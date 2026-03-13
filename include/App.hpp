@@ -1,7 +1,12 @@
 #ifndef APP_HPP
 #define APP_HPP
 
+#include "Util/GameObject.hpp"
+#include "Util/Renderer.hpp"
+#include "Util/Text.hpp"
 #include "pch.hpp" // IWYU pragma: export
+#include <memory>
+#include "Scene.hpp"
 
 class App {
 public:
@@ -23,6 +28,9 @@ private:
     void ValidTask();
 
 private:
+    Util::Renderer m_Root;
+    
+    std::unique_ptr<Scene> m_Scene;
     State m_CurrentState = State::START;
 };
 

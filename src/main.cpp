@@ -23,5 +23,6 @@ int main(int, char**) {
         }
         context->Update();
     }
+    
     return 0;
 }
