@@ -5,9 +5,12 @@ set(SRC_FILES
 
     Component/TextButton/TextButton.cpp
     
+    Component/Map/MapPiece.cpp
+    
     Scene/MapTest.cpp
 
-    Map/MapPiece.cpp
+
+    Character.cpp
 )
 
 set(INCLUDE_FILES
@@ -24,7 +27,10 @@ set(INCLUDE_FILES
 
     Scene/MapTest.hpp
 
-    Map/MapPiece.hpp
+    Component/Map/MapPiece.hpp
+    Component/Map/MapBase.hpp
+
+    Character.hpp
 )
 
 set(TEST_FILES

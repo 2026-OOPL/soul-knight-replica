@@ -1,3 +1,4 @@
+#include <glm/fwd.hpp>
 #include <memory>
 
 #include "Core/Context.hpp"
@@ -5,13 +6,65 @@
 #include "Util/GameObject.hpp"
 #include "Util/Image.hpp"
 #include "Util/Logger.hpp"
+#include "Component/Map/MapPiece.hpp"
 
 #include "MainMenu.hpp"
 #include "Component/TextButton/TextButton.hpp"
 
 void MainMenu::StartNewGame() {
     LOG_INFO("Game started !");
-    m_Redirect_Scene = std::make_unique<MapTest>(this->m_Root);
+
+    std::vector<std::shared_ptr<MapPiece>> test;
+
+
+    test.push_back(std::make_shared<MapPiece>(
+        glm::vec2(0, 0),
+        RESOURCE_DIR"/Map/StageTest/Map_0_0.png"
+    ));
+
+    test.push_back(std::make_shared<MapPiece>(
+        glm::vec2(-1280, 0),
+        RESOURCE_DIR"/Map/StageTest/Map_0_0.png"
+    ));
+
+    test.push_back(std::make_shared<MapPiece>(
+        glm::vec2(1280, 0),
+        RESOURCE_DIR"/Map/StageTest/Map_0_0.png"
+    ));
+    
+    // asdsadsad
+    test.push_back(std::make_shared<MapPiece>(
+        glm::vec2(0, 720),
+        RESOURCE_DIR"/Map/StageTest/Map_0_0.png"
+    ));
+
+    test.push_back(std::make_shared<MapPiece>(
+        glm::vec2(-1280, 720),
+        RESOURCE_DIR"/Map/StageTest/Map_0_0.png"
+    ));
+
+    test.push_back(std::make_shared<MapPiece>(
+        glm::vec2(1280, 720),
+        RESOURCE_DIR"/Map/StageTest/Map_0_0.png"
+    ));
+
+    // sadasds
+    test.push_back(std::make_shared<MapPiece>(
+        glm::vec2(0, -720),
+        RESOURCE_DIR"/Map/StageTest/Map_0_0.png"
+    ));
+
+    test.push_back(std::make_shared<MapPiece>(
+        glm::vec2(-1280, -720),
+        RESOURCE_DIR"/Map/StageTest/Map_0_0.png"
+    ));
+
+    test.push_back(std::make_shared<MapPiece>(
+        glm::vec2(1280, -720),
+        RESOURCE_DIR"/Map/StageTest/Map_0_0.png"
+    ));
+
+    m_Redirect_Scene = std::make_unique<MapTest>(this->m_Root, glm::vec2(0, 0), test);
 }
 
 void MainMenu::LeaveGame() {
