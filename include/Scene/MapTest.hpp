@@ -3,14 +3,14 @@
 
 #include "Scene.hpp"
 #include "Util/GameObject.hpp"
+#include <glm/fwd.hpp>
 #include <memory>
 #include <vector>
 #include "Map/MapPiece.hpp"
 
 class MapTest : public Scene {
 public:
-    MapTest(Util::Renderer* m_Root, std::vector<MapPiece> pieces) : Scene(m_Root) {
-        this->pieces = pieces;
+    MapTest(Util::Renderer* m_Root) : Scene(m_Root) {
         Initialize();
     }
 
@@ -24,6 +24,7 @@ public:
     void Update() override;
 
     std::vector<MapPiece> pieces;
+    glm::vec2 cooridinate;
 
 protected:
     // std::unique_ptr<Util::GameObject> m_Character = 

@@ -17,5 +17,7 @@ void MapTest::Dispose() {
 }
 
 void MapTest::Update() {
-    
+    for (MapPiece& i : this->pieces) {
+        i.ToggleVisibilityByCooridinate(cooridinate);
+    }
 }
