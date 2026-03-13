@@ -8,6 +8,8 @@ set(SRC_FILES
     
     Component/Map/MapPiece.cpp
     
+    Component/Map/MapPiece.cpp
+    
 =======
 
 >>>>>>> Stashed changes
