@@ -19,6 +19,7 @@ public:
     glm::vec2 m_Cooridinate;
     std::shared_ptr<Util::Image> m_Image;
     
+    glm::vec2 GetScaledCooridinate();
     bool GetVisibilityByCooridinate(glm::vec2 cooridinate);
     void SetTransformByCooridinate(glm::vec2 cooridinate);
 };

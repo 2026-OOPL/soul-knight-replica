@@ -5,16 +5,16 @@
 #include <memory>
 #include <vector>
 
+#include "Util/GameObject.hpp"
 #include "Component/Map/MapBase.hpp"
 #include "Component/Map/MapPiece.hpp"
-#include "Util/GameObject.hpp"
 
 class MapTest : public MapBase {
 public:
-    MapTest(Util::Renderer* m_Root, glm::vec2 cooridinate, std::vector<std::shared_ptr<MapPiece>> pieces) : MapBase(m_Root, cooridinate, pieces) {
+    MapTest(glm::vec2 cooridinate) : MapBase(cooridinate, {}) {
+        m_Transform.scale = {1.5, 1.5};
         this->m_Pieces = pieces;
         this->m_Cooridinate = cooridinate;
-        Initialize();
     }
 
     ~MapTest() override {

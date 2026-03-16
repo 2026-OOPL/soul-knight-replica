@@ -2,6 +2,7 @@
 #define STATEFUL_COMPONENT_HPP
 
 class IStateful {
+public:
     virtual void Update() = 0; 
 };
 

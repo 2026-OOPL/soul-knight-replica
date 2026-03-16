@@ -1,70 +1,22 @@
 #include <glm/fwd.hpp>
 #include <memory>
 
+#include "Component/IStateful.hpp"
+#include "Component/Map/MapPiece.hpp"
 #include "Core/Context.hpp"
 #include "Scene/MapTest.hpp"
 #include "Util/GameObject.hpp"
 #include "Util/Image.hpp"
 #include "Util/Logger.hpp"
-#include "Component/Map/MapPiece.hpp"
+#include "Component/Map/BaseRoom.hpp"
 
 #include "MainMenu.hpp"
 #include "Component/TextButton/TextButton.hpp"
 
 void MainMenu::StartNewGame() {
-    LOG_INFO("Game started !");
+    m_Redirect_Scene = std::make_shared<MapTest>(glm::vec2(0, 0));
 
-    std::vector<std::shared_ptr<MapPiece>> test;
-
-
-    test.push_back(std::make_shared<MapPiece>(
-        glm::vec2(0, 0),
-        RESOURCE_DIR"/Map/StageTest/Map_0_0.png"
-    ));
-
-    test.push_back(std::make_shared<MapPiece>(
-        glm::vec2(-1280, 0),
-        RESOURCE_DIR"/Map/StageTest/Map_0_0.png"
-    ));
-
-    test.push_back(std::make_shared<MapPiece>(
-        glm::vec2(1280, 0),
-        RESOURCE_DIR"/Map/StageTest/Map_0_0.png"
-    ));
-    
-    // asdsadsad
-    test.push_back(std::make_shared<MapPiece>(
-        glm::vec2(0, 720),
-        RESOURCE_DIR"/Map/StageTest/Map_0_0.png"
-    ));
-
-    test.push_back(std::make_shared<MapPiece>(
-        glm::vec2(-1280, 720),
-        RESOURCE_DIR"/Map/StageTest/Map_0_0.png"
-    ));
-
-    test.push_back(std::make_shared<MapPiece>(
-        glm::vec2(1280, 720),
-        RESOURCE_DIR"/Map/StageTest/Map_0_0.png"
-    ));
-
-    // sadasds
-    test.push_back(std::make_shared<MapPiece>(
-        glm::vec2(0, -720),
-        RESOURCE_DIR"/Map/StageTest/Map_0_0.png"
-    ));
-
-    test.push_back(std::make_shared<MapPiece>(
-        glm::vec2(-1280, -720),
-        RESOURCE_DIR"/Map/StageTest/Map_0_0.png"
-    ));
-
-    test.push_back(std::make_shared<MapPiece>(
-        glm::vec2(1280, -720),
-        RESOURCE_DIR"/Map/StageTest/Map_0_0.png"
-    ));
-
-    m_Redirect_Scene = std::make_unique<MapTest>(this->m_Root, glm::vec2(0, 0), test);
+    this->AddChild(m_Redirect_Scene);
 }
 
 void MainMenu::LeaveGame() {
@@ -72,12 +24,11 @@ void MainMenu::LeaveGame() {
     
     auto context = Core::Context::GetInstance();
     context->SetExit(true);
-    
 }
 
 void MainMenu::Initialize() {
     const glm::vec2 buttonBaseline = {-440, -30};
-    
+
     m_Button_NewGame = std::make_unique<TextButton>(
         "開新遊戲", 2,
         std::make_shared<ButtonAction>(
@@ -87,20 +38,20 @@ void MainMenu::Initialize() {
         )
     );
     m_Button_NewGame->m_Transform.translation = buttonBaseline + glm::vec2(0, 0);
-    m_Root->AddChild(m_Button_NewGame);
+    this->AddChild(m_Button_NewGame);
     
     m_Button_LoadGame = std::make_unique<TextButton>(
         "載入存檔", 2,
         nullptr
     );
     m_Button_LoadGame->m_Transform.translation = buttonBaseline + glm::vec2(0, -70);
-    m_Root->AddChild(m_Button_LoadGame);
+    this->AddChild(m_Button_LoadGame);
 
     m_Button_Credit = std::make_unique<TextButton>(
         "遊玩設定", 2, nullptr
     );
     m_Button_Credit->m_Transform.translation = buttonBaseline + glm::vec2(0, -140);
-    m_Root->AddChild(m_Button_Credit);
+    this->AddChild(m_Button_Credit);
 
     m_Button_Leave = std::make_unique<TextButton>(
         "離開遊戲", 2, 
@@ -111,7 +62,18 @@ void MainMenu::Initialize() {
         )
     );
     m_Button_Leave->m_Transform.translation = buttonBaseline + glm::vec2(0, -210);
-    m_Root->AddChild(m_Button_Leave);
+    this->AddChild(m_Button_Leave);
+
+    m_Game_Title = std::make_shared<Util::GameObject>(
+        std::make_shared<Util::Image>(
+            RESOURCE_DIR"/Image/MainMenu/GameTitle.png"
+        ),
+        1
+    );
+
+    m_Game_Title->m_Transform.translation = {-270,220};
+
+    this->AddChild(m_Game_Title);
 
     m_Background = std::make_shared<Util::GameObject>(
         std::make_shared<Util::Image>(
@@ -119,24 +81,20 @@ void MainMenu::Initialize() {
         ),
         0
     );
-    m_Root->AddChild(m_Background);
+    
+    this->AddChild(m_Background);
+
 }
 
 void MainMenu::Dispose() {
-    m_Root->RemoveChild(m_Button_NewGame);
-    m_Root->RemoveChild(m_Button_LoadGame);
-    m_Root->RemoveChild(m_Button_Credit);
-    m_Root->RemoveChild(m_Button_Leave);
-    m_Root->RemoveChild(m_Background);
+    this->RemoveChild(m_Button_NewGame);
+    this->RemoveChild(m_Button_LoadGame);
+    this->RemoveChild(m_Button_Credit);
+    this->RemoveChild(m_Button_Leave);
+    this->RemoveChild(m_Background);
 }
 
-void MainMenu::Update() {
-    m_Button_NewGame->Update();
-    m_Button_LoadGame->Update();
-    m_Button_Credit->Update();
-    m_Button_Leave->Update();
-}
 
-std::unique_ptr<Scene> MainMenu::GetRedirection() {
-    return std::move(this->m_Redirect_Scene);
+std::shared_ptr<Scene> MainMenu::GetRedirection() {
+    return this->m_Redirect_Scene;
 } 

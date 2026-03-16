@@ -1,4 +1,5 @@
 #include "Component/Map/MapPiece.hpp"
+#include <glm/fwd.hpp>
 
 bool MapPiece::GetVisibilityByCooridinate(glm::vec2 cooridinate) {
     auto context = Core::Context::GetInstance();
@@ -6,7 +7,7 @@ bool MapPiece::GetVisibilityByCooridinate(glm::vec2 cooridinate) {
     glm::vec2 mapSize = this->GetScaledSize();
     glm::vec2 windowSize = {context->GetWindowWidth(), context->GetWindowHeight()};
 
-    glm::vec2 mapPosition = this->m_Cooridinate;
+    glm::vec2 mapPosition = GetScaledCooridinate();
     glm::vec2 windowPosition = cooridinate;
 
     // Current window view port border in LTRB
@@ -37,14 +38,24 @@ bool MapPiece::GetVisibilityByCooridinate(glm::vec2 cooridinate) {
     float wRight  = windowBorder.z;
     float wBottom = windowBorder.w;
 
-    bool isOutside = (mRight  < wLeft) || // 整張在地圖左邊
-                     (mLeft   > wRight) || // 整張在地圖右邊
-                     (mBottom > wTop) || // 整張在地圖上方 (Bottom 比 Window Top 還高)
-                     (mTop    < wBottom);   // 整張在地圖下方 (Top 比 Window Bottom 還低)
+    bool isOutside = 
+        (mRight  < wLeft  ) || // 整張在地圖左邊
+        (mLeft   > wRight ) || // 整張在地圖右邊
+        (mBottom > wTop   ) || // 整張在地圖上方 (Bottom 比 Window Top 還高)
+        (mTop    < wBottom);   // 整張在地圖下方 (Top 比 Window Bottom 還低)
 
     return !isOutside;
 }
 
 void MapPiece::SetTransformByCooridinate(glm::vec2 cooridinate) {
-    this->m_Transform.translation = this->m_Cooridinate - cooridinate;
+    glm::vec2 scaledCooridinate = GetScaledCooridinate();
+
+    this->m_Transform.translation = scaledCooridinate - cooridinate;
+}
+
+glm::vec2 MapPiece::GetScaledCooridinate() {
+    return {
+        this->m_Cooridinate.x * this->m_Transform.scale.x,
+        this->m_Cooridinate.y * this->m_Transform.scale.y,
+    };
 }

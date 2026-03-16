@@ -10,19 +10,16 @@
 
 class MainMenu : public Scene {
 public:
-    MainMenu(Util::Renderer* m_Root) : Scene(m_Root) {
-        Initialize();
+    MainMenu() : Scene() {
     };
     
     ~MainMenu() {
-        Dispose();
     };
 
     void Initialize() override;
     void Dispose() override;
-    void Update() override;
     
-    std::unique_ptr<Scene> GetRedirection() override;
+    std::shared_ptr<Scene> GetRedirection() override;
 
 private:
     std::shared_ptr<TextButton> m_Button_NewGame;
@@ -31,8 +28,9 @@ private:
     std::shared_ptr<TextButton> m_Button_Leave;
 
     std::shared_ptr<Util::GameObject> m_Background;
+    std::shared_ptr<Util::GameObject> m_Game_Title;
 
-    std::unique_ptr<Scene> m_Redirect_Scene;
+    std::shared_ptr<Scene> m_Redirect_Scene;
 
     void StartNewGame();
     void LeaveGame();
