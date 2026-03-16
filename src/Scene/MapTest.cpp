@@ -173,8 +173,3 @@ bool MapTest::WillPlayerCollide(const glm::vec2 &nextCoordinate) const {
 
     return false;
 }
-
-void MapTest::Update() {
-
-}
-
