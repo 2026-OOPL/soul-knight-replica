@@ -6,6 +6,8 @@ int main(int, char**) {
     auto context = Core::Context::GetInstance();
     App app;
 
+    context->SetWindowIcon(RESOURCE_DIR"/icon.png");
+
     while (!context->GetExit()) {
         switch (app.GetCurrentState()) {
             case App::State::START:
@@ -21,6 +23,7 @@ int main(int, char**) {
                 context->SetExit(true);
                 break;
         }
+        
         context->Update();
     }
     

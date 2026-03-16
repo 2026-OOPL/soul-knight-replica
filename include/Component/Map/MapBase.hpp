@@ -5,13 +5,13 @@
 #include <memory>
 #include <vector>
 
-#include "Scene.hpp"
 #include "Util/GameObject.hpp"
+#include "Scene.hpp"
 #include "Component/Map/MapPiece.hpp"
 
 class MapBase : public Scene {
 public:
-    MapBase(Util::Renderer* m_Root, glm::vec2 cooridinate, std::vector<std::shared_ptr<MapPiece>> pieces) : Scene(m_Root) {
+    MapBase(glm::vec2 cooridinate, std::vector<std::shared_ptr<MapPiece>> pieces) : Scene() {
         this->pieces = pieces;
         this->m_Cooridinate = cooridinate;
     }

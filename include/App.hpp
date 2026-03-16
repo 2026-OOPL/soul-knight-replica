@@ -30,7 +30,7 @@ private:
 private:
     Util::Renderer m_Root;
     
-    std::unique_ptr<Scene> m_Scene;
+    std::shared_ptr<Scene> m_Scene;
     State m_CurrentState = State::START;
 };
 

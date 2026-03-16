@@ -11,17 +11,24 @@
 void App::Start() {
     LOG_TRACE("Start");
 
-    m_Scene = std::make_unique<MainMenu>(&m_Root);
+    m_Scene = std::make_shared<MainMenu>();
+    m_Scene->Initialize();
 
     m_CurrentState = State::UPDATE;
 }
 
 void App::Update() {
      
-    std::unique_ptr<Scene> newScene = m_Scene->GetRedirection();
+    std::shared_ptr<Scene> newScene = m_Scene->GetRedirection();
 
     if (newScene) {
-        m_Scene = std::move(newScene);
+        this->m_Root.RemoveChild(m_Scene);
+        m_Scene->Dispose();
+
+        m_Scene = newScene;
+        m_Scene->Initialize();
+
+        this->m_Root.AddChild(m_Scene);
     }
 
     m_Scene->Update();

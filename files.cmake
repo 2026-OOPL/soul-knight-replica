@@ -30,6 +30,9 @@ set(INCLUDE_FILES
     Component/Map/MapBase.hpp
 
     Character.hpp
+
+
+    Config.hpp
 )
 
 set(TEST_FILES

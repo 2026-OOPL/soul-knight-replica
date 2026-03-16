@@ -20,6 +20,7 @@ public:
         m_ColliderSize = GetScaledSize();//取出圖片大小乘上大小倍率
     };
 
+
     bool GetVisibilityByCooridinate(glm::vec2 cooridinate);//判斷相機位置決定地圖是否需要被顯示
     void SetTransformByCooridinate(glm::vec2 cooridinate);//根據視角將地圖座標轉換成相機座標
 
@@ -45,6 +46,7 @@ private:
     std::shared_ptr<Util::Image> m_Image;//圖片路徑
     bool m_IsWall = false;//設定這塊地圖是否為牆
     glm::vec2 m_ColliderSize = {0.0F, 0.0F};//碰撞盒大小
+
 };
 
 #endif

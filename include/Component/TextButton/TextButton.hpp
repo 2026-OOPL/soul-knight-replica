@@ -21,10 +21,10 @@ public:
         this->theme = theme != nullptr ? theme : this->theme;
         this->action = action != nullptr ? action : this->action;
         
-        m_DrawableCast = std::make_shared<Util::Text>(
+        m_Text = std::make_shared<Util::Text>(
             theme->font, theme->size, text, this->theme->normal);
 
-        this->SetDrawable(m_DrawableCast);
+        this->SetDrawable(m_Text);
     }
 
     TextButton(
@@ -35,10 +35,10 @@ public:
         this->theme = theme != nullptr ? theme : this->theme;
         this->action = action != nullptr ? action : this->action;
         
-        m_DrawableCast = std::make_shared<Util::Text>(
+        m_Text = std::make_shared<Util::Text>(
             theme->font, theme->size, text, this->theme->normal);
 
-        this->SetDrawable(m_DrawableCast);
+        this->SetDrawable(m_Text);
     }
 
     void Update() override;
@@ -51,7 +51,7 @@ private:
     bool isEnter = false;
     bool isPressed = false;
 
-    std::shared_ptr<Util::Text> m_DrawableCast;
+    std::shared_ptr<Util::Text> m_Text;
 
     std::shared_ptr<ButtonTheme> theme = std::make_shared<ButtonTheme>();
 

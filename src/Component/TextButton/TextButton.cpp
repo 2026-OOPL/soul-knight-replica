@@ -79,6 +79,4 @@ void TextButton::Update() {
         std::dynamic_pointer_cast<Util::Text>(m_Drawable) 
         -> SetColor(theme->normal);
     }
-
-    Util::GameObject::Draw();
 }
