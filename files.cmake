@@ -4,15 +4,8 @@ set(SRC_FILES
     Scene.cpp
 
     Component/TextButton/TextButton.cpp
-<<<<<<< Updated upstream
-    
-    Component/Map/MapPiece.cpp
-    
-    Component/Map/MapPiece.cpp
-    
-=======
+    Component/Map/MapPiece.cpp   
 
->>>>>>> Stashed changes
     Scene/MapTest.cpp
 
 
