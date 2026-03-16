@@ -1,90 +1,47 @@
-#include "Util/Transform.hpp"
-#include <glm/fwd.hpp>
-#include <memory>
-#include <vector>
+#ifndef I_COLLIDABLE_HPP
+#define I_COLLIDABLE_HPP
 
-class HitBox {
+#include <glm/glm.hpp>/*為了使用到 glm::vec2 裡的成員型別*/
+
+class ICollidable
+{
 public:
-    Util::Transform m_Transform;
-    std::vector<std::shared_ptr<HitBox>> m_HitBox;
-
-    HitBox(std::vector<std::shared_ptr<HitBox>> &hitbox, Util::Transform transform) {
-        this->m_Transform = transform;
-        this->m_HitBox = hitbox;
+    struct RectCollider/*定義碰撞箱*/
+    {
+        glm::vec2 center;/*矩形中心點*/
+        glm::vec2 size;/*矩形寬高*/
     };
 
-    Util::Transform GetTransformWithOffset(Util::Transform others) {
-        Util::Transform result;
+    virtual ~ICollidable() = default;
 
-        result.translation = {
-            m_Transform.translation.x + others.translation.x,
-            m_Transform.translation.y + others.translation.y
-        };
+    /*如果繼承ICollidable就必須實作GetCollider()還有CanBlockMovement()*/
+    virtual RectCollider GetCollider() const = 0;//你要回傳自己的碰撞矩形
+    virtual bool CanBlockMovement() const = 0;//你要回答這這物件會不會擋路
+    
+    /*增加可讀性使用此函式把
+    ICollidable::IsOverlapping(a.GetCollider(), b.GetCollider())改成
+    a.IsCollidingWith(b)*/
+    bool IsCollidingWith(const ICollidable &other) const {
+        return IsOverlapping(GetCollider(), other.GetCollider());
+    }
+    /*碰撞邏輯實作*/
+    static bool IsOverlapping(const RectCollider &lhs,
+                              const RectCollider &rhs) {
+                                
+        const float lhsLeft = lhs.center.x - lhs.size.x / 2.0F;//左邊界位置 = 中心 x - 半個寬
+        const float lhsRight = lhs.center.x + lhs.size.x / 2.0F;//右邊界位置 = 中心 x + 半個寬
+        const float lhsTop = lhs.center.y + lhs.size.y / 2.0F;//上邊界位置 = 中心 y + 半個高
+        const float lhsBottom = lhs.center.y - lhs.size.y / 2.0F;//下邊界位置 = 中心 y - 半個高
 
-        result.scale = 
-            m_Transform.scale * others.scale;
-        
-        result.rotation = 
-            m_Transform.rotation + m_Transform.rotation;
+        const float rhsLeft = rhs.center.x - rhs.size.x / 2.0F;
+        const float rhsRight = rhs.center.x + rhs.size.x / 2.0F;
+        const float rhsTop = rhs.center.y + rhs.size.y / 2.0F;
+        const float rhsBottom = rhs.center.y - rhs.size.y / 2.0F;
 
-        return result;
+        /*有重疊就回傳ture*/
+        return !(lhsRight <= rhsLeft || lhsLeft >= rhsRight ||
+                 lhsTop <= rhsBottom || lhsBottom >= rhsTop);
     }
 };
 
-class RectHitBox : public HitBox {
-public:
-    RectHitBox(
-        float width,
-        float height,
-        Util::Transform transform,
-        std::vector<std::shared_ptr<HitBox>> &hitBoxes
-    ) : HitBox(hitBoxes, transform) {
-        this->m_Width = width;
-        this->m_Height = height;
-    }
-
-
-private:
-    float m_Width;
-    float m_Height;
-};
-
-class CircHitBox : public HitBox {
-public:
-    int m_Raduis;
-
-    CircHitBox(
-        int raduis,
-        Util::Transform transform,
-        std::vector<std::shared_ptr<HitBox>> &hitBoxes
-    ) : HitBox(hitBoxes, transform) {
-        this->m_Raduis = raduis;
-    }
-};
-
-class ICollidable {
-public:
-    bool isCollideWith(std::shared_ptr<ICollidable> other) {
-        this->GetTransform();
-        other->GetTransform();
-
-        return false;
-    }
-
-    virtual HitBox GetHitbox() = 0;
-    virtual Util::Transform GetTransform() = 0;
-
-private:
-
-    static bool CalculateCollide(CircHitBox circ, RectHitBox rect) {
-        return CalculateCollide(rect, circ);
-    }
-
-    static bool CalculateCollide(RectHitBox rect, CircHitBox circ) {
-        
-        return false;
-    }
-
-
-
-};
+#endif

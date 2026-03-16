@@ -7,7 +7,7 @@ bool MapPiece::GetVisibilityByCooridinate(glm::vec2 cooridinate) {
     glm::vec2 mapSize = this->GetScaledSize();
     glm::vec2 windowSize = {context->GetWindowWidth(), context->GetWindowHeight()};
 
-    glm::vec2 mapPosition = GetScaledCooridinate();
+    glm::vec2 mapPosition = GetPosition();
     glm::vec2 windowPosition = cooridinate;
 
     // Current window view port border in LTRB
@@ -48,14 +48,7 @@ bool MapPiece::GetVisibilityByCooridinate(glm::vec2 cooridinate) {
 }
 
 void MapPiece::SetTransformByCooridinate(glm::vec2 cooridinate) {
-    glm::vec2 scaledCooridinate = GetScaledCooridinate();
+    glm::vec2 scaledCooridinate = GetPosition();
 
     this->m_Transform.translation = scaledCooridinate - cooridinate;
-}
-
-glm::vec2 MapPiece::GetScaledCooridinate() {
-    return {
-        this->m_Cooridinate.x * this->m_Transform.scale.x,
-        this->m_Cooridinate.y * this->m_Transform.scale.y,
-    };
 }

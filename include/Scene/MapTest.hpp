@@ -1,13 +1,14 @@
 #ifndef MAP_TEST_HPP
 #define MAP_TEST_HPP
 
-#include <glm/fwd.hpp>
 #include <memory>
 #include <vector>
 
 #include "Util/GameObject.hpp"
 #include "Component/Map/MapBase.hpp"
 #include "Component/Map/MapPiece.hpp"
+#include "Component/Player/Player.hpp"
+
 
 class MapTest : public MapBase {
 public:
@@ -17,20 +18,21 @@ public:
         this->m_Cooridinate = cooridinate;
     }
 
-    ~MapTest() override {
-        Dispose();
-    };
+    ~MapTest() override { Dispose(); }
 
     void Initialize() override;
     void Dispose() override;
-
     void Update() override;
 
+private:
+    bool WillPlayerCollide(const glm::vec2 &nextCoordinate) const;
+
+private:
     glm::vec2 m_Cooridinate;
     std::vector<std::shared_ptr<MapPiece>> m_Pieces;
-
-protected:
-    // std::unique_ptr<Util::GameObject> m_Character = 
+    std::shared_ptr<Player> m_Player;
+    std::shared_ptr<MapPiece> m_TestBlock;
+    float m_PlayerSpeed = 0.35F;
 };
 
 #endif
