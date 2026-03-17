@@ -1,6 +1,7 @@
 #ifndef MAP_TEST_HPP
 #define MAP_TEST_HPP
 
+#include <memory>
 #include <vector>
 
 #include "Component/Map/MapSystem.hpp"
@@ -12,7 +13,7 @@ public:
         this->m_Cooridinate = cooridinate;
     }
 
-    ~MapTest() override { Dispose(); }
+    ~MapTest() override = default;
 
     void Initialize() override;
     void Dispose() override;
@@ -22,6 +23,9 @@ private:
     bool WillPlayerCollide(const glm::vec2 &nextCoordinate) const;
 
 private:
+    std::shared_ptr<Player> m_MainPlayer;
+    std::shared_ptr<MapPiece> m_TestBlock;
+    
     glm::vec2 m_Cooridinate;
 
     float m_PlayerSpeed = 0.35F;

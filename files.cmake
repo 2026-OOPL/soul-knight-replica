@@ -8,8 +8,6 @@ set(SRC_FILES
 
     Scene/MapTest.cpp
 
-
-    Character.cpp
 )
 
 set(INCLUDE_FILES
@@ -20,6 +18,7 @@ set(INCLUDE_FILES
     Component/Player/Player.hpp
     Component/TextButton/TextButton.hpp
     Component/TextButton/TextButtonPropertycpp.hpp
+    Component/Character/Character.hpp
 
     Component/ICollidable.hpp
     Component/IStateful.hpp
@@ -28,8 +27,6 @@ set(INCLUDE_FILES
 
     Component/Map/MapPiece.hpp
     Component/Map/MapBase.hpp
-
-    Character.hpp
 
     CameraBase.hpp
     Config.hpp

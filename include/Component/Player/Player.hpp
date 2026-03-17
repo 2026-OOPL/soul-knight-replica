@@ -27,19 +27,23 @@ public:
     }
     /*回傳角色碰撞箱大小*/
     glm::vec2 GetColliderSize() const { return m_ColliderSize; }
+    
     /*設定角色碰撞箱大小*/
     void SetColliderSize(const glm::vec2 &colliderSize) {
         m_ColliderSize = colliderSize;
     }
+
     /*回傳角色中心位置*/
     glm::vec2 GetPosition() const { return m_Transform.translation; }
     void SetPosition(const glm::vec2 &position) {
         m_Transform.translation = position;
     }
+
     /*定義玩家中心點 = 玩家目前位置，玩家大小 = 玩家碰撞盒大小*/
     RectCollider GetCollider() const override {
         return RectCollider{m_Transform.translation, m_ColliderSize};
     }
+
     /*定義玩家可以卡住其他物件*/
     bool CanBlockMovement() const override { return true; }
 
@@ -63,6 +67,7 @@ public:
         if (moveIntent == glm::vec2(0.0F, 0.0F)) {
             return moveIntent;
         }
+        
         /*為了移除斜線走路比直線快的bug*/
         return glm::normalize(moveIntent);
     }

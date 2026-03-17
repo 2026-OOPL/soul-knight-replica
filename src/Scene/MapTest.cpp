@@ -10,8 +10,10 @@
 #include "Util/Time.hpp"
 
 void MapTest::Initialize() {
-    m_Player = std::make_shared<Player>();
-    m_Player->SetPosition({0.0F, 0.0F});
+    m_MainPlayer = std::make_shared<Player>();
+    m_MainPlayer->SetPosition({0.0F, 0.0F});
+    m_Player.push_back(m_MainPlayer);
+
     /*建立碰撞箱*/
     m_TestBlock = std::make_shared<MapPiece>(
         glm::vec2(220.0F, 0.0F), RESOURCE_DIR "/Character/character.png", true);
