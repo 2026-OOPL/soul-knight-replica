@@ -36,7 +36,7 @@ protected:
 
 class ICollidable {
 public:
-    std::vector<std::shared_ptr<Collider>> GetCollideBox();
+    virtual std::vector<std::shared_ptr<Collider>> GetCollideBox() = 0;
 
     // struct RectCollider/*定義碰撞箱*/
     // {

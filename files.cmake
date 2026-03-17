@@ -8,6 +8,10 @@ set(SRC_FILES
 
     Scene/MapTest.cpp
 
+    Component/Camera/TraceCamera.cpp
+    Component/Player/Player.cpp
+    Component/Map/MapSystem.cpp
+
 )
 
 set(INCLUDE_FILES

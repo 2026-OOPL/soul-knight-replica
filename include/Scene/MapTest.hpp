@@ -8,7 +8,7 @@
 
 class MapTest : public MapSystem {
 public:
-    MapTest(glm::vec2 cooridinate) : MapSystem(cooridinate, {}) {
+    MapTest(glm::vec2 cooridinate) : MapSystem() {
         m_Transform.scale = {1.5, 1.5};
         this->m_Cooridinate = cooridinate;
     }

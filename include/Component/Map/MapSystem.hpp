@@ -13,13 +13,21 @@
 #include "Scene.hpp"
 #include "Component/Map/MapPiece.hpp"
 
+
 class MapSystem : public Scene {
 public:
-    MapSystem(glm::vec2 cooridinate, std::vector<std::shared_ptr<MapPiece>> pieces) : Scene() {
+    MapSystem() : Scene() {
+    }
+
+    MapSystem(std::vector<std::shared_ptr<MapPiece>> pieces) : Scene() {
         this->m_Pieces = pieces;
     }
 
     virtual ~MapSystem() = default;
+
+    void Initialize() override;
+    void Dispose() override;
+
 
     // 從相機取得目前畫面位置，並
     void GetCameraCoor();

@@ -8,9 +8,14 @@
 
 class TraceCamera : public Camera {
 public:
-    TraceCamera(std::shared_ptr<IMapObject> target) : Camera() {
+    TraceCamera(
+        std::shared_ptr<IMapObject> target,
+        Util::Transform transform
+    ) : Camera(transform) {
         m_Target = target;
     }
+
+    Util::Transform GetObjectTransform(std::shared_ptr<IMapObject> object) override;
 
 protected:
     std::shared_ptr<IMapObject> m_Target;

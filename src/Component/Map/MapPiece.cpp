@@ -1,5 +1,23 @@
 #include "Component/Map/MapPiece.hpp"
+#include "Util/Transform.hpp"
 #include <glm/fwd.hpp>
+
+
+glm::vec2 MapPiece::GetObjectSize() {
+    return this->GetScaledSize();
+}
+
+glm::vec2 MapPiece::GetCooridinate() {
+    return this->m_Cooridinate;
+}
+
+Util::Transform MapPiece::GetTransform() {
+    return this->m_Transform;
+}
+
+std::vector<std::shared_ptr<Collider>> MapPiece::GetCollideBox() {
+    return {};
+}
 
 bool MapPiece::GetVisibilityByCooridinate(glm::vec2 cooridinate) {
     auto context = Core::Context::GetInstance();

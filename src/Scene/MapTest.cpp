@@ -31,61 +31,50 @@ void MapTest::Initialize() {
 
     LOG_INFO("Game started !");
 
-    this->AddChild(std::make_shared<BaseRoom>(
+    m_Pieces.push_back(std::make_shared<BaseRoom>(
         glm::vec2(0, 0)
     ));
 
-    this->AddChild(std::make_shared<MapPiece>(
+    m_Pieces.push_back(std::make_shared<MapPiece>(
         glm::vec2(-1280, 0),
         RESOURCE_DIR"/Map/StageTest/Map_0_0.png"
     ));
 
-    this->AddChild(std::make_shared<MapPiece>(
+    m_Pieces.push_back(std::make_shared<MapPiece>(
         glm::vec2(1280, 0),
         RESOURCE_DIR"/Map/StageTest/Map_0_0.png"
     ));
     
-    // asdsadsad
-    this->AddChild(std::make_shared<MapPiece>(
+    m_Pieces.push_back(std::make_shared<MapPiece>(
         glm::vec2(0, 720),
         RESOURCE_DIR"/Map/StageTest/Map_0_0.png"
     ));
 
-    this->AddChild(std::make_shared<MapPiece>(
+    m_Pieces.push_back(std::make_shared<MapPiece>(
         glm::vec2(-1280, 720),
         RESOURCE_DIR"/Map/StageTest/Map_0_0.png"
     ));
 
-    this->AddChild(std::make_shared<MapPiece>(
+    m_Pieces.push_back(std::make_shared<MapPiece>(
         glm::vec2(1280, 720),
         RESOURCE_DIR"/Map/StageTest/Map_0_0.png"
     ));
 
-    // sadasds
-    this->AddChild(std::make_shared<MapPiece>(
+    m_Pieces.push_back(std::make_shared<MapPiece>(
         glm::vec2(0, -720),
         RESOURCE_DIR"/Map/StageTest/Map_0_0.png"
     ));
 
-    this->AddChild(std::make_shared<MapPiece>(
+    m_Pieces.push_back(std::make_shared<MapPiece>(
         glm::vec2(-1280, -720),
         RESOURCE_DIR"/Map/StageTest/Map_0_0.png"
     ));
-
-    this->AddChild(std::make_shared<MapPiece>(
-        glm::vec2(1280, -720),
-        RESOURCE_DIR"/Map/StageTest/Map_0_0.png"
-    ));
-    
-    for (auto& i : m_Pieces) {
-        this->AddChild(i);
-    }
 }
 
 void MapTest::Dispose() {
-    if (m_Player != nullptr) {
-        this->RemoveChild(m_Player);
-        m_Player.reset();
+    if (m_MainPlayer != nullptr) {
+        this->RemoveChild(m_MainPlayer);
+        m_MainPlayer.reset();
     }
 
     if (m_TestBlock != nullptr) {
@@ -100,7 +89,7 @@ void MapTest::Dispose() {
 
 void MapTest::Update() {
 
-    const glm::vec2 moveDirection = m_Player->GetMoveIntent();
+    const glm::vec2 moveDirection = m_MainPlayer->GetMoveIntent();
     if (moveDirection != glm::vec2(0.0F, 0.0F)) {
         const glm::vec2 frameDelta =
             moveDirection * m_PlayerSpeed * Util::Time::GetDeltaTimeMs();
@@ -142,26 +131,7 @@ void MapTest::Update() {
 }
 
 bool MapTest::WillPlayerCollide(const glm::vec2 &nextCoordinate) const {
-    const ICollidable::RectCollider playerCollider{
-        nextCoordinate,
-        m_Player->GetColliderSize(),
-    };
-
-    for (const auto &piece : m_Pieces) {
-        if (!piece->CanBlockMovement()) {
-            continue;
-        }
-
-        if (ICollidable::IsOverlapping(playerCollider, piece->GetCollider())) {
-            return true;
-        }
-    }
-
-    if (m_TestBlock != nullptr && m_TestBlock->CanBlockMovement() &&
-        ICollidable::IsOverlapping(playerCollider, m_TestBlock->GetCollider())) {
-        return true;
-    }
-
+    // TODO
 
     return false;
 }
