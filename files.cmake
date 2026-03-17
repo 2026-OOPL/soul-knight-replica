@@ -11,7 +11,7 @@ set(SRC_FILES
     Component/Camera/TraceCamera.cpp
     Component/Player/Player.cpp
     Component/Map/MapSystem.cpp
-
+    Component/Camera/Camera.cpp
 )
 
 set(INCLUDE_FILES

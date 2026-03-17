@@ -1,3 +1,6 @@
+#include "Util/Input.hpp"
+#include "Util/Keycode.hpp"
+
 #include "Component/Player/Player.hpp"
 
 glm::vec2 Player::GetObjectSize() {

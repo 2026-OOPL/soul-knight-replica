@@ -14,3 +14,7 @@ Util::Transform TraceCamera::GetObjectTransform(std::shared_ptr<IMapObject> obje
         {1, 1 }
     };
 }
+
+void TraceCamera::Update() {
+    this->m_Transform.translation = m_Target->GetCooridinate();
+}

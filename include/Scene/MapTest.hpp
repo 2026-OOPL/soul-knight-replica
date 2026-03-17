@@ -2,16 +2,12 @@
 #define MAP_TEST_HPP
 
 #include <memory>
-#include <vector>
 
 #include "Component/Map/MapSystem.hpp"
 
 class MapTest : public MapSystem {
 public:
-    MapTest(glm::vec2 cooridinate) : MapSystem() {
-        m_Transform.scale = {1.5, 1.5};
-        this->m_Cooridinate = cooridinate;
-    }
+    MapTest();
 
     ~MapTest() override = default;
 
@@ -24,9 +20,7 @@ private:
 
 private:
     std::shared_ptr<Player> m_MainPlayer;
-    std::shared_ptr<MapPiece> m_TestBlock;
-    
-    glm::vec2 m_Cooridinate;
+    // std::shared_ptr<MapPiece> m_TestBlock;
 
     float m_PlayerSpeed = 0.35F;
 };

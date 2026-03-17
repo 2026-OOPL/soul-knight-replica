@@ -9,7 +9,7 @@ class Character : public Util::GameObject {
 public:
     Character(
         std::shared_ptr<Util::Animation> WalkAnimation
-    ) {
+    ) : GameObject(WalkAnimation, 5) {
         this->m_WalkAnimation = WalkAnimation;
     };
 

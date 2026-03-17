@@ -1,14 +1,13 @@
 #ifndef MAP_PIECE_HPP
 #define MAP_PIECE_HPP
 
-#include <glm/fwd.hpp>
+#include <glm/vec2.hpp>
 #include <memory>
 #include <string>
 #include <sys/types.h>
 
 #include "Component/ICollidable.hpp"
 #include "Component/IMapObject.hpp"
-#include "Core/Context.hpp"
 #include "Util/GameObject.hpp"
 #include "Util/Image.hpp"
 
@@ -31,7 +30,6 @@ public:
     
     std::vector<std::shared_ptr<Collider>> GetCollideBox() override;
 
-    bool GetVisibilityByCooridinate(glm::vec2 cooridinate) ;//判斷相機位置決定地圖是否需要被顯示
     void SetTransformByCooridinate(glm::vec2 cooridinate);//根據視角將地圖座標轉換成相機座標
 
     bool IsWall() const { return m_IsWall; }//判斷是否是牆 

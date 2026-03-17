@@ -1,20 +1,17 @@
-#include <glm/fwd.hpp>
+#include <glm/vec2.hpp>
 #include <memory>
 
-#include "Component/IStateful.hpp"
-#include "Component/Map/MapPiece.hpp"
+#include "MainMenu.hpp"
+#include "Component/Map/BaseRoom.hpp"
+#include "Component/TextButton/TextButton.hpp"
 #include "Core/Context.hpp"
 #include "Scene/MapTest.hpp"
 #include "Util/GameObject.hpp"
 #include "Util/Image.hpp"
 #include "Util/Logger.hpp"
-#include "Component/Map/BaseRoom.hpp"
-
-#include "MainMenu.hpp"
-#include "Component/TextButton/TextButton.hpp"
 
 void MainMenu::StartNewGame() {
-    m_Redirect_Scene = std::make_shared<MapTest>(glm::vec2(0, 0));
+    m_Redirect_Scene = std::make_shared<MapTest>();
 
     this->AddChild(m_Redirect_Scene);
 }
