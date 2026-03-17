@@ -31,7 +31,7 @@ set(INCLUDE_FILES
 
     Character.hpp
 
-
+    CameraBase.hpp
     Config.hpp
 )
 

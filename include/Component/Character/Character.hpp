@@ -1,0 +1,20 @@
+#ifndef CHARACTER_HPP
+#define CHARACTER_HPP
+
+#include "Util/Animation.hpp"
+#include "Util/GameObject.hpp"
+#include <memory>
+
+class Character : public Util::GameObject {
+public:
+    Character(
+        std::shared_ptr<Util::Animation> WalkAnimation
+    ) {
+        this->m_WalkAnimation = WalkAnimation;
+    };
+
+protected:
+    std::shared_ptr<Util::Animation> m_WalkAnimation;
+};
+
+#endif

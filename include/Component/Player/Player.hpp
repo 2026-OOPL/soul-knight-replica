@@ -1,21 +1,30 @@
 #ifndef PLAYER_PLAYER_HPP
 #define PLAYER_PLAYER_HPP
 
+#include "Component/Character/Character.hpp"
 #include "Component/ICollidable.hpp"//為了繼承ICollidable
+#include "Component/IMapObject.hpp"
+#include "Util/Animation.hpp"
 #include "Util/GameObject.hpp"//為了使用 m_Transform, SetDrawable(),GetScaledSize() 這些 GameObject 內部成員
 
 #include "Util/Image.hpp"//為了使用 Util::Image
 #include "Util/Input.hpp"//為了使用 Util::Input
 #include "Util/Keycode.hpp"//為了使用 Util::Keycode
 
-class Player : public Util::GameObject, public ICollidable {
+class Player : public Character, public ICollidable, public IMapObject {
 public:
     /*設定角色圖片、圖片層級*/
-    Player()
-        : Util::GameObject(
-              std::make_shared<Util::Image>(RESOURCE_DIR
-                                            "/Character/character.png"),
-              10.0F) {}
+    Player() : Character(
+        std::make_shared<Util::Animation>(
+            std::vector<std::string>{
+                RESOURCE_DIR"/Character/character.png"
+            },
+            false,
+            1
+        )
+    ) {
+
+    }
     /*回傳角色碰撞箱大小*/
     glm::vec2 GetColliderSize() const { return m_ColliderSize; }
     /*設定角色碰撞箱大小*/
@@ -33,6 +42,7 @@ public:
     }
     /*定義玩家可以卡住其他物件*/
     bool CanBlockMovement() const override { return true; }
+
     /*得到玩家想往哪移動的意圖*/
     glm::vec2 GetMoveIntent() const {
         glm::vec2 moveIntent(0.0F, 0.0F);

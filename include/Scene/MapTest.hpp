@@ -1,20 +1,14 @@
 #ifndef MAP_TEST_HPP
 #define MAP_TEST_HPP
 
-#include <memory>
 #include <vector>
 
-#include "Util/GameObject.hpp"
-#include "Component/Map/MapBase.hpp"
-#include "Component/Map/MapPiece.hpp"
-#include "Component/Player/Player.hpp"
+#include "Component/Map/MapSystem.hpp"
 
-
-class MapTest : public MapBase {
+class MapTest : public MapSystem {
 public:
-    MapTest(glm::vec2 cooridinate) : MapBase(cooridinate, {}) {
+    MapTest(glm::vec2 cooridinate) : MapSystem(cooridinate, {}) {
         m_Transform.scale = {1.5, 1.5};
-        this->m_Pieces = pieces;
         this->m_Cooridinate = cooridinate;
     }
 
@@ -29,9 +23,7 @@ private:
 
 private:
     glm::vec2 m_Cooridinate;
-    std::vector<std::shared_ptr<MapPiece>> m_Pieces;
-    std::shared_ptr<Player> m_Player;
-    std::shared_ptr<MapPiece> m_TestBlock;
+
     float m_PlayerSpeed = 0.35F;
 };
 

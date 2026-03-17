@@ -1,15 +1,12 @@
-#include "Scene/MapTest.hpp"
-#include "Component/Map/MapPiece.hpp"
-#include "Component/TextButton/TextButton.hpp"
+#include <memory>
 
+#include "Component/Map/MapPiece.hpp"
 #include "Component/Map/BaseRoom.hpp"
 #include "Scene.hpp"
 #include "Util/GameObject.hpp"
 #include "Util/Image.hpp"
-#include "Util/Input.hpp"
 #include "Util/Logger.hpp"
-#include <memory>
-#include "Component/TextButton/TextButton.hpp"
+#include "Scene/MapTest.hpp"
 #include "Util/Time.hpp"
 
 void MapTest::Initialize() {
@@ -80,13 +77,6 @@ void MapTest::Initialize() {
     
     for (auto& i : m_Pieces) {
         this->AddChild(i);
-    
-
-
-
-
-    
-
     }
 }
 
