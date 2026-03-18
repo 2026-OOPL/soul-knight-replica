@@ -2,16 +2,20 @@ set(SRC_FILES
     App.cpp
     MainMenu.cpp
     Scene.cpp
-
+    
+    Component/Player/Player.cpp
     Component/TextButton/TextButton.cpp
+    
     Component/Map/MapPiece.cpp   
+    Component/Map/MapSystem.cpp
+    
+    Component/Camera/Camera.cpp
+    Component/Camera/TraceCamera.cpp
+    Component/Camera/MultiTraceCamere.cpp
 
     Scene/MapTest.cpp
 
-    Component/Camera/TraceCamera.cpp
-    Component/Player/Player.cpp
-    Component/Map/MapSystem.cpp
-    Component/Camera/Camera.cpp
+    Component/Camera/Curve.cpp
 )
 
 set(INCLUDE_FILES
@@ -29,8 +33,11 @@ set(INCLUDE_FILES
 
     Scene/MapTest.hpp
 
-    Component/Map/MapPiece.hpp
     Component/Map/MapBase.hpp
+    Component/Map/MapPiece.hpp
+
+    Component/Camera/MultiTraceCamere.hpp
+    Component/Camera/Curve.hpp
 
     CameraBase.hpp
     Config.hpp

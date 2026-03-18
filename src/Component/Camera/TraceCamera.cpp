@@ -1,20 +1,35 @@
+#include "Util/Logger.hpp"
 #include "Util/Transform.hpp"
 #include <Component/Camera/TraceCamera.hpp>
 #include <Component/IMapObject.hpp>
 #include <glm/fwd.hpp>
 
-Util::Transform TraceCamera::GetObjectTransform(std::shared_ptr<IMapObject> object) {
+Util::Transform TraceCamera::GetTargetCooridinate(std::shared_ptr<IMapObject> object) {
     // The view center of this camera 
-    glm::vec2 cameraCooridinate = m_Target->GetCooridinate();
+    glm::vec2 cameraCooridinate = this->GetCooridinate();
     glm::vec2 objectCooridinate = object->GetCooridinate();
 
     return {
         objectCooridinate - cameraCooridinate,
         0,
-        {1, 1 }
+        {1, 1}
     };
 }
 
+glm::vec2 TraceCamera::GetTargetCooridinate() {
+    return m_Target->GetCooridinate();
+}
+
 void TraceCamera::Update() {
-    this->m_Transform.translation = m_Target->GetCooridinate();
+    this->m_TargetCooridinate = this->GetTargetCooridinate();
+
+    if (m_Curve) {
+        glm::vec2 moveTarget = m_Curve->ApplyCurve(this->GetCooridinate(), m_TargetCooridinate);
+
+        LOG_INFO(moveTarget);
+
+        this->SetCooridinate(moveTarget);
+    } else {
+        this->SetCooridinate(m_TargetCooridinate);
+    }
 }

@@ -6,9 +6,9 @@
 
 class StaticCamera : public Camera {
 
-    StaticCamera(Util::Transform transform) : Camera(transform) 
-    {
-            
+    StaticCamera(Util::Transform transform) 
+    : Camera(transform) {
+        
     }
 
 };

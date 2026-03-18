@@ -50,3 +50,26 @@ bool Camera::GetVisibility(std::shared_ptr<IMapObject> object) {
 
     return !isOutside;
 }
+
+void Camera::SetCooridinate(glm::vec2 coordinate) {
+    this->m_Transform.translation = coordinate;
+}
+
+void Camera::SetScale(glm::vec2 scale) {
+    this->m_Transform.scale = scale;
+}
+void Camera::SetRotation(double degree) {
+    this->m_Transform.rotation = degree;
+}
+
+glm::vec2 Camera::GetCooridinate() {
+    return this->m_Transform.translation;
+}
+
+glm::vec2 Camera::GetScale() {
+    return this->m_Transform.scale;
+}
+
+double Camera::GetRotation() {
+    return this->m_Transform.rotation;
+}

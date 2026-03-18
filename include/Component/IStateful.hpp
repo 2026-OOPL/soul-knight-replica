@@ -3,7 +3,9 @@
 
 class IStateful {
 public:
-    virtual void Update() = 0; 
+    virtual void Update() = 0;
+
+    virtual ~IStateful() = default;
 };
 
 #endif

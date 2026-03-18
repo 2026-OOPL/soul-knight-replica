@@ -1,5 +1,6 @@
 #include <memory>
 
+#include "Component/Camera/Curve.hpp"
 #include "Component/IStateful.hpp"
 #include "Component/IMapObject.hpp"
 #include "Component/Map/BaseRoom.hpp"
@@ -12,15 +13,10 @@ MapTest::MapTest() : MapSystem() {
     m_MainPlayer = std::make_shared<Player>();
     m_MainPlayer->SetPosition({0.0F, 0.0F});
     m_Players.push_back(m_MainPlayer);
-
-    // // 建立碰撞箱
-    // m_TestBlock = std::make_shared<MapPiece>(
-    //     glm::vec2(220.0F, 0.0F), RESOURCE_DIR"/Character/Character.png", true);
-    // m_TestBlock->m_Transform.scale = {2.0F, 2.0F};//長寬放大兩倍
-    // m_TestBlock->SetColliderSize(m_TestBlock->GetScaledSize());
-    // this->AddChild(m_TestBlock);
     
-    m_AttachCamera = std::make_shared<TraceCamera>(m_MainPlayer);
+    m_AttachCamera = std::make_shared<TraceCamera>(
+        m_MainPlayer, std::make_shared<EaseOutQubicCurve>()
+    );
 
     m_Pieces.push_back(std::make_shared<BaseRoom>(
         glm::vec2(0, 0)
@@ -36,11 +32,6 @@ void MapTest::Dispose() {
         this->RemoveChild(m_MainPlayer);
         m_MainPlayer.reset();
     }
-
-    // if (m_TestBlock != nullptr) {
-    //     this->RemoveChild(m_TestBlock);
-    //     m_TestBlock.reset();
-    // }
 
     for (const auto &piece : m_Pieces) {
         this->RemoveChild(piece);
@@ -76,7 +67,7 @@ void MapTest::Update() {
             piece->SetVisible(visible);
 
             if (visible) {
-                piece->m_Transform = m_AttachCamera->GetObjectTransform(object);
+                piece->m_Transform = m_AttachCamera->GetTargetCooridinate(object);
             }
         }
 
