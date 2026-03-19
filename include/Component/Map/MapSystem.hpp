@@ -23,10 +23,6 @@ public:
 
     virtual ~MapSystem() = default;
 
-    void Initialize() override;
-    void Dispose() override;
-
-
     // 從相機取得目前畫面位置，並
     void GetCameraCoor();
 

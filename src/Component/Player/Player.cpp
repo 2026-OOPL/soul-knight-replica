@@ -1,5 +1,6 @@
 #include "Util/Input.hpp"
 #include "Util/Keycode.hpp"
+#include "Util/Time.hpp"
 
 #include "Component/Player/Player.hpp"
 
@@ -58,4 +59,32 @@ glm::vec2 Player::GetMoveIntent() const {
     
     /*為了移除斜線走路比直線快的bug*/
     return glm::normalize(moveIntent);
+}
+
+void Player::Update() {
+    const glm::vec2 moveDirection = this->GetMoveIntent();
+
+    if (moveDirection != glm::vec2(0.0F, 0.0F)) {
+        const glm::vec2 frameDelta =
+            moveDirection * this->m_PlayerSpeed * Util::Time::GetDeltaTimeMs();
+
+        glm::vec2 nextCoordinate = this->m_Cooridinate;
+
+        nextCoordinate.x += frameDelta.x;
+        if (!WillCollide()) {
+            this->m_Cooridinate = nextCoordinate;
+        }
+
+        nextCoordinate = this->m_Cooridinate;
+        nextCoordinate.y += frameDelta.y;
+        if (!WillCollide()) {
+            this->m_Cooridinate = nextCoordinate;
+        }
+    }
+}
+
+bool Player::WillCollide() {
+    // TODO: Collide logic
+
+    return false;
 }

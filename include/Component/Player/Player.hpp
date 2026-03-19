@@ -4,10 +4,11 @@
 #include "Component/Character/Character.hpp"
 #include "Component/ICollidable.hpp"
 #include "Component/IMapObject.hpp"
+#include "Component/IStateful.hpp"
 #include "Util/Animation.hpp"
 #include <glm/fwd.hpp>
 
-class Player : public Character, public ICollidable, public IMapObject {
+class Player : public Character, public ICollidable, public IMapObject, public IStateful {
 public:
     Player() : Character(
         std::make_shared<Util::Animation>(
@@ -21,12 +22,15 @@ public:
         m_Cooridinate = {0, 0};
     }
 
+    void Update() override;
+
     // Provide data for IMapObject
     glm::vec2 GetObjectSize() override;
     glm::vec2 GetCooridinate() override;
     Util::Transform GetTransform() override;
     
     // Provide data for ICollidable
+    bool WillCollide() override;
     std::vector<std::shared_ptr<Collider>> GetCollideBox() override;
 
     glm::vec2 GetColliderSize(); // 回傳角色碰撞箱大小
@@ -37,7 +41,7 @@ public:
     glm::vec2 GetMoveIntent() const; 
 
     // The absolute position on the map
-    glm::vec2 m_Cooridinate; 
+    glm::vec2 m_Cooridinate;
 
 private:
     //玩家的碰撞盒尺寸

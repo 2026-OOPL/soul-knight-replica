@@ -15,11 +15,6 @@ Util::Transform MapPiece::GetTransform() {
     return this->m_Transform;
 }
 
-std::vector<std::shared_ptr<Collider>> MapPiece::GetCollideBox() {
-    return {};
-}
-
-
 void MapPiece::SetTransformByCooridinate(glm::vec2 cooridinate) {
     glm::vec2 scaledCooridinate = GetPosition();
 

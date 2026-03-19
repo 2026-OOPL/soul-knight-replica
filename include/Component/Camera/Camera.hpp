@@ -1,11 +1,13 @@
 #ifndef CAMERA_BASE_HPP
 #define CAMERA_BASE_HPP
 
-#include <Util/Transform.hpp>
-#include <glm/fwd.hpp>
 #include <memory>
+#include <glm/vec2.hpp>
+
+#include <Util/Transform.hpp>
 
 #include "Component/IMapObject.hpp"
+#include "Util/GameObject.hpp"
 
 class Camera {
 public:
@@ -18,8 +20,9 @@ public:
     Util::Transform GetTransform();
 
     // 計算一個遊戲物件在 Camera 視角下的渲染座標
-    virtual Util::Transform GetTargetCooridinate(std::shared_ptr<IMapObject> object) = 0;
-    virtual bool GetVisibility(std::shared_ptr<IMapObject> object);
+    virtual bool            GetVisibilityByCamera(std::shared_ptr<IMapObject> object);
+    virtual Util::Transform GetTransformByCamera(std::shared_ptr<IMapObject> object) = 0;
+    virtual void            SetTransformByCamera(std::shared_ptr<Util::GameObject> object);
 
     // Get the cooridinate where the camera needs to go to
     virtual glm::vec2 GetTargetCooridinate() = 0;

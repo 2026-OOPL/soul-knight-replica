@@ -14,7 +14,5 @@ void Scene::Update() {
         if (stateful) {
             stateful->Update();
         }
-
-        i->Draw();
     }
 }

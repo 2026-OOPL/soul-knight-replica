@@ -38,6 +38,8 @@ class ICollidable {
 public:
     virtual std::vector<std::shared_ptr<Collider>> GetCollideBox() = 0;
 
+    virtual bool WillCollide() = 0;
+
     // struct RectCollider/*定義碰撞箱*/
     // {
     //     glm::vec2 center;/*矩形中心點*/

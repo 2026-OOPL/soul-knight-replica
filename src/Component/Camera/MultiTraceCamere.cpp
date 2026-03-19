@@ -3,7 +3,7 @@
 #include <Component/IMapObject.hpp>
 #include <glm/fwd.hpp>
 
-Util::Transform MultiTraceCamera::GetTargetCooridinate(std::shared_ptr<IMapObject> object) {
+Util::Transform MultiTraceCamera::GetTransformByCamera(std::shared_ptr<IMapObject> object) {
     
     // The view center of this camera 
     glm::vec2 cameraCooridinate = this->m_TargetCooridinate;

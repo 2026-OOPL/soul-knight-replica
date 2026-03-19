@@ -18,7 +18,7 @@ public:
     }
 
     glm::vec2 GetTargetCooridinate() override;
-    Util::Transform GetTargetCooridinate(std::shared_ptr<IMapObject> object) override;
+    Util::Transform GetTransformByCamera(std::shared_ptr<IMapObject> object) override;
 
     void Update() override;
 

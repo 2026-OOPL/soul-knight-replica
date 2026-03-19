@@ -1,33 +1,28 @@
-#include "App.hpp"
+#include <memory>
 
 #include "Util/Input.hpp"
 #include "Util/Keycode.hpp"
 #include "Util/Logger.hpp"
-#include <memory>
-#include <utility>
-#include "MainMenu.hpp"
 #include "Util/Renderer.hpp"
+
+#include "App.hpp"
+#include "MainMenu.hpp"
 
 void App::Start() {
     LOG_TRACE("Start");
 
     m_Scene = std::make_shared<MainMenu>();
-    m_Scene->Initialize();
+    m_Root.AddChild(m_Scene);
 
     m_CurrentState = State::UPDATE;
 }
 
 void App::Update() {
-     
     std::shared_ptr<Scene> newScene = m_Scene->GetRedirection();
 
     if (newScene) {
         this->m_Root.RemoveChild(m_Scene);
-        m_Scene->Dispose();
-
         m_Scene = newScene;
-        m_Scene->Initialize();
-
         this->m_Root.AddChild(m_Scene);
     }
 

@@ -21,60 +21,28 @@ MapTest::MapTest() : MapSystem() {
     m_Pieces.push_back(std::make_shared<BaseRoom>(
         glm::vec2(0, 0)
     ));
-}
 
-void MapTest::Initialize() {
+    this->AddChild(m_MainPlayer);
 
-}
-
-void MapTest::Dispose() {
-    if (m_MainPlayer != nullptr) {
-        this->RemoveChild(m_MainPlayer);
-        m_MainPlayer.reset();
+    for (auto const& i : m_Pieces) {
+        this->AddChild(i);
     }
+}
 
+MapTest::~MapTest() {
+    this->RemoveChild(m_MainPlayer);
+
+    for (auto const& i : m_Pieces) {
+        this->RemoveChild(i);
+    }
+}
+
+void MapTest::Update() {    
     for (const auto &piece : m_Pieces) {
-        this->RemoveChild(piece);
-    }
-}
-
-void MapTest::Update() {
-    const glm::vec2 moveDirection = m_MainPlayer->GetMoveIntent();
-
-    if (moveDirection != glm::vec2(0.0F, 0.0F)) {
-        const glm::vec2 frameDelta =
-            moveDirection * m_PlayerSpeed * Util::Time::GetDeltaTimeMs();
-
-        glm::vec2 nextCoordinate = m_MainPlayer->m_Cooridinate;
-
-        nextCoordinate.x += frameDelta.x;
-        if (!WillPlayerCollide(nextCoordinate)) {
-            m_MainPlayer->m_Cooridinate = nextCoordinate;
-        }
-
-        nextCoordinate = m_MainPlayer->m_Cooridinate;
-        nextCoordinate.y += frameDelta.y;
-        if (!WillPlayerCollide(nextCoordinate)) {
-            m_MainPlayer->m_Cooridinate = nextCoordinate;
-        }
-    }
-    
-    for (const auto &piece : m_Pieces) {
-        std::shared_ptr<IMapObject> object = std::dynamic_pointer_cast<IMapObject>(piece);
-        
-        if (object) {
-            const bool visible = m_AttachCamera->GetVisibility(object);
-            piece->SetVisible(visible);
-
-            if (visible) {
-                piece->m_Transform = m_AttachCamera->GetTargetCooridinate(object);
-            }
-        }
-
-        piece->Draw();
+        m_AttachCamera->SetTransformByCamera(piece);
     }
 
-    m_MainPlayer->Draw();
+    m_MainPlayer->Update();
 
     // Update camera if available
     std::shared_ptr<IStateful> statefulCamera = std::dynamic_pointer_cast<IStateful>(m_AttachCamera);
@@ -83,10 +51,4 @@ void MapTest::Update() {
     }
 
     Scene::Update();
-}
-
-bool MapTest::WillPlayerCollide(const glm::vec2 &nextCoordinate) const {
-    // TODO
-
-    return false;
 }

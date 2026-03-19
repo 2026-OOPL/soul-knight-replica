@@ -1,5 +1,10 @@
+#include "Component/IMapObject.hpp"
 #include "Core/Context.hpp"
+#include "Util/GameObject.hpp"
+#include <exception>
 #include <glm/fwd.hpp>
+#include <memory>
+#include <stdexcept>
 #include "Component/Camera/Camera.hpp"
 
 glm::vec2 Camera::GetCameraSize() {
@@ -7,7 +12,7 @@ glm::vec2 Camera::GetCameraSize() {
     return {context->GetWindowWidth(), context->GetWindowHeight()};
 }
 
-bool Camera::GetVisibility(std::shared_ptr<IMapObject> object) {
+bool Camera::GetVisibilityByCamera(std::shared_ptr<IMapObject> object) {
     glm::vec2 objectSize = object->GetObjectSize();
     glm::vec2 cameraSize = this->GetCameraSize();
 
@@ -50,6 +55,21 @@ bool Camera::GetVisibility(std::shared_ptr<IMapObject> object) {
 
     return !isOutside;
 }
+
+void Camera::SetTransformByCamera(std::shared_ptr<Util::GameObject> object) {
+    std::shared_ptr<IMapObject> mapObject = std::dynamic_pointer_cast<IMapObject>(object);
+    
+    if (mapObject == nullptr) {
+        throw std::runtime_error("This object cannot be cast to IMapObject.");
+    }
+
+    const bool visible = this->GetVisibilityByCamera(mapObject);
+    object->SetVisible(visible);
+
+    if (visible) {
+        object->m_Transform = this->GetTransformByCamera(mapObject);
+    }
+} 
 
 void Camera::SetCooridinate(glm::vec2 coordinate) {
     this->m_Transform.translation = coordinate;
