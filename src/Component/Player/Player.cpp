@@ -2,6 +2,8 @@
 #include "Util/Keycode.hpp"
 #include "Util/Time.hpp"
 
+#include <utility>
+
 #include "Component/Player/Player.hpp"
 
 glm::vec2 Player::GetObjectSize() {
@@ -17,7 +19,7 @@ Util::Transform Player::GetTransform() {
 }
 
 std::vector<std::shared_ptr<Collider>> Player::GetCollideBox() {
-    // TODO
+    // Legacy interface, the current collision flow uses CollisionSystem directly.
     return {};
 }
 
@@ -30,11 +32,23 @@ void Player::SetColliderSize(const glm::vec2 &colliderSize) {
 }
 
 glm::vec2 Player::GetPosition() const {
-    return m_Transform.translation;
+    return m_Cooridinate;
 }
 
 void Player::SetPosition(const glm::vec2 &position) {
-    m_Transform.translation = position;
+    m_Cooridinate = position;
+}
+
+Collision::AxisAlignedBox Player::GetCollisionBox() const {
+    return this->GetCollisionBoxAt(m_Cooridinate);
+}
+
+Collision::AxisAlignedBox Player::GetCollisionBoxAt(const glm::vec2 &coordinate) const {
+    return Collision::CollisionSystem::BuildBox(coordinate, m_ColliderSize);
+}
+
+void Player::SetCollisionResolver(CollisionResolver collisionResolver) {
+    m_CollisionResolver = std::move(collisionResolver);
 }
 
 glm::vec2 Player::GetMoveIntent() const {
@@ -64,27 +78,37 @@ glm::vec2 Player::GetMoveIntent() const {
 void Player::Update() {
     const glm::vec2 moveDirection = this->GetMoveIntent();
 
-    if (moveDirection != glm::vec2(0.0F, 0.0F)) {
-        const glm::vec2 frameDelta =
-            moveDirection * this->m_PlayerSpeed * Util::Time::GetDeltaTimeMs();
+    if (moveDirection == glm::vec2(0.0F, 0.0F)) {
+        m_PendingMoveDelta = {0.0F, 0.0F};
+        return;
+    }
 
-        glm::vec2 nextCoordinate = this->m_Cooridinate;
+    const glm::vec2 frameDelta =
+        moveDirection * this->m_PlayerSpeed * Util::Time::GetDeltaTimeMs();
 
-        nextCoordinate.x += frameDelta.x;
-        if (!WillCollide()) {
-            this->m_Cooridinate = nextCoordinate;
-        }
+    m_PendingMoveDelta = frameDelta;
 
-        nextCoordinate = this->m_Cooridinate;
-        nextCoordinate.y += frameDelta.y;
-        if (!WillCollide()) {
-            this->m_Cooridinate = nextCoordinate;
-        }
+    if (m_CollisionResolver) {
+        const Collision::MovementResult movementResult = m_CollisionResolver(
+            this->GetCollisionBox(),
+            frameDelta
+        );
+
+        this->m_Cooridinate += movementResult.resolvedDelta;
+    } else {
+        this->m_Cooridinate += frameDelta;
     }
 }
 
 bool Player::WillCollide() {
-    // TODO: Collide logic
+    if (!m_CollisionResolver) {
+        return false;
+    }
 
-    return false;
+    const Collision::MovementResult movementResult = m_CollisionResolver(
+        this->GetCollisionBox(),
+        m_PendingMoveDelta
+    );
+
+    return movementResult.blockedX || movementResult.blockedY;
 }

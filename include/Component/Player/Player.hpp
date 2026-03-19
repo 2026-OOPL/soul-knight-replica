@@ -2,14 +2,21 @@
 #define PLAYER_PLAYER_HPP
 
 #include "Component/Character/Character.hpp"
+#include "Component/Collision/CollisionSystem.hpp"
 #include "Component/ICollidable.hpp"
 #include "Component/IMapObject.hpp"
 #include "Component/IStateful.hpp"
 #include "Util/Animation.hpp"
+#include <functional>
 #include <glm/fwd.hpp>
 
 class Player : public Character, public ICollidable, public IMapObject, public IStateful {
 public:
+    using CollisionResolver = std::function<Collision::MovementResult(
+        const Collision::AxisAlignedBox &,
+        const glm::vec2 &
+    )>;
+
     Player() : Character(
         std::make_shared<Util::Animation>(
             std::vector<std::string>{
@@ -38,6 +45,9 @@ public:
     glm::vec2 GetPosition() const; // 回傳角色中心位置
     void SetPosition(const glm::vec2 &position);
 
+    Collision::AxisAlignedBox GetCollisionBox() const;
+    Collision::AxisAlignedBox GetCollisionBoxAt(const glm::vec2 &coordinate) const;
+    void SetCollisionResolver(CollisionResolver collisionResolver);
     glm::vec2 GetMoveIntent() const; 
 
     // The absolute position on the map
@@ -45,7 +55,9 @@ public:
 
 private:
     //玩家的碰撞盒尺寸
-    glm::vec2 m_ColliderSize = {48.0F, 48.0F};
+    glm::vec2 m_ColliderSize = {25.0F, 25.0F};
+    glm::vec2 m_PendingMoveDelta = {0.0F, 0.0F};
+    CollisionResolver m_CollisionResolver;
 };
 
 #endif

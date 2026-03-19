@@ -11,7 +11,6 @@
 #include "Util/GameObject.hpp"
 #include "Util/Image.hpp"
 
-/*繼承 Util::GameObject 表示要能夠顯示在畫面上，繼承 ICollidable 表示這是有參與碰撞的地圖區塊*/
 class MapPiece : public Util::GameObject, public IMapObject {
 public:
     /*輸入此碰撞區塊的位置、圖片路徑、是否為牆、*/

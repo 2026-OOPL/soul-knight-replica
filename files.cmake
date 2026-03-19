@@ -5,6 +5,7 @@ set(SRC_FILES
     
     Component/Player/Player.cpp
     Component/TextButton/TextButton.cpp
+    Component/Collision/CollisionSystem.cpp
     
     Component/Map/MapPiece.cpp   
     Component/Map/MapSystem.cpp
@@ -27,6 +28,7 @@ set(INCLUDE_FILES
     Component/TextButton/TextButton.hpp
     Component/TextButton/TextButtonPropertycpp.hpp
     Component/Character/Character.hpp
+    Component/Collision/CollisionSystem.hpp
 
     Component/ICollidable.hpp
     Component/IStateful.hpp

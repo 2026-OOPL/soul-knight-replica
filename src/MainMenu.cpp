@@ -12,6 +12,8 @@
 
 void MainMenu::StartNewGame() {
     m_Redirect_Scene = std::make_shared<MapTest>();
+
+    this->AddChild(m_Redirect_Scene);
 }
 
 void MainMenu::LeaveGame() {
@@ -21,7 +23,7 @@ void MainMenu::LeaveGame() {
     context->SetExit(true);
 }
 
-MainMenu::MainMenu() : Scene() {
+void MainMenu::Initialize() {
     const glm::vec2 buttonBaseline = {-440, -30};
 
     m_Button_NewGame = std::make_unique<TextButton>(
@@ -78,9 +80,10 @@ MainMenu::MainMenu() : Scene() {
     );
     
     this->AddChild(m_Background);
+
 }
 
-MainMenu::~MainMenu() {
+void MainMenu::Dispose() {
     this->RemoveChild(m_Button_NewGame);
     this->RemoveChild(m_Button_LoadGame);
     this->RemoveChild(m_Button_Credit);

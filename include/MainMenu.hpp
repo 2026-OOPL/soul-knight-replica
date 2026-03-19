@@ -10,9 +10,14 @@
 
 class MainMenu : public Scene {
 public:
-    MainMenu();
+    MainMenu() : Scene() {
+    };
     
-    virtual ~MainMenu();
+    ~MainMenu() {
+    };
+
+    void Initialize() override;
+    void Dispose() override;
     
     std::shared_ptr<Scene> GetRedirection() override;
 
