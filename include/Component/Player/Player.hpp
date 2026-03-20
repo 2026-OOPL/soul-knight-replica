@@ -13,7 +13,7 @@ public:
     Player() : Character(
         std::make_shared<Util::Animation>(
             std::vector<std::string>{
-                RESOURCE_DIR"/Character/Character.png"
+                RESOURCE_DIR"/Character/Test/test_stand.png"
             },
             true,
             1

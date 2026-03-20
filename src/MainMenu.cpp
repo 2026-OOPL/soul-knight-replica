@@ -61,7 +61,7 @@ MainMenu::MainMenu() : Scene() {
 
     m_Game_Title = std::make_shared<Util::GameObject>(
         std::make_shared<Util::Image>(
-            RESOURCE_DIR"/Image/MainMenu/GameTitle.png"
+            RESOURCE_DIR"/UI/MainMenu/GameTitle.png"
         ),
         1
     );
@@ -72,7 +72,7 @@ MainMenu::MainMenu() : Scene() {
 
     m_Background = std::make_shared<Util::GameObject>(
         std::make_shared<Util::Image>(
-            RESOURCE_DIR"/Image/MainMenu/Background.png"
+            RESOURCE_DIR"/UI/MainMenu/Background.png"
         ),
         0
     );

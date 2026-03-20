@@ -90,6 +90,6 @@ glm::vec2 Camera::GetScale() {
     return this->m_Transform.scale;
 }
 
-double Camera::GetRotation() {
+float Camera::GetRotation() {
     return this->m_Transform.rotation;
 }

@@ -1,3 +1,4 @@
+#include <glm/fwd.hpp>
 #include <memory>
 
 #include "Component/Camera/Curve.hpp"
@@ -17,6 +18,8 @@ MapTest::MapTest() : MapSystem() {
     m_AttachCamera = std::make_shared<TraceCamera>(
         m_MainPlayer, std::make_shared<EaseOutQubicCurve>()
     );
+
+    m_AttachCamera->SetScale(glm::vec2(2 ,2));
 
     m_Pieces.push_back(std::make_shared<BaseRoom>(
         glm::vec2(0, 0)

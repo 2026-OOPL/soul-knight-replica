@@ -14,17 +14,11 @@
 
 class MapSystem : public Scene {
 public:
-    MapSystem() : Scene() {
-    }
+    MapSystem();
 
-    MapSystem(std::vector<std::shared_ptr<MapPiece>> pieces) : Scene() {
-        this->m_Pieces = pieces;
-    }
+    MapSystem(std::vector<std::shared_ptr<MapPiece>> pieces);
 
     virtual ~MapSystem() = default;
-
-    // 從相機取得目前畫面位置，並
-    void GetCameraCoor();
 
 protected:
     std::vector<std::shared_ptr<Mob>> m_Mobs;
