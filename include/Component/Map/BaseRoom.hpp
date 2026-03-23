@@ -1,11 +1,13 @@
+#ifndef BASE_ROOM_HPP
+#define BASE_ROOM_HPP
+
+#include <glm/vec2.hpp>
+
 #include "Component/Map/MapPiece.hpp"
 
 class BaseRoom : public MapPiece {
 public:
-    BaseRoom(glm::vec2 cooridinate) 
-    : MapPiece(cooridinate, RESOURCE_DIR"/Map/Room/Room_17x17.png") {
-        
-    };
-
-
+    explicit BaseRoom(glm::vec2 cooridinate);
 };
+
+#endif

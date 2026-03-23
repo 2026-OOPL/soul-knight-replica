@@ -4,16 +4,16 @@
 #include <imgui.h>
 #include <memory>
 
-#include "Scene.hpp"
 #include "Component/TextButton/TextButton.hpp"
+#include "Scene.hpp"
 #include "Util/GameObject.hpp"
 
 class MainMenu : public Scene {
 public:
     MainMenu();
-    
-    virtual ~MainMenu();
-    
+
+    ~MainMenu() override;
+
     std::shared_ptr<Scene> GetRedirection() override;
 
 private:
@@ -29,7 +29,6 @@ private:
 
     void StartNewGame();
     void LeaveGame();
-    
 };
 
 #endif

@@ -1,0 +1,255 @@
+#include "Component/Collision/CollisionSystem.hpp"
+
+#include <algorithm>
+#include <utility>
+
+#include "Component/Map/MapPiece.hpp"
+
+namespace {
+
+bool IsBoxBlocked(
+    const Collision::AxisAlignedBox &candidate,
+    const std::vector<Collision::AxisAlignedBox> &blockingBoxes,
+    const Collision::CollisionSystem &collisionSystem
+) {
+    for (const auto &blockingBox : blockingBoxes) {
+        if (collisionSystem.IsOverlapping(candidate, blockingBox)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+std::vector<Collision::AxisAlignedBox> BuildHorizontalWallSegments(
+    const glm::vec2 &roomCenter,
+    float wallY,
+    float wallWidth,
+    float wallThickness,
+    float openingWidth
+) {
+    if (openingWidth <= 0.0F || openingWidth >= wallWidth) {
+        return {
+            Collision::CollisionSystem::BuildBox(
+                {roomCenter.x, wallY},
+                {wallWidth, wallThickness}
+            )
+        };
+    }
+
+    const float sideWidth = (wallWidth - openingWidth) / 2.0F;
+    const float centerOffset = (openingWidth + sideWidth) / 2.0F;
+
+    return {
+        Collision::CollisionSystem::BuildBox(
+            {roomCenter.x - centerOffset, wallY},
+            {sideWidth, wallThickness}
+        ),
+        Collision::CollisionSystem::BuildBox(
+            {roomCenter.x + centerOffset, wallY},
+            {sideWidth, wallThickness}
+        )
+    };
+}
+
+std::vector<Collision::AxisAlignedBox> BuildVerticalWallSegments(
+    const glm::vec2 &roomCenter,
+    float wallX,
+    float wallHeight,
+    float wallThickness,
+    float openingHeight
+) {
+    if (openingHeight <= 0.0F || openingHeight >= wallHeight) {
+        return {
+            Collision::CollisionSystem::BuildBox(
+                {wallX, roomCenter.y},
+                {wallThickness, wallHeight}
+            )
+        };
+    }
+
+    const float sideHeight = (wallHeight - openingHeight) / 2.0F;
+    const float centerOffset = (openingHeight + sideHeight) / 2.0F;
+
+    return {
+        Collision::CollisionSystem::BuildBox(
+            {wallX, roomCenter.y - centerOffset},
+            {wallThickness, sideHeight}
+        ),
+        Collision::CollisionSystem::BuildBox(
+            {wallX, roomCenter.y + centerOffset},
+            {wallThickness, sideHeight}
+        )
+    };
+}
+
+} // namespace
+
+namespace Collision {
+
+AxisAlignedBox CollisionSystem::BuildBox(const glm::vec2 &center, const glm::vec2 &size) {
+    return {
+        center,
+        size
+    };
+}
+
+void CollisionSystem::SetStaticBlockingBoxes(const std::vector<AxisAlignedBox> &blockingBoxes) {
+    m_StaticBlockingBoxes = blockingBoxes;
+}
+
+void CollisionSystem::SetBlockingBoxProvider(BlockingBoxProvider blockingBoxProvider) {
+    m_BlockingBoxProvider = std::move(blockingBoxProvider);
+}
+
+std::vector<AxisAlignedBox> CollisionSystem::GetBlockingBoxes() const {
+    std::vector<AxisAlignedBox> blockingBoxes = m_StaticBlockingBoxes;
+
+    if (m_BlockingBoxProvider) {
+        std::vector<AxisAlignedBox> dynamicBoxes = m_BlockingBoxProvider();
+
+        blockingBoxes.insert(
+            blockingBoxes.end(),
+            dynamicBoxes.begin(),
+            dynamicBoxes.end()
+        );
+    }
+
+    return blockingBoxes;
+}
+
+bool CollisionSystem::IsOverlapping(
+    const AxisAlignedBox &lhs,
+    const AxisAlignedBox &rhs
+) const {
+    const glm::vec2 lhsHalfSize = lhs.size / 2.0F;
+    const glm::vec2 rhsHalfSize = rhs.size / 2.0F;
+
+    const float lhsLeft = lhs.center.x - lhsHalfSize.x;
+    const float lhsRight = lhs.center.x + lhsHalfSize.x;
+    const float lhsTop = lhs.center.y + lhsHalfSize.y;
+    const float lhsBottom = lhs.center.y - lhsHalfSize.y;
+
+    const float rhsLeft = rhs.center.x - rhsHalfSize.x;
+    const float rhsRight = rhs.center.x + rhsHalfSize.x;
+    const float rhsTop = rhs.center.y + rhsHalfSize.y;
+    const float rhsBottom = rhs.center.y - rhsHalfSize.y;
+
+    return !(lhsRight <= rhsLeft || lhsLeft >= rhsRight ||
+             lhsTop <= rhsBottom || lhsBottom >= rhsTop);
+}
+
+bool CollisionSystem::IsBlocked(const AxisAlignedBox &box) const {
+    const std::vector<AxisAlignedBox> blockingBoxes = this->GetBlockingBoxes();
+
+    return IsBoxBlocked(box, blockingBoxes, *this);
+}
+
+MovementResult CollisionSystem::ResolveMovement(
+    const AxisAlignedBox &currentBox,
+    const glm::vec2 &intendedDelta
+) const {
+    const std::vector<AxisAlignedBox> blockingBoxes = this->GetBlockingBoxes();
+    MovementResult result;
+    AxisAlignedBox resolvedBox = currentBox;
+
+    if (intendedDelta.x != 0.0F) {
+        AxisAlignedBox horizontalCandidate = resolvedBox;
+        horizontalCandidate.center.x += intendedDelta.x;
+
+        if (IsBoxBlocked(horizontalCandidate, blockingBoxes, *this)) {
+            result.blockedX = true;
+        } else {
+            result.resolvedDelta.x = intendedDelta.x;
+            resolvedBox.center.x += intendedDelta.x;
+        }
+    }
+
+    if (intendedDelta.y != 0.0F) {
+        AxisAlignedBox verticalCandidate = resolvedBox;
+        verticalCandidate.center.y += intendedDelta.y;
+
+        if (IsBoxBlocked(verticalCandidate, blockingBoxes, *this)) {
+            result.blockedY = true;
+        } else {
+            result.resolvedDelta.y = intendedDelta.y;
+        }
+    }
+
+    return result;
+}
+
+std::vector<AxisAlignedBox> BuildWallBoxes(
+    const std::vector<std::shared_ptr<MapPiece>> &pieces
+) {
+    std::vector<AxisAlignedBox> wallBoxes;
+
+    for (const auto &piece : pieces) {
+        if (piece == nullptr || !piece->IsWall()) {
+            continue;
+        }
+
+        wallBoxes.push_back(CollisionSystem::BuildBox(
+            piece->GetCooridinate(),
+            piece->GetColliderSize()
+        ));
+    }
+
+    return wallBoxes;
+}
+
+std::vector<AxisAlignedBox> BuildRoomBoundaryBoxes(
+    const glm::vec2 &roomCenter,
+    const glm::vec2 &roomSize,
+    float wallThickness,
+    const glm::vec2 &doorOpeningSize
+) {
+    const float safeWallThickness = std::max(0.0F, wallThickness);
+    const glm::vec2 safeDoorOpeningSize = {
+        std::clamp(doorOpeningSize.x, 0.0F, roomSize.x),
+        std::clamp(doorOpeningSize.y, 0.0F, roomSize.y)
+    };
+    const glm::vec2 roomHalfSize = roomSize / 2.0F;
+    const float halfWallThickness = safeWallThickness / 2.0F;
+    std::vector<AxisAlignedBox> boundaryBoxes;
+
+    const std::vector<AxisAlignedBox> topWalls = BuildHorizontalWallSegments(
+        roomCenter,
+        roomCenter.y + roomHalfSize.y - halfWallThickness,
+        roomSize.x,
+        safeWallThickness,
+        safeDoorOpeningSize.x
+    );
+    boundaryBoxes.insert(boundaryBoxes.end(), topWalls.begin(), topWalls.end());
+
+    const std::vector<AxisAlignedBox> bottomWalls = BuildHorizontalWallSegments(
+        roomCenter,
+        roomCenter.y - roomHalfSize.y + halfWallThickness,
+        roomSize.x,
+        safeWallThickness,
+        safeDoorOpeningSize.x
+    );
+    boundaryBoxes.insert(boundaryBoxes.end(), bottomWalls.begin(), bottomWalls.end());
+
+    const std::vector<AxisAlignedBox> leftWalls = BuildVerticalWallSegments(
+        roomCenter,
+        roomCenter.x - roomHalfSize.x + halfWallThickness,
+        roomSize.y,
+        safeWallThickness,
+        safeDoorOpeningSize.y
+    );
+    boundaryBoxes.insert(boundaryBoxes.end(), leftWalls.begin(), leftWalls.end());
+
+    const std::vector<AxisAlignedBox> rightWalls = BuildVerticalWallSegments(
+        roomCenter,
+        roomCenter.x + roomHalfSize.x - halfWallThickness,
+        roomSize.y,
+        safeWallThickness,
+        safeDoorOpeningSize.y
+    );
+    boundaryBoxes.insert(boundaryBoxes.end(), rightWalls.begin(), rightWalls.end());
+
+    return boundaryBoxes;
+}
+
+} // namespace Collision

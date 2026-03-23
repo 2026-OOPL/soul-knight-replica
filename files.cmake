@@ -3,10 +3,13 @@ set(SRC_FILES
     MainMenu.cpp
     Scene.cpp
     
+    Component/Collision/CollisionSystem.cpp
     Component/Player/Player.cpp
     Component/TextButton/TextButton.cpp
     
-    Component/Map/MapPiece.cpp   
+    Component/Map/BaseRoom.cpp
+    Component/Map/MapPiece.cpp
+    Component/Map/Door.cpp
     Component/Map/MapSystem.cpp
     
     Component/Camera/Camera.cpp
@@ -23,9 +26,10 @@ set(INCLUDE_FILES
     MainMenu.hpp
     Scene.hpp
 
+    Component/Collision/CollisionSystem.hpp
     Component/Player/Player.hpp
     Component/TextButton/TextButton.hpp
-    Component/TextButton/TextButtonPropertycpp.hpp
+    Component/TextButton/TextButtonProperty.hpp
     Component/Character/Character.hpp
 
     Component/ICollidable.hpp
@@ -33,13 +37,16 @@ set(INCLUDE_FILES
 
     Scene/MapTest.hpp
 
-    Component/Map/MapBase.hpp
+    Component/Map/BaseRoom.hpp
+    Component/Map/Door.hpp
     Component/Map/MapPiece.hpp
+    Component/Map/MapSystem.hpp
 
+    Component/Camera/Camera.hpp
+    Component/Camera/TraceCamera.hpp
     Component/Camera/MultiTraceCamere.hpp
     Component/Camera/Curve.hpp
 
-    CameraBase.hpp
     Config.hpp
 )
 

@@ -1,8 +1,8 @@
+#include "Component/Player/Player.hpp"
+
 #include "Util/Input.hpp"
 #include "Util/Keycode.hpp"
 #include "Util/Time.hpp"
-
-#include "Component/Player/Player.hpp"
 
 glm::vec2 Player::GetObjectSize() {
     return this->GetScaledSize();
@@ -17,24 +17,28 @@ Util::Transform Player::GetTransform() {
 }
 
 std::vector<std::shared_ptr<Collider>> Player::GetCollideBox() {
-    // TODO
     return {};
 }
 
 glm::vec2 Player::GetColliderSize() {
-    return m_ColliderSize;
+    return this->m_ColliderSize;
 }
 
 void Player::SetColliderSize(const glm::vec2 &colliderSize) {
-    m_ColliderSize = colliderSize;
+    this->m_ColliderSize = colliderSize;
 }
 
 glm::vec2 Player::GetPosition() const {
-    return m_Transform.translation;
+    return this->m_Cooridinate;
 }
 
 void Player::SetPosition(const glm::vec2 &position) {
-    m_Transform.translation = position;
+    this->m_Cooridinate = position;
+    this->m_Transform.translation = position;
+}
+
+void Player::SetCollisionResolver(CollisionResolver collisionResolver) {
+    this->m_CollisionResolver = collisionResolver;
 }
 
 glm::vec2 Player::GetMoveIntent() const {
@@ -56,8 +60,7 @@ glm::vec2 Player::GetMoveIntent() const {
     if (moveIntent == glm::vec2(0.0F, 0.0F)) {
         return moveIntent;
     }
-    
-    /*為了移除斜線走路比直線快的bug*/
+
     return glm::normalize(moveIntent);
 }
 
@@ -68,23 +71,24 @@ void Player::Update() {
         const glm::vec2 frameDelta =
             moveDirection * this->m_PlayerSpeed * Util::Time::GetDeltaTimeMs();
 
-        glm::vec2 nextCoordinate = this->m_Cooridinate;
+        if (this->m_CollisionResolver) {
+            const Collision::MovementResult movementResult = this->m_CollisionResolver(
+                Collision::CollisionSystem::BuildBox(
+                    this->m_Cooridinate,
+                    this->m_ColliderSize
+                ),
+                frameDelta
+            );
 
-        nextCoordinate.x += frameDelta.x;
-        if (!WillCollide()) {
-            this->m_Cooridinate = nextCoordinate;
-        }
-
-        nextCoordinate = this->m_Cooridinate;
-        nextCoordinate.y += frameDelta.y;
-        if (!WillCollide()) {
-            this->m_Cooridinate = nextCoordinate;
+            this->m_Cooridinate += movementResult.resolvedDelta;
+        } else {
+            this->m_Cooridinate += frameDelta;
         }
     }
+
+    this->m_Transform.translation = this->m_Cooridinate;
 }
 
 bool Player::WillCollide() {
-    // TODO: Collide logic
-
     return false;
 }

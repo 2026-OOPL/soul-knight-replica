@@ -1,57 +1,148 @@
-#include <glm/fwd.hpp>
+#include "Scene/MapTest.hpp"
+
+#include <algorithm>
 #include <memory>
 
 #include "Component/Camera/Curve.hpp"
-#include "Component/IStateful.hpp"
-#include "Component/IMapObject.hpp"
-#include "Component/Map/BaseRoom.hpp"
 #include "Component/Camera/TraceCamera.hpp"
-#include "Scene.hpp"
-#include "Scene/MapTest.hpp"
-#include "Util/Time.hpp"
+#include "Component/IStateful.hpp"
+
+namespace {
+
+constexpr float kDoorMarginFromRoom = 70.0F;
+
+} // namespace
 
 MapTest::MapTest() : MapSystem() {
-    m_MainPlayer = std::make_shared<Player>();
-    m_MainPlayer->SetPosition({0.0F, 0.0F});
-    m_Players.push_back(m_MainPlayer);
-    
-    m_AttachCamera = std::make_shared<TraceCamera>(
-        m_MainPlayer, std::make_shared<EaseOutQubicCurve>()
+    this->m_MainRoom = std::make_shared<BaseRoom>(glm::vec2(0.0F, 0.0F));
+    this->m_Pieces.push_back(this->m_MainRoom);
+
+    const glm::vec2 roomSize = this->m_MainRoom->GetObjectSize();
+    const glm::vec2 roomHalfSize = roomSize / 2.0F;
+    const float halfWallThickness = this->m_RoomWallThickness / 2.0F;
+    const float maxDoorWidth =
+        std::max(0.0F, roomSize.x - (this->m_RoomWallThickness * 2.0F));
+    const float maxDoorHeight =
+        std::max(0.0F, roomSize.y - (this->m_RoomWallThickness * 2.0F));
+    const float minDoorWidth = std::min(110.0F, maxDoorWidth);
+    const float minDoorHeight = std::min(110.0F, maxDoorHeight);
+
+    this->m_DoorOpeningSize = {
+        std::clamp(roomSize.x * 0.18F, minDoorWidth, maxDoorWidth),
+        std::clamp(roomSize.y * 0.18F, minDoorHeight, maxDoorHeight)
+    };
+
+    this->m_Doors = {
+        std::make_shared<Door>(
+            glm::vec2(0.0F, roomHalfSize.y - halfWallThickness),
+            DoorSide::Top,
+            glm::vec2(this->m_DoorOpeningSize.x, this->m_RoomWallThickness),
+            true
+        ),
+        std::make_shared<Door>(
+            glm::vec2(roomHalfSize.x - halfWallThickness, 0.0F),
+            DoorSide::Right,
+            glm::vec2(this->m_RoomWallThickness, this->m_DoorOpeningSize.y),
+            true
+        ),
+        std::make_shared<Door>(
+            glm::vec2(0.0F, -roomHalfSize.y + halfWallThickness),
+            DoorSide::Bottom,
+            glm::vec2(this->m_DoorOpeningSize.x, this->m_RoomWallThickness),
+            true
+        ),
+        std::make_shared<Door>(
+            glm::vec2(-roomHalfSize.x + halfWallThickness, 0.0F),
+            DoorSide::Left,
+            glm::vec2(this->m_RoomWallThickness, this->m_DoorOpeningSize.y),
+            true
+        )
+    };
+
+    for (const auto &door : this->m_Doors) {
+        this->m_Pieces.push_back(door);
+    }
+
+    this->m_MainPlayer = std::make_shared<Player>();
+    this->m_MainPlayer->SetPosition({
+        0.0F,
+        -roomHalfSize.y - kDoorMarginFromRoom
+    });
+    this->m_Players.push_back(this->m_MainPlayer);
+
+    this->m_AttachCamera = std::make_shared<TraceCamera>(
+        this->m_MainPlayer,
+        std::make_shared<EaseOutQubicCurve>()
     );
 
-    m_AttachCamera->SetScale(glm::vec2(2 ,2));
+    this->m_CollisionSystem = std::make_shared<Collision::CollisionSystem>();
+    this->m_CollisionSystem->SetBlockingBoxProvider([this]() {
+        return Collision::BuildWallBoxes(this->m_Pieces);
+    });
+    this->m_CollisionSystem->SetStaticBlockingBoxes(
+        Collision::BuildRoomBoundaryBoxes(
+            this->m_MainRoom->GetCooridinate(),
+            roomSize,
+            this->m_RoomWallThickness,
+            this->m_DoorOpeningSize
+        )
+    );
 
-    m_Pieces.push_back(std::make_shared<BaseRoom>(
-        glm::vec2(0, 0)
-    ));
+    this->m_MainPlayer->SetCollisionResolver(
+        [this](
+            const Collision::AxisAlignedBox &currentBox,
+            const glm::vec2 &intendedDelta
+        ) {
+            return this->m_CollisionSystem->ResolveMovement(currentBox, intendedDelta);
+        }
+    );
 
-    this->AddChild(m_MainPlayer);
+    this->AddChild(this->m_MainPlayer);
 
-    for (auto const& i : m_Pieces) {
-        this->AddChild(i);
+    for (const auto &piece : this->m_Pieces) {
+        this->AddChild(piece);
     }
 }
 
 MapTest::~MapTest() {
-    this->RemoveChild(m_MainPlayer);
+    this->RemoveChild(this->m_MainPlayer);
 
-    for (auto const& i : m_Pieces) {
-        this->RemoveChild(i);
+    for (const auto &piece : this->m_Pieces) {
+        this->RemoveChild(piece);
     }
 }
 
-void MapTest::Update() {    
-    for (const auto &piece : m_Pieces) {
-        m_AttachCamera->SetTransformByCamera(piece);
+void MapTest::Update() {
+    this->Scene::Update();
+
+    if (!this->m_HasPlayerEnteredRoom && this->IsPlayerInsideRoom()) {
+        this->m_HasPlayerEnteredRoom = true;
+        this->CloseAllDoors();
     }
 
-    m_MainPlayer->Update();
+    if (this->m_AttachCamera == nullptr) {
+        return;
+    }
 
-    // Update camera if available
-    std::shared_ptr<IStateful> statefulCamera = std::dynamic_pointer_cast<IStateful>(m_AttachCamera);
-    if (statefulCamera) {
+    std::shared_ptr<IStateful> statefulCamera =
+        std::dynamic_pointer_cast<IStateful>(this->m_AttachCamera);
+    if (statefulCamera != nullptr) {
         statefulCamera->Update();
     }
 
-    Scene::Update();
+    if (this->m_MainPlayer != nullptr) {
+        this->m_AttachCamera->SetTransformByCamera(this->m_MainPlayer);
+    }
+
+    for (const auto &piece : this->m_Pieces) {
+        this->m_AttachCamera->SetTransformByCamera(piece);
+    }
+}
+
+void MapTest::CloseAllDoors() {
+    for (const auto &door : this->m_Doors) {
+        if (door != nullptr) {
+            door->Close();
+        }
+    }
 }
