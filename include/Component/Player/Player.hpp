@@ -6,6 +6,7 @@
 #include "Component/IMapObject.hpp"
 #include "Component/IStateful.hpp"
 #include "Util/Animation.hpp"
+#include "Util/Transform.hpp"
 #include <glm/fwd.hpp>
 
 class Player : public Character, public ICollidable, public IMapObject, public IStateful {
@@ -19,15 +20,14 @@ public:
             1
         )
     ) {
-        m_Cooridinate = {0, 0};
     }
 
     void Update() override;
 
     // Provide data for IMapObject
     glm::vec2 GetObjectSize() override;
-    glm::vec2 GetCooridinate() override;
-    Util::Transform GetTransform() override;
+    Util::Transform GetAbsoluteTransform() override;
+    Util::Transform GetObjectTransform() override;
     
     // Provide data for ICollidable
     bool WillCollide() override;
@@ -41,11 +41,11 @@ public:
     glm::vec2 GetMoveIntent() const; 
 
     // The absolute position on the map
-    glm::vec2 m_Cooridinate;
-
+    Util::Transform m_AbsoluteTransform;
 private:
     //玩家的碰撞盒尺寸
     glm::vec2 m_ColliderSize = {48.0F, 48.0F};
+
 };
 
 #endif

@@ -29,7 +29,7 @@ MainMenu::MainMenu() : Scene() {
         std::make_shared<ButtonAction>(
             nullptr,
             nullptr,
-            [this]() { this->StartNewGame(); }
+            [this](){ this->StartNewGame(); }
         )
     );
     m_Button_NewGame->m_Transform.translation = buttonBaseline + glm::vec2(0, 0);

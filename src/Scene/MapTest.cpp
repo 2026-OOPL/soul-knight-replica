@@ -13,6 +13,9 @@
 MapTest::MapTest() : MapSystem() {
     m_MainPlayer = std::make_shared<Player>();
     m_MainPlayer->SetPosition({0.0F, 0.0F});
+    m_MainPlayer->m_AbsoluteTransform.scale = {.5, .5};
+    
+    this->AddChild(m_MainPlayer);
     m_Players.push_back(m_MainPlayer);
     
     m_AttachCamera = std::make_shared<TraceCamera>(
@@ -25,7 +28,6 @@ MapTest::MapTest() : MapSystem() {
         glm::vec2(0, 0)
     ));
 
-    this->AddChild(m_MainPlayer);
 
     for (auto const& i : m_Pieces) {
         this->AddChild(i);
@@ -44,6 +46,8 @@ void MapTest::Update() {
     for (const auto &piece : m_Pieces) {
         m_AttachCamera->SetTransformByCamera(piece);
     }
+
+    m_AttachCamera->SetTransformByCamera(m_MainPlayer);
 
     m_MainPlayer->Update();
 

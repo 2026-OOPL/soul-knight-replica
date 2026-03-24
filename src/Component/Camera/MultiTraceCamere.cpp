@@ -4,10 +4,11 @@
 #include <glm/fwd.hpp>
 
 Util::Transform MultiTraceCamera::GetTransformByCamera(std::shared_ptr<IMapObject> object) {
-    
+    Util::Transform objectTransform = object->GetAbsoluteTransform();
+
     // The view center of this camera 
     glm::vec2 cameraCooridinate = this->m_TargetCooridinate;
-    glm::vec2 objectCooridinate = object->GetCooridinate();
+    glm::vec2 objectCooridinate = objectTransform.translation;
 
     return {
         objectCooridinate - cameraCooridinate,
@@ -21,7 +22,8 @@ glm::vec2 MultiTraceCamera::GetTargetCooridinate() {
     glm::vec2 targetCooridinate = {0, 0};
 
     for (auto const & i : m_Target) {
-        targetCooridinate += i->GetCooridinate() / glm::vec2(targetCount, targetCount);  
+        Util::Transform objectTransform = i->GetAbsoluteTransform();
+        targetCooridinate += objectTransform.translation / glm::vec2(targetCount, targetCount);  
     }
 
     return targetCooridinate;

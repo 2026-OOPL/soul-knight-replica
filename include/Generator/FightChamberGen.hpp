@@ -1,8 +1,8 @@
 #ifndef FIGHT_CHAMBER_GEN
 #define FIGHT_CHAMBER_GEN
 
-#include <memory>
 #include <vector>
+#include <memory>
 
 #include <glm/vec2.hpp>
 
