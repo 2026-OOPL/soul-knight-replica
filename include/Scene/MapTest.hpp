@@ -13,9 +13,7 @@
 class MapTest : public MapSystem {
 public:
     MapTest();
-
     ~MapTest() override;
-
     void Update() override;
 
 private:
@@ -26,7 +24,10 @@ private:
     std::shared_ptr<BaseRoom> m_MainRoom;
     std::vector<std::shared_ptr<Door>> m_Doors;
     glm::vec2 m_DoorOpeningSize = {0.0F, 0.0F};
-    bool m_HasPlayerEnteredRoom = false;
+    float m_DoorCloseDelayMs = 2000.0F;
+    float m_DoorCloseElapsedMs = 0.0F;
+    bool m_IsDoorCloseScheduled = false;
+    bool m_HasClosedDoors = false;
 };
 
 #endif

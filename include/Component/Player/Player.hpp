@@ -2,6 +2,8 @@
 #define PLAYER_PLAYER_HPP
 
 #include <functional>
+#include <memory>
+#include <vector>
 
 #include <glm/fwd.hpp>
 
@@ -19,17 +21,7 @@ public:
         const glm::vec2 &
     )>;
 
-    Player() : Character(
-        std::make_shared<Util::Animation>(
-            std::vector<std::string>{
-                RESOURCE_DIR"/Character/Test/test_stand.png"
-            },
-            true,
-            1
-        )
-    ) {
-        this->m_Cooridinate = {0.0F, 0.0F};
-    }
+    Player();
 
     void Update() override;
 
@@ -44,6 +36,8 @@ public:
     void SetColliderSize(const glm::vec2 &colliderSize);
     glm::vec2 GetPosition() const;
     void SetPosition(const glm::vec2 &position);
+    Collision::AxisAlignedBox GetCollisionBox() const;
+    Collision::AxisAlignedBox GetCollisionBoxAt(const glm::vec2 &coordinate) const;
     void SetCollisionResolver(CollisionResolver collisionResolver);
 
     glm::vec2 GetMoveIntent() const;
@@ -52,6 +46,7 @@ public:
 
 private:
     glm::vec2 m_ColliderSize = {48.0F, 48.0F};
+    glm::vec2 m_PendingMoveDelta = {0.0F, 0.0F};
     CollisionResolver m_CollisionResolver = nullptr;
 };
 

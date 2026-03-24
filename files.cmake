@@ -2,11 +2,11 @@ set(SRC_FILES
     App.cpp
     MainMenu.cpp
     Scene.cpp
-    
+
     Component/Collision/CollisionSystem.cpp
     Component/Player/Player.cpp
     Component/TextButton/TextButton.cpp
-    
+
     Component/Map/BaseRoom.cpp
     Component/Map/MapPiece.cpp
     Component/Map/Door.cpp
@@ -33,6 +33,7 @@ set(INCLUDE_FILES
     Component/Character/Character.hpp
 
     Component/ICollidable.hpp
+    Component/IMapObject.hpp
     Component/IStateful.hpp
 
     Scene/MapTest.hpp
@@ -46,8 +47,6 @@ set(INCLUDE_FILES
     Component/Camera/TraceCamera.hpp
     Component/Camera/MultiTraceCamere.hpp
     Component/Camera/Curve.hpp
-
-    Config.hpp
 )
 
 set(TEST_FILES

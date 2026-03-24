@@ -6,6 +6,7 @@
 #include "Component/Camera/Curve.hpp"
 #include "Component/Camera/TraceCamera.hpp"
 #include "Component/IStateful.hpp"
+#include "Util/Time.hpp"
 
 namespace {
 
@@ -15,7 +16,7 @@ constexpr float kDoorMarginFromRoom = 70.0F;
 
 MapTest::MapTest() : MapSystem() {
     this->m_MainRoom = std::make_shared<BaseRoom>(glm::vec2(0.0F, 0.0F));
-    this->m_MainRoom->m_Transform.scale = {2.0F, 2.0F}; // 放大 2 倍
+    this->m_MainRoom->m_Transform.scale = {2.0F, 2.0F};
     this->m_Pieces.push_back(this->m_MainRoom);
 
     const glm::vec2 roomSize = this->m_MainRoom->GetObjectSize();
@@ -98,34 +99,44 @@ MapTest::MapTest() : MapSystem() {
         }
     );
 
-    this->AddChild(this->m_MainPlayer);
+    if (this->m_MainPlayer != nullptr) {
+        this->AddChild(this->m_MainPlayer);
+    }
 
     for (const auto &piece : this->m_Pieces) {
-        this->AddChild(piece);
+        if (piece != nullptr) {
+            this->AddChild(piece);
+        }
     }
 }
 
-MapTest::~MapTest() {
-    this->RemoveChild(this->m_MainPlayer);
-
-    for (const auto &piece : this->m_Pieces) {
-        this->RemoveChild(piece);
-    }
-}
+MapTest::~MapTest() = default;
 
 void MapTest::Update() {
     this->Scene::Update();
 
-    if (!this->m_HasPlayerEnteredRoom && this->IsPlayerInsideRoom()) {
-        this->m_HasPlayerEnteredRoom = true;
-        this->CloseAllDoors();
+    if (!this->m_IsDoorCloseScheduled &&
+        !this->m_HasClosedDoors &&
+        this->IsPlayerInsideRoom()) {
+        this->m_IsDoorCloseScheduled = true;
+        this->m_DoorCloseElapsedMs = 0.0F;
+    }
+
+    if (this->m_IsDoorCloseScheduled) {
+        this->m_DoorCloseElapsedMs += Util::Time::GetDeltaTimeMs();
+
+        if (this->m_DoorCloseElapsedMs >= this->m_DoorCloseDelayMs) {
+            this->CloseAllDoors();
+            this->m_IsDoorCloseScheduled = false;
+            this->m_HasClosedDoors = true;
+        }
     }
 
     if (this->m_AttachCamera == nullptr) {
         return;
     }
 
-    std::shared_ptr<IStateful> statefulCamera =
+    const std::shared_ptr<IStateful> statefulCamera =
         std::dynamic_pointer_cast<IStateful>(this->m_AttachCamera);
     if (statefulCamera != nullptr) {
         statefulCamera->Update();

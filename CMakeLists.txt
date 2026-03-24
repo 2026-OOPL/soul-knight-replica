@@ -34,7 +34,7 @@ list(TRANSFORM INCLUDE_FILES PREPEND ${INCLUDE_DIR}/)
 add_executable(${PROJECT_NAME}
     ${SRC_DIR}/main.cpp
     ${SRC_FILES}
-    ${HEADER_FILES}
+    ${INCLUDE_FILES}
 )
 
 if(MSVC)

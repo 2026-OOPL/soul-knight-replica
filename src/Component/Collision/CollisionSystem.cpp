@@ -95,18 +95,18 @@ AxisAlignedBox CollisionSystem::BuildBox(const glm::vec2 &center, const glm::vec
 }
 
 void CollisionSystem::SetStaticBlockingBoxes(const std::vector<AxisAlignedBox> &blockingBoxes) {
-    m_StaticBlockingBoxes = blockingBoxes;
+    this->m_StaticBlockingBoxes = blockingBoxes;
 }
 
 void CollisionSystem::SetBlockingBoxProvider(BlockingBoxProvider blockingBoxProvider) {
-    m_BlockingBoxProvider = std::move(blockingBoxProvider);
+    this->m_BlockingBoxProvider = std::move(blockingBoxProvider);
 }
 
 std::vector<AxisAlignedBox> CollisionSystem::GetBlockingBoxes() const {
-    std::vector<AxisAlignedBox> blockingBoxes = m_StaticBlockingBoxes;
+    std::vector<AxisAlignedBox> blockingBoxes = this->m_StaticBlockingBoxes;
 
-    if (m_BlockingBoxProvider) {
-        std::vector<AxisAlignedBox> dynamicBoxes = m_BlockingBoxProvider();
+    if (this->m_BlockingBoxProvider) {
+        const std::vector<AxisAlignedBox> dynamicBoxes = this->m_BlockingBoxProvider();
 
         blockingBoxes.insert(
             blockingBoxes.end(),
@@ -173,6 +173,7 @@ MovementResult CollisionSystem::ResolveMovement(
             result.blockedY = true;
         } else {
             result.resolvedDelta.y = intendedDelta.y;
+            resolvedBox.center.y += intendedDelta.y;
         }
     }
 

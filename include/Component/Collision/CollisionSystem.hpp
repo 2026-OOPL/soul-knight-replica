@@ -2,9 +2,10 @@
 #define COLLISION_SYSTEM_HPP
 
 #include <functional>
-#include <glm/vec2.hpp>
 #include <memory>
 #include <vector>
+
+#include <glm/vec2.hpp>
 
 class MapPiece;
 
