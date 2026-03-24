@@ -9,12 +9,11 @@
 
 #include "Component/Character/Character.hpp"
 #include "Component/Collision/CollisionSystem.hpp"
-#include "Component/ICollidable.hpp"
 #include "Component/IMapObject.hpp"
 #include "Component/IStateful.hpp"
 #include "Util/Animation.hpp"
 
-class Player : public Character, public ICollidable, public IMapObject, public IStateful {
+class Player : public Character, public IMapObject, public IStateful {
 public:
     using CollisionResolver = std::function<Collision::MovementResult(
         const Collision::AxisAlignedBox &,
@@ -28,9 +27,6 @@ public:
     glm::vec2 GetObjectSize() override;
     glm::vec2 GetCooridinate() override;
     Util::Transform GetTransform() override;
-
-    bool WillCollide() override;
-    std::vector<std::shared_ptr<Collider>> GetCollideBox() override;
 
     glm::vec2 GetColliderSize();
     void SetColliderSize(const glm::vec2 &colliderSize);

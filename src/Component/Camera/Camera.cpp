@@ -67,13 +67,7 @@ void Camera::SetTransformByCamera(std::shared_ptr<Util::GameObject> object) {
     object->SetVisible(visible);
 
     if (visible) {
-        const Util::Transform currentTransform = object->GetTransform();
-        Util::Transform nextTransform = this->GetTransformByCamera(mapObject);
-
-        nextTransform.rotation = currentTransform.rotation;
-        nextTransform.scale = currentTransform.scale;
-
-        object->m_Transform = nextTransform;
+        object->m_Transform = this->GetTransformByCamera(mapObject);
     }
 }
 

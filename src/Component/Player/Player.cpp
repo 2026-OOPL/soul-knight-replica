@@ -31,10 +31,6 @@ Util::Transform Player::GetTransform() {
     return this->m_Transform;
 }
 
-std::vector<std::shared_ptr<Collider>> Player::GetCollideBox() {
-    return {};
-}
-
 glm::vec2 Player::GetColliderSize() {
     return this->m_ColliderSize;
 }
@@ -113,18 +109,4 @@ void Player::Update() {
     }
 
     this->m_Transform.translation = this->m_Cooridinate;
-}
-
-bool Player::WillCollide() {
-    if (!this->m_CollisionResolver ||
-        this->m_PendingMoveDelta == glm::vec2(0.0F, 0.0F)) {
-        return false;
-    }
-
-    const Collision::MovementResult movementResult = this->m_CollisionResolver(
-        this->GetCollisionBox(),
-        this->m_PendingMoveDelta
-    );
-
-    return movementResult.blockedX || movementResult.blockedY;
 }

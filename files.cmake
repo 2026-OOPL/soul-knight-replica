@@ -32,7 +32,6 @@ set(INCLUDE_FILES
     Component/TextButton/TextButtonProperty.hpp
     Component/Character/Character.hpp
 
-    Component/ICollidable.hpp
     Component/IMapObject.hpp
     Component/IStateful.hpp
 

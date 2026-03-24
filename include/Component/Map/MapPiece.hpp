@@ -25,7 +25,7 @@ public:
     glm::vec2 GetCooridinate() override;
     Util::Transform GetTransform() override;
 
-    void SetTransformByCooridinate(glm::vec2 cooridinate);
+    void SetTransformByCooridinate(glm::vec2 cooridinate);//目前此職責已交給carmera
 
     bool IsWall() const { return this->m_IsWall; }
     void SetIsWall(bool isWall) { this->m_IsWall = isWall; }
