@@ -1,13 +1,15 @@
 #ifndef MULTI_TRACE_CAMERA_HPP
 #define MULTI_TRACE_CAMERA_HPP
 
+#include <memory>
+#include <vector>
+
+#include <glm/vec2.hpp>
+
 #include "Component/Camera/Camera.hpp"
 #include "Component/IMapObject.hpp"
 #include "Component/IStateful.hpp"
-#include <glm/fwd.hpp>
-#include <glm/vec2.hpp>
-#include <memory>
-#include <vector>
+
 
 class MultiTraceCamera : public Camera, IStateful {
 public:
