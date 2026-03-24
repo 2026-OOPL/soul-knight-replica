@@ -1,11 +1,13 @@
-#include "Component/IMapObject.hpp"
-#include "Core/Context.hpp"
-#include "Util/GameObject.hpp"
-#include <exception>
-#include <glm/fwd.hpp>
 #include <memory>
 #include <stdexcept>
+
+#include <glm/vec2.hpp>
+
+#include "Core/Context.hpp"
+#include "Component/IMapObject.hpp"
 #include "Component/Camera/Camera.hpp"
+#include "Util/GameObject.hpp"
+#include "Util/Transform.hpp"
 
 glm::vec2 Camera::GetCameraSize() {
     auto context = Core::Context::GetInstance();
@@ -13,10 +15,12 @@ glm::vec2 Camera::GetCameraSize() {
 }
 
 bool Camera::GetVisibilityByCamera(std::shared_ptr<IMapObject> object) {
+    Util::Transform objectTransform = object->GetAbsoluteTransform();
+
     glm::vec2 objectSize = object->GetObjectSize();
     glm::vec2 cameraSize = this->GetCameraSize();
 
-    glm::vec2 objectCooridinate = object->GetCooridinate();
+    glm::vec2 objectCooridinate = objectTransform.translation;
     glm::vec2 cameraCooridinate = this->m_Transform.translation;
 
     // Current window view port border in LTRB

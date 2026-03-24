@@ -24,7 +24,7 @@ public:
         m_Text = std::make_shared<Util::Text>(
             theme->font, theme->size, text, this->theme->normal);
 
-        this->SetDrawable(m_Text);
+        this->SetDrawable(m_Text);  
     }
 
     TextButton(
