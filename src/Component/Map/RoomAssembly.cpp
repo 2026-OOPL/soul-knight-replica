@@ -5,6 +5,7 @@
 #include <utility>
 
 #include "Util/Image.hpp"
+#include "Util/Logger.hpp"
 
 namespace {
 
@@ -163,7 +164,7 @@ RoomAssembly::RoomAssembly(Config config) {
     this->m_Room = std::make_shared<BaseRoom>(config.roomCenter);
     this->m_Pieces.push_back(this->m_Room);
 
-    const glm::vec2 roomCenter = this->m_Room->GetCooridinate();
+    const glm::vec2 roomCenter = this->m_Room->GetAbsoluteCooridinate();
     const glm::vec2 roomSize = this->m_Room->GetObjectSize();
     const std::vector<DoorConfig> doorConfigs = BuildDefaultDoorConfigs();
     Collision::RoomBoundaryOpenings wallOpenings;
@@ -183,6 +184,7 @@ RoomAssembly::RoomAssembly(Config config) {
     for (const DoorConfig &doorConfig : doorConfigs) {
         const glm::vec2 doorPosition =
             BuildDoorPosition(roomCenter, roomSize, doorConfig) + doorConfig.positionOffset;
+
         const std::shared_ptr<Door> door = std::make_shared<Door>(
             doorPosition,
             doorConfig.side,
@@ -218,7 +220,7 @@ glm::vec2 RoomAssembly::GetSuggestedBottomSpawn(float distanceFromRoom) const {
         return {0.0F, 0.0F};
     }
 
-    const glm::vec2 roomCenter = this->m_Room->GetCooridinate();
+    const glm::vec2 roomCenter = this->m_Room->GetAbsoluteCooridinate();
     const glm::vec2 roomSize = this->m_Room->GetObjectSize();
 
     return {

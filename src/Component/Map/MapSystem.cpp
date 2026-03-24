@@ -1,4 +1,5 @@
 #include "Component/Map/MapSystem.hpp"
+#include "Util/Transform.hpp"
 
 #include <cmath>
 #include <utility>
@@ -24,11 +25,15 @@ bool MapSystem::IsPlayerInsideRoom() const {
         return false;
     }
 
-    const glm::vec2 roomCenter = room->GetCooridinate();
+    
+    const Util::Transform roomTransform = room->GetAbsoluteTransform();
+    const Util::Transform playerTransform = player->GetAbsoluteTransform();
+
+    const glm::vec2 roomCenter = roomTransform.translation;
     const glm::vec2 roomHalfSize = room->GetObjectSize() / 2.0F;
     const glm::vec2 innerHalfSize =
         roomHalfSize - glm::vec2(this->m_RoomWallThickness * 1.5F);
-    const glm::vec2 playerOffset = player->GetCooridinate() - roomCenter;
+    const glm::vec2 playerOffset = playerTransform.translation - roomCenter;
 
     return std::abs(playerOffset.x) <= innerHalfSize.x &&
            std::abs(playerOffset.y) <= innerHalfSize.y;
