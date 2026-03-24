@@ -55,9 +55,9 @@ public:
     void Close();
     void Toggle();
 
-    bool IsOpen() const;
-    State GetState() const;
-    DoorSide GetSide() const;
+    bool IsOpen() const; 
+    State GetState() const; 
+    DoorSide GetSide() const; 
 
 private:
     void ApplyDrawable(const std::shared_ptr<Core::Drawable> &drawable);

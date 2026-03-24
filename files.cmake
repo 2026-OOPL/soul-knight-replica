@@ -11,6 +11,7 @@ set(SRC_FILES
     Component/Map/MapPiece.cpp
     Component/Map/Door.cpp
     Component/Map/MapSystem.cpp
+    Component/Map/RoomAssembly.cpp
     
     Component/Camera/Camera.cpp
     Component/Camera/TraceCamera.cpp
@@ -41,6 +42,7 @@ set(INCLUDE_FILES
     Component/Map/Door.hpp
     Component/Map/MapPiece.hpp
     Component/Map/MapSystem.hpp
+    Component/Map/RoomAssembly.hpp
 
     Component/Camera/Camera.hpp
     Component/Camera/TraceCamera.hpp
