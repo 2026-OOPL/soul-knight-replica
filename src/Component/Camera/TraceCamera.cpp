@@ -11,8 +11,8 @@ Util::Transform TraceCamera::GetTransformByCamera(std::shared_ptr<IMapObject> ob
 
     return {
         objectCooridinate - cameraCooridinate,
-        0,
-        {1, 1}
+        GetRotation(),
+        GetScale()
     };
 }
 
@@ -25,8 +25,6 @@ void TraceCamera::Update() {
 
     if (m_Curve) {
         glm::vec2 moveTarget = m_Curve->ApplyCurve(this->GetCooridinate(), m_TargetCooridinate);
-
-        LOG_INFO(moveTarget);
 
         this->SetCooridinate(moveTarget);
     } else {

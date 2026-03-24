@@ -20,6 +20,7 @@ public:
           m_IsWall(isWall) 
     {
         m_Image = std::make_shared<Util::Image>(resource);//建立圖片物件
+
         SetDrawable(m_Image);//設定m_Image為可畫的
         m_ColliderSize = GetScaledSize();//取出圖片大小乘上大小倍率
     };

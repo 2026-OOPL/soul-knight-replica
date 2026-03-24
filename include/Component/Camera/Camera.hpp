@@ -35,7 +35,7 @@ public:
 
     glm::vec2 GetCooridinate();
     glm::vec2 GetScale();
-    double GetRotation();
+    float GetRotation();
 
 private:
     Util::Transform m_Transform;
