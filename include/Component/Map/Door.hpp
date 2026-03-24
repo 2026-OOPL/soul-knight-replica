@@ -6,7 +6,14 @@
 
 #include "Component/IStateful.hpp"
 #include "Component/Map/MapPiece.hpp"
-#include "Util/Text.hpp"
+
+namespace Core {
+class Drawable;
+}
+
+namespace Util {
+class Animation;
+}
 
 enum class DoorSide {
     Top,
@@ -17,36 +24,50 @@ enum class DoorSide {
 
 class Door : public MapPiece, public IStateful {
 public:
+    enum class State {
+        Closed,
+        Opening,
+        Open,
+        Closing
+    };
+
+    struct Visuals {
+        std::shared_ptr<Core::Drawable> closedIdle;
+        std::shared_ptr<Core::Drawable> openIdle;
+        std::shared_ptr<Util::Animation> opening = nullptr;
+        std::shared_ptr<Util::Animation> closing = nullptr;
+    };
+
     Door(
         glm::vec2 cooridinate,
         DoorSide side,
         glm::vec2 colliderSize,
+        glm::vec2 renderSize,
+        Visuals visuals,
         bool isOpen = true
     );
 
     void Update() override;
+
+    glm::vec2 GetObjectSize() override;
 
     void Open();
     void Close();
     void Toggle();
 
     bool IsOpen() const;
-    bool IsClosed() const;
+    State GetState() const;
     DoorSide GetSide() const;
 
 private:
-    glm::vec2 MoveTowards(
-        const glm::vec2 &current,
-        const glm::vec2 &target,
-        float maxDistanceDelta
-    ) const;
+    void ApplyDrawable(const std::shared_ptr<Core::Drawable> &drawable);
+    void EnterState(State state);
 
+    Visuals m_Visuals;
     DoorSide m_Side;
-    std::shared_ptr<Util::Text> m_DrawableText;
-    glm::vec2 m_ClosedScale = {1.0F, 1.0F};
-    glm::vec2 m_OpenScale = {1.0F, 0.15F};
+    State m_State = State::Closed;
+    glm::vec2 m_RenderSize = {1.0F, 1.0F};
     float m_BaseRotation = 0.0F;
-    bool m_IsOpen = true;
 };
 
 #endif

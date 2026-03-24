@@ -41,7 +41,7 @@ public:
     glm::vec2 m_Cooridinate;
 
 private:
-    glm::vec2 m_ColliderSize = {48.0F, 48.0F};
+    glm::vec2 m_ColliderSize = {24.0F, 24.0F};
     glm::vec2 m_PendingMoveDelta = {0.0F, 0.0F};
     CollisionResolver m_CollisionResolver = nullptr;
 };

@@ -29,7 +29,7 @@ protected:
     std::vector<std::shared_ptr<Camera>> m_Cameras;
     std::vector<std::shared_ptr<MapPiece>> m_Pieces;
     std::shared_ptr<Camera> m_AttachCamera;
-    float m_RoomWallThickness = 25.0F;
+    float m_RoomWallThickness = 20.0F;
 };
 
 #endif

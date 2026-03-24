@@ -11,6 +11,18 @@ class MapPiece;
 
 namespace Collision {
 
+struct WallOpening {
+    float size = 0.0F;
+    float offset = 0.0F;
+};
+
+struct RoomBoundaryOpenings {
+    WallOpening top;
+    WallOpening right;
+    WallOpening bottom;
+    WallOpening left;
+};
+
 struct AxisAlignedBox {
     glm::vec2 center = {0.0F, 0.0F};
     glm::vec2 size = {0.0F, 0.0F};
@@ -53,8 +65,14 @@ std::vector<AxisAlignedBox> BuildWallBoxes(
 std::vector<AxisAlignedBox> BuildRoomBoundaryBoxes(
     const glm::vec2 &roomCenter,
     const glm::vec2 &roomSize,
+    float wallThickness
+);
+
+std::vector<AxisAlignedBox> BuildRoomBoundaryBoxes(
+    const glm::vec2 &roomCenter,
+    const glm::vec2 &roomSize,
     float wallThickness,
-    const glm::vec2 &doorOpeningSize = {0.0F, 0.0F}
+    const RoomBoundaryOpenings &openings
 );
 
 } // namespace Collision

@@ -8,11 +8,12 @@ Util::Transform TraceCamera::GetTransformByCamera(std::shared_ptr<IMapObject> ob
     // The view center of this camera 
     glm::vec2 cameraCooridinate = this->GetCooridinate();
     glm::vec2 objectCooridinate = object->GetCooridinate();
+    const Util::Transform objectTransform = object->GetTransform();
 
     return {
         objectCooridinate - cameraCooridinate,
-        GetRotation(),
-        GetScale()
+        objectTransform.rotation + GetRotation(),
+        objectTransform.scale * GetScale()
     };
 }
 

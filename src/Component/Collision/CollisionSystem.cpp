@@ -26,9 +26,14 @@ std::vector<Collision::AxisAlignedBox> BuildHorizontalWallSegments(
     float wallY,
     float wallWidth,
     float wallThickness,
-    float openingWidth
+    const Collision::WallOpening &opening
 ) {
-    if (openingWidth <= 0.0F || openingWidth >= wallWidth) {
+    if (wallWidth <= 0.0F || wallThickness <= 0.0F) {
+        return {};
+    }
+
+    const float openingWidth = std::clamp(opening.size, 0.0F, wallWidth);
+    if (openingWidth <= 0.0F) {
         return {
             Collision::CollisionSystem::BuildBox(
                 {roomCenter.x, wallY},
@@ -37,19 +42,33 @@ std::vector<Collision::AxisAlignedBox> BuildHorizontalWallSegments(
         };
     }
 
-    const float sideWidth = (wallWidth - openingWidth) / 2.0F;
-    const float centerOffset = (openingWidth + sideWidth) / 2.0F;
+    const float wallLeft = roomCenter.x - wallWidth / 2.0F;
+    const float wallRight = roomCenter.x + wallWidth / 2.0F;
+    const float openingHalfWidth = openingWidth / 2.0F;
+    const float openingCenterX = std::clamp(
+        roomCenter.x + opening.offset,
+        wallLeft + openingHalfWidth,
+        wallRight - openingHalfWidth
+    );
+    const float leftWidth = std::max(0.0F, openingCenterX - openingHalfWidth - wallLeft);
+    const float rightWidth = std::max(0.0F, wallRight - openingCenterX - openingHalfWidth);
+    std::vector<Collision::AxisAlignedBox> segments;
 
-    return {
-        Collision::CollisionSystem::BuildBox(
-            {roomCenter.x - centerOffset, wallY},
-            {sideWidth, wallThickness}
-        ),
-        Collision::CollisionSystem::BuildBox(
-            {roomCenter.x + centerOffset, wallY},
-            {sideWidth, wallThickness}
-        )
-    };
+    if (leftWidth > 0.0F) {
+        segments.push_back(Collision::CollisionSystem::BuildBox(
+            {wallLeft + leftWidth / 2.0F, wallY},
+            {leftWidth, wallThickness}
+        ));
+    }
+
+    if (rightWidth > 0.0F) {
+        segments.push_back(Collision::CollisionSystem::BuildBox(
+            {wallRight - rightWidth / 2.0F, wallY},
+            {rightWidth, wallThickness}
+        ));
+    }
+
+    return segments;
 }
 
 std::vector<Collision::AxisAlignedBox> BuildVerticalWallSegments(
@@ -57,9 +76,14 @@ std::vector<Collision::AxisAlignedBox> BuildVerticalWallSegments(
     float wallX,
     float wallHeight,
     float wallThickness,
-    float openingHeight
+    const Collision::WallOpening &opening
 ) {
-    if (openingHeight <= 0.0F || openingHeight >= wallHeight) {
+    if (wallHeight <= 0.0F || wallThickness <= 0.0F) {
+        return {};
+    }
+
+    const float openingHeight = std::clamp(opening.size, 0.0F, wallHeight);
+    if (openingHeight <= 0.0F) {
         return {
             Collision::CollisionSystem::BuildBox(
                 {wallX, roomCenter.y},
@@ -68,19 +92,33 @@ std::vector<Collision::AxisAlignedBox> BuildVerticalWallSegments(
         };
     }
 
-    const float sideHeight = (wallHeight - openingHeight) / 2.0F;
-    const float centerOffset = (openingHeight + sideHeight) / 2.0F;
+    const float wallBottom = roomCenter.y - wallHeight / 2.0F;
+    const float wallTop = roomCenter.y + wallHeight / 2.0F;
+    const float openingHalfHeight = openingHeight / 2.0F;
+    const float openingCenterY = std::clamp(
+        roomCenter.y + opening.offset,
+        wallBottom + openingHalfHeight,
+        wallTop - openingHalfHeight
+    );
+    const float bottomHeight = std::max(0.0F, openingCenterY - openingHalfHeight - wallBottom);
+    const float topHeight = std::max(0.0F, wallTop - openingCenterY - openingHalfHeight);
+    std::vector<Collision::AxisAlignedBox> segments;
 
-    return {
-        Collision::CollisionSystem::BuildBox(
-            {wallX, roomCenter.y - centerOffset},
-            {wallThickness, sideHeight}
-        ),
-        Collision::CollisionSystem::BuildBox(
-            {wallX, roomCenter.y + centerOffset},
-            {wallThickness, sideHeight}
-        )
-    };
+    if (bottomHeight > 0.0F) {
+        segments.push_back(Collision::CollisionSystem::BuildBox(
+            {wallX, wallBottom + bottomHeight / 2.0F},
+            {wallThickness, bottomHeight}
+        ));
+    }
+
+    if (topHeight > 0.0F) {
+        segments.push_back(Collision::CollisionSystem::BuildBox(
+            {wallX, wallTop - topHeight / 2.0F},
+            {wallThickness, topHeight}
+        ));
+    }
+
+    return segments;
 }
 
 } // namespace
@@ -202,14 +240,23 @@ std::vector<AxisAlignedBox> BuildWallBoxes(
 std::vector<AxisAlignedBox> BuildRoomBoundaryBoxes(
     const glm::vec2 &roomCenter,
     const glm::vec2 &roomSize,
+    float wallThickness
+) {
+    return BuildRoomBoundaryBoxes(
+        roomCenter,
+        roomSize,
+        wallThickness,
+        RoomBoundaryOpenings{}
+    );
+}
+
+std::vector<AxisAlignedBox> BuildRoomBoundaryBoxes(
+    const glm::vec2 &roomCenter,
+    const glm::vec2 &roomSize,
     float wallThickness,
-    const glm::vec2 &doorOpeningSize
+    const RoomBoundaryOpenings &openings
 ) {
     const float safeWallThickness = std::max(0.0F, wallThickness);
-    const glm::vec2 safeDoorOpeningSize = {
-        std::clamp(doorOpeningSize.x, 0.0F, roomSize.x),
-        std::clamp(doorOpeningSize.y, 0.0F, roomSize.y)
-    };
     const glm::vec2 roomHalfSize = roomSize / 2.0F;
     const float halfWallThickness = safeWallThickness / 2.0F;
     std::vector<AxisAlignedBox> boundaryBoxes;
@@ -219,16 +266,16 @@ std::vector<AxisAlignedBox> BuildRoomBoundaryBoxes(
         roomCenter.y + roomHalfSize.y - halfWallThickness,
         roomSize.x,
         safeWallThickness,
-        safeDoorOpeningSize.x
+        openings.top
     );
     boundaryBoxes.insert(boundaryBoxes.end(), topWalls.begin(), topWalls.end());
 
     const std::vector<AxisAlignedBox> bottomWalls = BuildHorizontalWallSegments(
         roomCenter,
-        roomCenter.y - roomHalfSize.y + halfWallThickness,
+        roomCenter.y - roomHalfSize.y + halfWallThickness+20.0F,//我在操code
         roomSize.x,
         safeWallThickness,
-        safeDoorOpeningSize.x
+        openings.bottom
     );
     boundaryBoxes.insert(boundaryBoxes.end(), bottomWalls.begin(), bottomWalls.end());
 
@@ -237,7 +284,7 @@ std::vector<AxisAlignedBox> BuildRoomBoundaryBoxes(
         roomCenter.x - roomHalfSize.x + halfWallThickness,
         roomSize.y,
         safeWallThickness,
-        safeDoorOpeningSize.y
+        openings.left
     );
     boundaryBoxes.insert(boundaryBoxes.end(), leftWalls.begin(), leftWalls.end());
 
@@ -246,7 +293,7 @@ std::vector<AxisAlignedBox> BuildRoomBoundaryBoxes(
         roomCenter.x + roomHalfSize.x - halfWallThickness,
         roomSize.y,
         safeWallThickness,
-        safeDoorOpeningSize.y
+        openings.right
     );
     boundaryBoxes.insert(boundaryBoxes.end(), rightWalls.begin(), rightWalls.end());
 
