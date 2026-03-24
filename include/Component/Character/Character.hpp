@@ -1,9 +1,10 @@
 #ifndef CHARACTER_HPP
 #define CHARACTER_HPP
 
+#include <memory>
+
 #include "Util/Animation.hpp"
 #include "Util/GameObject.hpp"
-#include <memory>
 
 class Character : public Util::GameObject {
 public:

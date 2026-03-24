@@ -5,10 +5,8 @@ set(SRC_FILES
     
     Component/Player/Player.cpp
     Component/TextButton/TextButton.cpp
-    
     Component/Map/MapPiece.cpp   
     Component/Map/MapSystem.cpp
-    
     Component/Camera/Camera.cpp
     Component/Camera/TraceCamera.cpp
     Component/Camera/MultiTraceCamere.cpp
@@ -23,24 +21,26 @@ set(INCLUDE_FILES
     MainMenu.hpp
     Scene.hpp
 
+    Common/Random.hpp
+    Common/Enums.hpp
+    Common/EnumMask.hpp
+    Common/Constants.hpp
+
     Component/Player/Player.hpp
     Component/TextButton/TextButton.hpp
     Component/TextButton/TextButtonPropertycpp.hpp
     Component/Character/Character.hpp
-
     Component/ICollidable.hpp
     Component/IStateful.hpp
-
-    Scene/MapTest.hpp
-
     Component/Map/MapBase.hpp
     Component/Map/MapPiece.hpp
-
     Component/Camera/MultiTraceCamere.hpp
     Component/Camera/Curve.hpp
+    
+    Generator/MapGenerator.hpp
+    Generator/JointRoomGen.hpp
 
-    CameraBase.hpp
-    Config.hpp
+    Scene/MapTest.hpp
 )
 
 set(TEST_FILES

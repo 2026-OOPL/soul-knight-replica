@@ -1,0 +1,11 @@
+#ifndef CONSTANTS_HPP
+#define CONSTANTS_HPP
+
+const int MAP_PIXEL_PER_BLOCK = 16;
+
+const int MAP_MINUMUM_ROOM_GENERATE_COUNT = 6;
+const int MAP_MAXIMUM_ROOM_GENERATE_COUNT = 10;
+
+const int ROOM_MAXIMUM_ATTACH_COUNT = 4;
+
+#endif
