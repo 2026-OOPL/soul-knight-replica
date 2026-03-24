@@ -15,6 +15,7 @@ constexpr float kDoorMarginFromRoom = 70.0F;
 
 MapTest::MapTest() : MapSystem() {
     this->m_MainRoom = std::make_shared<BaseRoom>(glm::vec2(0.0F, 0.0F));
+    this->m_MainRoom->m_Transform.scale = {2.0F, 2.0F}; // 放大 2 倍
     this->m_Pieces.push_back(this->m_MainRoom);
 
     const glm::vec2 roomSize = this->m_MainRoom->GetObjectSize();
