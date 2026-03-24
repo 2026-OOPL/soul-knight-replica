@@ -26,8 +26,8 @@ public:
         bool isWall = false
     );
 
-    glm::vec2 GetObjectSize() override;
     
+    glm::vec2 GetAbsoluteScale() override;
     Util::Transform GetAbsoluteTransform() override;
     Util::Transform GetObjectTransform() override;
 

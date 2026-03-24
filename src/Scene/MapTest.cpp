@@ -48,7 +48,7 @@ MapTest::MapTest() : MapSystem() {
         std::make_shared<EaseOutQubicCurve>()
     );
 
-    this->m_AttachCamera->SetScale({2, 2});
+    this->m_AttachCamera->SetScale({3, 3});
 
     if (this->m_MainPlayer != nullptr) {
         this->AddChild(this->m_MainPlayer);

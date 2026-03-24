@@ -49,7 +49,7 @@ public:
 
     void Update() override;
 
-    glm::vec2 GetObjectSize() override;
+    glm::vec2 GetAbsoluteScale() override;
 
     void Open();
     void Close();

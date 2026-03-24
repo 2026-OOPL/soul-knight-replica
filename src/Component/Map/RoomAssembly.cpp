@@ -165,7 +165,7 @@ RoomAssembly::RoomAssembly(Config config) {
     this->m_Pieces.push_back(this->m_Room);
 
     const glm::vec2 roomCenter = this->m_Room->GetAbsoluteCooridinate();
-    const glm::vec2 roomSize = this->m_Room->GetObjectSize();
+    const glm::vec2 roomSize = this->m_Room->GetAbsoluteScale();
     const std::vector<DoorConfig> doorConfigs = BuildDefaultDoorConfigs();
     Collision::RoomBoundaryOpenings wallOpenings;
     std::array<bool, 4> occupiedSides = {false, false, false, false};
@@ -221,7 +221,7 @@ glm::vec2 RoomAssembly::GetSuggestedBottomSpawn(float distanceFromRoom) const {
     }
 
     const glm::vec2 roomCenter = this->m_Room->GetAbsoluteCooridinate();
-    const glm::vec2 roomSize = this->m_Room->GetObjectSize();
+    const glm::vec2 roomSize = this->m_Room->GetAbsoluteScale();
 
     return {
         roomCenter.x,

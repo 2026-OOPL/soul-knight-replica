@@ -8,9 +8,9 @@
 class IMapObject {
 public:
 
+    virtual glm::vec2 GetAbsoluteScale() = 0;
     virtual Util::Transform GetAbsoluteTransform() = 0;
     
-    virtual glm::vec2 GetObjectSize() = 0;
 
     virtual Util::Transform GetObjectTransform() = 0; // Return the transformation of the object
 };

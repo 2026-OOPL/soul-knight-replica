@@ -58,8 +58,12 @@ void Door::Update() {
     }
 }
 
-glm::vec2 Door::GetObjectSize() {
-    return this->m_RenderSize;
+glm::vec2 Door::GetAbsoluteScale() {
+    if (this->m_Drawable == nullptr) {
+        return {0,0 };
+    }
+
+    return this->m_Drawable->GetSize() * m_AbsoluteTransform.scale;
 }
 
 void Door::Open() {

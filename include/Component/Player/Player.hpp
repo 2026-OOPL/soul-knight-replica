@@ -26,7 +26,7 @@ public:
     void Update() override;
 
     // These are the getter of the m_Transform in Util::GameObject
-    glm::vec2 GetObjectSize() override;
+    glm::vec2 GetAbsoluteScale() override;
     Util::Transform GetObjectTransform() override;
 
     // These are the getter of the m_AbsoluteTransform in MapSystem

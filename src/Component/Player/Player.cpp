@@ -21,8 +21,8 @@ Player::Player()
     this->m_AbsoluteTransform.translation = {0.0F, 0.0F};
 }
 
-glm::vec2 Player::GetObjectSize() {
-    return this->GetScaledSize();
+glm::vec2 Player::GetAbsoluteScale() {
+    return this->m_Drawable->GetSize() * this->m_AbsoluteTransform.scale;
 }
 
 Util::Transform Player::GetAbsoluteTransform() {
