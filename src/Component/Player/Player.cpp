@@ -4,7 +4,9 @@
 
 #include "Util/Input.hpp"
 #include "Util/Keycode.hpp"
+#include "Util/Logger.hpp"
 #include "Util/Time.hpp"
+#include "Util/Transform.hpp"
 
 Player::Player()
     : Character(
@@ -16,18 +18,18 @@ Player::Player()
               1
           )
       ) {
-    this->m_Cooridinate = {0.0F, 0.0F};
+    this->m_AbsoluteTransform.translation = {0.0F, 0.0F};
 }
 
 glm::vec2 Player::GetObjectSize() {
     return this->GetScaledSize();
 }
 
-glm::vec2 Player::GetCooridinate() {
-    return this->m_Cooridinate;
+Util::Transform Player::GetAbsoluteTransform() {
+    return this->m_AbsoluteTransform;
 }
 
-Util::Transform Player::GetTransform() {
+Util::Transform Player::GetObjectTransform() {
     return this->m_Transform;
 }
 
@@ -39,17 +41,16 @@ void Player::SetColliderSize(const glm::vec2 &colliderSize) {
     this->m_ColliderSize = colliderSize;
 }
 
-glm::vec2 Player::GetPosition() const {
-    return this->m_Cooridinate;
+glm::vec2 Player::GetAbsolutePosition() const {
+    return this->m_AbsoluteTransform.translation;
 }
 
 void Player::SetPosition(const glm::vec2 &position) {
-    this->m_Cooridinate = position;
-    this->m_Transform.translation = position;
+    this->m_AbsoluteTransform.translation = position;
 }
 
 Collision::AxisAlignedBox Player::GetCollisionBox() const {
-    return this->GetCollisionBoxAt(this->m_Cooridinate);
+    return this->GetCollisionBoxAt(this->m_AbsoluteTransform.translation);
 }
 
 Collision::AxisAlignedBox Player::GetCollisionBoxAt(const glm::vec2 &coordinate) const {
@@ -88,7 +89,6 @@ void Player::Update() {
 
     if (moveDirection == glm::vec2(0.0F, 0.0F)) {
         this->m_PendingMoveDelta = {0.0F, 0.0F};
-        this->m_Transform.translation = this->m_Cooridinate;
         return;
     }
 
@@ -103,10 +103,8 @@ void Player::Update() {
             frameDelta
         );
 
-        this->m_Cooridinate += movementResult.resolvedDelta;
+        this->m_AbsoluteTransform.translation += movementResult.resolvedDelta;
     } else {
-        this->m_Cooridinate += frameDelta;
+        this->m_AbsoluteTransform.translation += frameDelta;
     }
-
-    this->m_Transform.translation = this->m_Cooridinate;
 }

@@ -28,6 +28,11 @@ set(INCLUDE_FILES
     Scene.hpp
 
     Component/Collision/CollisionSystem.hpp
+    Common/Random.hpp
+    Common/Enums.hpp
+    Common/EnumMask.hpp
+    Common/Constants.hpp
+
     Component/Player/Player.hpp
     Component/TextButton/TextButton.hpp
     Component/TextButton/TextButtonProperty.hpp
@@ -48,6 +53,15 @@ set(INCLUDE_FILES
     Component/Camera/TraceCamera.hpp
     Component/Camera/MultiTraceCamere.hpp
     Component/Camera/Curve.hpp
+    Component/IStateful.hpp
+    Component/Map/MapPiece.hpp
+    Component/Camera/MultiTraceCamere.hpp
+    Component/Camera/Curve.hpp
+    
+    Generator/MapGenerator.hpp
+    Generator/JointRoomGen.hpp
+
+    Scene/MapTest.hpp
 )
 
 set(TEST_FILES

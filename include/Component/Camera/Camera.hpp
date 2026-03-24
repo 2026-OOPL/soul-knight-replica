@@ -37,7 +37,7 @@ public:
     glm::vec2 GetScale();
     float GetRotation();
 
-private:
+protected:
     Util::Transform m_Transform;
 };
 

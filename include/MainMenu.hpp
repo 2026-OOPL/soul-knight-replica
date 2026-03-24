@@ -4,9 +4,10 @@
 #include <imgui.h>
 #include <memory>
 
-#include "Component/TextButton/TextButton.hpp"
-#include "Scene.hpp"
 #include "Util/GameObject.hpp"
+
+#include "Scene.hpp"
+#include "Component/TextButton/TextButton.hpp"
 
 class MainMenu : public Scene {
 public:

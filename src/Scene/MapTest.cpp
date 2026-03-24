@@ -5,6 +5,7 @@
 #include "Component/Camera/Curve.hpp"
 #include "Component/Camera/TraceCamera.hpp"
 #include "Component/IStateful.hpp"
+#include "Util/Logger.hpp"
 #include "Util/Time.hpp"
 
 namespace {
@@ -32,6 +33,9 @@ MapTest::MapTest() : MapSystem() {
             return this->m_CollisionSystem.ResolveMovement(currentBox, intendedDelta);
         }
     );
+
+    m_MainPlayer->m_AbsoluteTransform.scale = {.5, .5};
+
     this->m_CollisionSystem.SetBlockingBoxProvider(
         [this]() {
             return Collision::BuildWallBoxes(this->m_Pieces);
@@ -43,6 +47,8 @@ MapTest::MapTest() : MapSystem() {
         this->m_MainPlayer,
         std::make_shared<EaseOutQubicCurve>()
     );
+
+    this->m_AttachCamera->SetScale({2, 2});
 
     if (this->m_MainPlayer != nullptr) {
         this->AddChild(this->m_MainPlayer);
@@ -88,6 +94,7 @@ void MapTest::Update() {
 
     if (this->m_MainPlayer != nullptr) {
         this->m_AttachCamera->SetTransformByCamera(this->m_MainPlayer);
+        this->m_MainPlayer->Update();
     }
 
     for (const auto &piece : this->m_Pieces) {
