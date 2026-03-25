@@ -1,61 +1,103 @@
-#include <glm/fwd.hpp>
+#include "Scene/MapTest.hpp"
+
 #include <memory>
 
 #include "Component/Camera/Curve.hpp"
-#include "Component/IStateful.hpp"
-#include "Component/IMapObject.hpp"
-#include "Component/Map/BaseRoom.hpp"
 #include "Component/Camera/TraceCamera.hpp"
-#include "Scene.hpp"
-#include "Scene/MapTest.hpp"
+#include "Component/IStateful.hpp"
+#include "Util/Logger.hpp"
 #include "Util/Time.hpp"
 
+namespace {
+
+constexpr float kPlayerSpawnBelowDoorDistance = 70.0F;
+constexpr float kDoorCloseDelayMs = 650.0F;
+
+} // namespace
+
 MapTest::MapTest() : MapSystem() {
-    m_MainPlayer = std::make_shared<Player>();
-    m_MainPlayer->SetPosition({0.0F, 0.0F});
-    m_MainPlayer->m_AbsoluteTransform.scale = {.5, .5};
+    RoomAssembly::Config roomConfig;
+    roomConfig.roomCenter = {0.0F, 0.0F};
+    roomConfig.wallThickness = this->m_RoomWallThickness;
+
+    this->m_MainRoomAssembly = std::make_unique<RoomAssembly>(std::move(roomConfig));
+    this->m_Pieces = this->m_MainRoomAssembly->GetPieces();
+    this->m_CollisionSystem.SetStaticBlockingBoxes(this->m_MainRoomAssembly->GetStaticWallBoxes());
     
-    this->AddChild(m_MainPlayer);
-    m_Players.push_back(m_MainPlayer);
-    
-    m_AttachCamera = std::make_shared<TraceCamera>(
-        m_MainPlayer, std::make_shared<EaseOutQubicCurve>()
+    this->m_MainPlayer = std::make_shared<Player>();
+    this->m_MainPlayer->SetPosition(
+        this->m_MainRoomAssembly->GetSuggestedBottomSpawn(kPlayerSpawnBelowDoorDistance)
+    );
+    this->m_MainPlayer->SetCollisionResolver(
+        [this](const Collision::AxisAlignedBox &currentBox, const glm::vec2 &intendedDelta) {
+            return this->m_CollisionSystem.ResolveMovement(currentBox, intendedDelta);
+        }
     );
 
-    m_AttachCamera->SetScale(glm::vec2(2 ,2));
+    m_MainPlayer->m_AbsoluteTransform.scale = {.5, .5};
 
-    m_Pieces.push_back(std::make_shared<BaseRoom>(
-        glm::vec2(0, 0)
-    ));
+    this->m_CollisionSystem.SetBlockingBoxProvider(
+        [this]() {
+            return Collision::BuildWallBoxes(this->m_Pieces);
+        }
+    );
+    this->m_Players.push_back(this->m_MainPlayer);
 
+    this->m_AttachCamera = std::make_shared<TraceCamera>(
+        this->m_MainPlayer,
+        std::make_shared<EaseOutQubicCurve>()
+    );
 
-    for (auto const& i : m_Pieces) {
-        this->AddChild(i);
+    this->m_AttachCamera->SetScale({3, 3});
+
+    if (this->m_MainPlayer != nullptr) {
+        this->AddChild(this->m_MainPlayer);
+    }
+
+    for (const auto &piece : this->m_Pieces) {
+        if (piece != nullptr) {
+            this->AddChild(piece);
+        }
     }
 }
 
-MapTest::~MapTest() {
-    this->RemoveChild(m_MainPlayer);
+MapTest::~MapTest() = default;
 
-    for (auto const& i : m_Pieces) {
-        this->RemoveChild(i);
-    }
-}
-
-void MapTest::Update() {    
-    for (const auto &piece : m_Pieces) {
-        m_AttachCamera->SetTransformByCamera(piece);
+void MapTest::Update() {
+    if (!this->m_HasPlayerEnteredMainRoom && this->IsPlayerInsideRoom()) {
+        this->m_HasPlayerEnteredMainRoom = true;
+        this->m_DoorCloseDelayRemainingMs = kDoorCloseDelayMs;
     }
 
-    m_AttachCamera->SetTransformByCamera(m_MainPlayer);
+    if (this->m_DoorCloseDelayRemainingMs >= 0.0F) {
+        this->m_DoorCloseDelayRemainingMs -= Util::Time::GetDeltaTimeMs();
 
-    m_MainPlayer->Update();
+        if (this->m_DoorCloseDelayRemainingMs <= 0.0F) {
+            if (this->m_MainRoomAssembly != nullptr) {
+                this->m_MainRoomAssembly->CloseAllDoors();
+            }
+            this->m_DoorCloseDelayRemainingMs = -1.0F;
+        }
+    }
 
-    // Update camera if available
-    std::shared_ptr<IStateful> statefulCamera = std::dynamic_pointer_cast<IStateful>(m_AttachCamera);
-    if (statefulCamera) {
+    this->Scene::Update();
+
+    if (this->m_AttachCamera == nullptr) {
+        return;
+    }
+
+    const std::shared_ptr<IStateful> statefulCamera =
+        std::dynamic_pointer_cast<IStateful>(this->m_AttachCamera);
+    if (statefulCamera != nullptr) {
         statefulCamera->Update();
     }
 
-    Scene::Update();
+    if (this->m_MainPlayer != nullptr) {
+        this->m_AttachCamera->SetTransformByCamera(this->m_MainPlayer);
+        this->m_MainPlayer->Update();
+    }
+
+    for (const auto &piece : this->m_Pieces) {
+        this->m_AttachCamera->SetTransformByCamera(piece);
+    }
 }

@@ -7,9 +7,9 @@
 #include <memory>
 
 bool TextButton::isMouseInBound() {
-    Util::Transform transform = GetTransform();
-    glm::vec2 size = GetScaledSize();
-    
+    Util::Transform transform = this->GetTransform();
+    glm::vec2 size = this->GetScaledSize();
+
     float left = transform.translation.x - size.x / 2;
     float right = transform.translation.x + size.x / 2;
     float down = transform.translation.y - size.y / 2;
@@ -20,45 +20,56 @@ bool TextButton::isMouseInBound() {
     return !(
         cursorPosition.x < left ||
         cursorPosition.x > right ||
-        cursorPosition.y < down || 
+        cursorPosition.y < down ||
         cursorPosition.y > up
     );
 }
 
 void TextButton::HandlePress() {
-    bool isInBound = isMouseInBound();
+    const bool isInBound = this->isMouseInBound();
+    const bool isMouseDown = Util::Input::IsKeyPressed(Util::Keycode::MOUSE_LB);
+    const bool isMousePressedThisFrame = Util::Input::IsKeyDown(Util::Keycode::MOUSE_LB);
+    const bool isMouseReleasedThisFrame = Util::Input::IsKeyUp(Util::Keycode::MOUSE_LB);
 
-    if (isInBound) {
-        isPressed = Util::Input::IsKeyPressed(Util::Keycode::MOUSE_LB);
-
-        if (Util::Input::IsKeyUp(Util::Keycode::MOUSE_LB) && action && action->onClick) {
-            action->onClick();
-        }
-    } else {
-        if (Util::Input::IsKeyUp(Util::Keycode::MOUSE_LB)) {
-            isPressed = false;
-        }
+    if (isMousePressedThisFrame && isInBound) {
+        this->m_PressedInside = true;
+        this->isPressed = true;
     }
 
+    if (!isMouseDown && !isMouseReleasedThisFrame) {
+        this->isPressed = false;
+    }
+
+    if (isMouseReleasedThisFrame) {
+        const bool shouldClick =
+            isInBound && this->m_PressedInside && this->action && this->action->onClick;
+
+        this->isPressed = false;
+        this->m_PressedInside = false;
+
+        if (shouldClick) {
+            this->action->onClick();
+        }
+    }
 }
 
 void TextButton::HandleHover() {
-    bool isInBound = isMouseInBound();
+    bool isInBound = this->isMouseInBound();
 
-    if (!isInBound && isEnter) {
-        isEnter = false;
-        
-        if (action && action->onLeave) {
-            action->onLeave();
+    if (!isInBound && this->isEnter) {
+        this->isEnter = false;
+
+        if (this->action && this->action->onLeave) {
+            this->action->onLeave();
         }
         return;
     }
 
-    if (isInBound && !isEnter) {
-        isEnter = true;
-        
-        if (action && action->onEnter) {
-            action->onEnter();
+    if (isInBound && !this->isEnter) {
+        this->isEnter = true;
+
+        if (this->action && this->action->onEnter) {
+            this->action->onEnter();
         }
 
         return;
@@ -66,17 +77,14 @@ void TextButton::HandleHover() {
 }
 
 void TextButton::Update() {
-    HandlePress();
-    HandleHover();
+    this->HandlePress();
+    this->HandleHover();
 
-    if (isPressed) {
-        std::dynamic_pointer_cast<Util::Text>(m_Drawable) 
-        -> SetColor(theme->pressed);
-    } else if (isEnter) {
-        std::dynamic_pointer_cast<Util::Text>(m_Drawable) 
-        -> SetColor(theme->hover);
+    if (this->isPressed) {
+        std::dynamic_pointer_cast<Util::Text>(this->m_Drawable)->SetColor(this->theme->pressed);
+    } else if (this->isEnter) {
+        std::dynamic_pointer_cast<Util::Text>(this->m_Drawable)->SetColor(this->theme->hover);
     } else {
-        std::dynamic_pointer_cast<Util::Text>(m_Drawable) 
-        -> SetColor(theme->normal);
+        std::dynamic_pointer_cast<Util::Text>(this->m_Drawable)->SetColor(this->theme->normal);
     }
 }

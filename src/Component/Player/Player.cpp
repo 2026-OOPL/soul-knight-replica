@@ -1,13 +1,28 @@
+#include "Component/Player/Player.hpp"
+
+#include <utility>
+
 #include "Util/Input.hpp"
 #include "Util/Keycode.hpp"
 #include "Util/Logger.hpp"
 #include "Util/Time.hpp"
 #include "Util/Transform.hpp"
 
-#include "Component/Player/Player.hpp"
+Player::Player()
+    : Character(
+          std::make_shared<Util::Animation>(
+              std::vector<std::string>{
+                  RESOURCE_DIR "/Character/Test/test_stand.png"
+              },
+              true,
+              1
+          )
+      ) {
+    this->m_AbsoluteTransform.translation = {0.0F, 0.0F};
+}
 
-glm::vec2 Player::GetObjectSize() {
-    return this->GetScaledSize();
+glm::vec2 Player::GetAbsoluteScale() {
+    return this->m_Drawable->GetSize() * this->m_AbsoluteTransform.scale;
 }
 
 Util::Transform Player::GetAbsoluteTransform() {
@@ -18,25 +33,32 @@ Util::Transform Player::GetObjectTransform() {
     return this->m_Transform;
 }
 
-std::vector<std::shared_ptr<Collider>> Player::GetCollideBox() {
-    // TODO
-    return {};
-}
-
 glm::vec2 Player::GetColliderSize() {
-    return m_ColliderSize;
+    return this->m_ColliderSize;
 }
 
 void Player::SetColliderSize(const glm::vec2 &colliderSize) {
-    m_ColliderSize = colliderSize;
+    this->m_ColliderSize = colliderSize;
 }
 
-glm::vec2 Player::GetPosition() const {
-    return m_Transform.translation;
+glm::vec2 Player::GetAbsolutePosition() const {
+    return this->m_AbsoluteTransform.translation;
 }
 
 void Player::SetPosition(const glm::vec2 &position) {
-    m_Transform.translation = position;
+    this->m_AbsoluteTransform.translation = position;
+}
+
+Collision::AxisAlignedBox Player::GetCollisionBox() const {
+    return this->GetCollisionBoxAt(this->m_AbsoluteTransform.translation);
+}
+
+Collision::AxisAlignedBox Player::GetCollisionBoxAt(const glm::vec2 &coordinate) const {
+    return Collision::CollisionSystem::BuildBox(coordinate, this->m_ColliderSize);
+}
+
+void Player::SetCollisionResolver(CollisionResolver collisionResolver) {
+    this->m_CollisionResolver = std::move(collisionResolver);
 }
 
 glm::vec2 Player::GetMoveIntent() const {
@@ -58,35 +80,31 @@ glm::vec2 Player::GetMoveIntent() const {
     if (moveIntent == glm::vec2(0.0F, 0.0F)) {
         return moveIntent;
     }
-    
-    /*為了移除斜線走路比直線快的bug*/
+
     return glm::normalize(moveIntent);
 }
 
 void Player::Update() {
     const glm::vec2 moveDirection = this->GetMoveIntent();
-    
-    if (moveDirection != glm::vec2(0.0F, 0.0F)) {
-        const glm::vec2 frameDelta =
-            moveDirection * this->m_PlayerSpeed * Util::Time::GetDeltaTimeMs();
 
-        glm::vec2 nextCoordinate = this->m_AbsoluteTransform.translation;
-
-        nextCoordinate.x += frameDelta.x;
-        if (!WillCollide()) {
-            this->m_AbsoluteTransform.translation = nextCoordinate;
-        }
-
-        nextCoordinate = this->m_AbsoluteTransform.translation;
-        nextCoordinate.y += frameDelta.y;
-        if (!WillCollide()) {
-            this->m_AbsoluteTransform.translation = nextCoordinate;
-        }
+    if (moveDirection == glm::vec2(0.0F, 0.0F)) {
+        this->m_PendingMoveDelta = {0.0F, 0.0F};
+        return;
     }
-}
 
-bool Player::WillCollide() {
-    // TODO: Collide logic
+    const glm::vec2 frameDelta =
+        moveDirection * this->m_PlayerSpeed * Util::Time::GetDeltaTimeMs();
 
-    return false;
+    this->m_PendingMoveDelta = frameDelta;
+
+    if (this->m_CollisionResolver) {
+        const Collision::MovementResult movementResult = this->m_CollisionResolver(
+            this->GetCollisionBox(),
+            frameDelta
+        );
+
+        this->m_AbsoluteTransform.translation += movementResult.resolvedDelta;
+    } else {
+        this->m_AbsoluteTransform.translation += frameDelta;
+    }
 }

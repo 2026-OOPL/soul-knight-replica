@@ -8,25 +8,36 @@ Util::Transform TraceCamera::GetTransformByCamera(std::shared_ptr<IMapObject> ob
     Util::Transform objectAbs = object->GetAbsoluteTransform();
     Util::Transform cameraAbs = this->m_Transform;
 
-    // 1. 計算世界空間中的位移向量
+    // 1. 計算世界空間位移 (World Delta)
     glm::vec2 worldDelta = objectAbs.translation - cameraAbs.translation;
 
-    // 2. 處理旋轉：物件必須繞著相機原點做反向旋轉
-    // 這裡假設 rotation 是弧度，且我們要套用的是相機旋轉的逆矩陣
+    // 2. 處理反向旋轉 (Inverse Rotation)
+    // 假設相機轉 30 度，畫面內容就要轉 -30 度
     float cosTheta = std::cos(-cameraAbs.rotation);
     float sinTheta = std::sin(-cameraAbs.rotation);
 
-    glm::vec2 relativeTranslation = {
+    glm::vec2 rotatedTranslation = {
         worldDelta.x * cosTheta - worldDelta.y * sinTheta,
         worldDelta.x * sinTheta + worldDelta.y * cosTheta
     };
 
-    // 3. 計算相對旋轉與縮放
-    // 旋轉通常是角度相減，縮放則是比例相除（看你的應用場景）
+    // 3. 處理相機縮放 (Scale as Zoom Factor)
+    // 當 cameraAbs.scale 為 2 時，位移與大小皆放大兩倍
+    glm::vec2 finalTranslation = {
+        rotatedTranslation.x * cameraAbs.scale.x,
+        rotatedTranslation.y * cameraAbs.scale.y
+    };
+
+    glm::vec2 finalScale = {
+        objectAbs.scale.x * cameraAbs.scale.x,
+        objectAbs.scale.y * cameraAbs.scale.y
+    };
+
+    // 4. 回傳變換結果
     return {
-        relativeTranslation,
-        objectAbs.rotation - cameraAbs.rotation,
-        objectAbs.scale * cameraAbs.scale // 通常局部縮放是相除，確保物件大小受相機倍率影響
+        finalTranslation,
+        objectAbs.rotation - cameraAbs.rotation, // 相對旋轉通常仍為相減
+        finalScale
     };
 }
 

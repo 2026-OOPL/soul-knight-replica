@@ -14,10 +14,8 @@ public:
         this->m_WalkAnimation = WalkAnimation;
     };
 
-
-
 protected:
-    float m_PlayerSpeed = 0.35F;
+    float m_PlayerSpeed = 0.15F;
     std::shared_ptr<Util::Animation> m_WalkAnimation;
 };
 
