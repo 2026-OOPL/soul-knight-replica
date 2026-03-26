@@ -2,7 +2,7 @@
 #include <memory>
 #include <stdexcept>
 
-#include "Generator/RandomChoose.hpp"
+#include "Common/Random.hpp"
 #include "Common/EnumMask.hpp"
 #include "Common/Enums.hpp"
 
@@ -43,14 +43,30 @@ int RandomChoose::GetInteger(int start, int end) {
     return (int) (seed * (end-start)) + start;  
 };
 
-Direction RandomChoose::GetDirection() {
-    return this->GetEnum<Direction>();
+int RandomChoose::GetInteger(int end) {
+    return this->GetInteger(0, end);
 }
 
-Direction RandomChoose::GetDirection(std::shared_ptr<EnumMask<Direction>> mask) {
-    return this->GetEnum<Direction>(mask);
+float RandomChoose::GetFloat() {
+    float seed = m_Dist(m_Engine);
+    return seed;
 }
 
-RoomType RandomChoose::GetRoomType() {
-    return this->GetEnum<RoomType>();
+float RandomChoose::GetFloat(float end) {
+    return end * this->GetFloat();
+}
+
+float RandomChoose::GetFloat(float start, float end) {
+    return (end - start) * this->GetFloat() + start;
+}
+
+bool RandomChoose::GetBool() {
+    float seed = m_Dist(m_Engine);
+    return seed > 0.5;
+}
+
+template <typename T> 
+T RandomChoose::ChooseFromVector(std::vector<T>& vector) {
+    int index = this->GetInteger(vector.size()-1);
+    return vector[index];
 }

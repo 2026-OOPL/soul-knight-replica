@@ -7,96 +7,152 @@
 
 #include "Common/Enums.hpp"
 #include "Common/Constants.hpp"
+#include "Common/Random.hpp"
+#include "Generator/GenFightChamber.hpp"
+#include "Generator/GenPortalChamber.hpp"
+#include "Generator/GenRewardChamber.hpp"
 #include "Generator/MapGenerator.hpp"
 
 MapGenerator::MapGenerator(std::string seed) {
-    m_RandomChoose = std::make_shared<RandomChoose>(seed);
+    this->m_RandomChoose = std::make_shared<RandomChoose>(seed);
 
-    m_MapGridSize = m_RandomChoose->GetInteger(5, 10);
-
-    // Set random room count from seed 
-    m_RemainRoomCount = m_RandomChoose->GetInteger(
-        MAP_MINUMUM_ROOM_GENERATE_COUNT,
-        MAP_MAXIMUM_ROOM_GENERATE_COUNT
-    );
-
-    m_MapGrid = std::vector<std::shared_ptr<RoomInfo>>(
-        m_MapGridSize * m_MapGridSize,
-        nullptr
-    );
-
-    // 1. Generate fighting chamber 
+    int mapSize = m_RandomChoose->GetInteger(5, 10);
     
-    // 2. Generate reward rooms 
+    this->m_MapGridSize = glm::vec2(mapSize, mapSize);
+    this->m_StartDirection = m_RandomChoose->GetEnum<Direction>();
+    this->m_StartCoordinateOffset = m_RandomChoose->GetInteger(mapSize-1);
+}
 
-    // 3. Generate portal room
+bool MapGenerator::FightChamberCooridinateValidator(glm::vec2 cooridinate) {
+    if (cooridinate.x <= 0 || cooridinate.x >= m_MapGridSize.x-1) {
+        return false;
+    }
+
+    if (cooridinate.y <= 0 || cooridinate.y >= m_MapGridSize.y-1) {
+        return false;
+    }
+
+    return true;
+}
+
+bool MapGenerator::RewardChamberCooridinateValidator(glm::vec2 cooridinate) {
+    return true;
 }
 
 void MapGenerator::GenerateRoom() {
-    m_CurrentPosition = this->GetStartCooridinate();
 
-    glm::vec2 startCooridinate = this->GetStartCooridinate();
+    m_GenChamber = std::make_shared<GenFightChamber>(
+        this->GetFightingChamberStartCooridinate(),
+        [this](glm::vec2 p) {return this->FightChamberCooridinateValidator(p);},
+        2,
+        4,
+        m_Blueprint,
+        m_RandomChoose
+    );
 
-    m_CurrentPosition = startCooridinate;
+    m_GenChamber->Generate();
 
-    do {
-        this->GenerateRoom(startCooridinate);
-
-        // Hop to the spot which is an empty room
-        do {
-            m_CurrentPosition = this->GetRandomNeighbor();
-        } while (this->GetInfoByCooridinate(m_CurrentPosition) != nullptr);
-
-    } while (1);
-}
-
-glm::vec2 MapGenerator::GetRandomNeighbor() {
-    int offset = this->m_RandomChoose->GetBool() ? 1 : -1;
-
-    glm::vec2 next;
+    m_GenChamber = std::make_shared<GenRewardChamber>(
+        [this](glm::vec2 p) {return this->RewardChamberCooridinateValidator(p);},
+        2,
+        4,
+        m_Blueprint,
+        m_RandomChoose
+    );
     
-    if (this->m_RandomChoose->GetBool()) {
-        next = m_CurrentPosition + glm::vec2(offset, 0);
-    } else {
-        next = m_CurrentPosition + glm::vec2(0, offset);
-    }
+    m_GenChamber->Generate();
 
-    if (next.x >= m_MapGridSize || next.x < 0) {
-        return this->GetRandomNeighbor();
-    }
+    m_GenChamber = std::make_shared<GenPortalChamber>(
+        this->GetPortalChamberGenPolicy(),
+        [](glm::vec2 _) {return true;},
+        m_Blueprint,
+        m_RandomChoose
+    );
+    
+    m_GenChamber->Generate();
 
-    if (next.y >= m_MapGridSize || next.y < 0) {
-        return this->GetRandomNeighbor();
-    }
+    std::shared_ptr<RoomInfo> starterRoom = std::make_shared<RoomInfo>(
+        RoomType::ROOM_13_13, RoomPurpose::STARTER
+    );
 
-    return next;
+    m_Blueprint->SetElementByCooridinate(
+        this->GetStarterChamberCooridinate(),
+        starterRoom
+    );
 }
 
-void MapGenerator::GenerateRoom(glm::vec2 posotion) {
-    if (this->GetInfoByCooridinate(posotion) != nullptr) {
-        throw std::runtime_error("This position already has a room");
+glm::vec2 MapGenerator::GetStarterChamberCooridinate() {
+    switch (m_StartDirection) {
+        case Direction::BOTTOM:
+            return glm::vec2(m_StartCoordinateOffset, m_MapGridSize.x-1);
+        
+        case Direction::LEFT:
+            return glm::vec2(m_StartCoordinateOffset, 0);
+
+        case Direction::RIGHT:
+            return glm::vec2(m_MapGridSize.y-1, m_StartCoordinateOffset);
+
+        case Direction::TOP:
+            return glm::vec2(m_StartCoordinateOffset, 0);
     }
 
-}
-
-std::shared_ptr<RoomInfo> MapGenerator::GetInfoByCooridinate(glm::vec2 coord) {
-    return this->m_MapGrid[m_MapGridSize * coord.x + coord.y];
-}
-
-glm::vec2 MapGenerator::GetStartCooridinate() {
     std::vector<glm::vec2> locations = {
         glm::vec2(0, 1),
-        glm::vec2(1, m_MapGridSize-1),
-        glm::vec2(m_MapGridSize-1, m_MapGridSize-2),
-        glm::vec2(m_MapGridSize-1, 1) 
+        glm::vec2(1, m_MapGridSize.y-1),
+        glm::vec2(m_MapGridSize.x-1, m_MapGridSize.y-2),
+        glm::vec2(m_MapGridSize.x-1, 1) 
     };
 
     int index = m_RandomChoose->GetInteger(0, 3);
     return locations[index];
 }
 
-void MapGenerator::GenerateFightingChamber() {
-    
-    return;
+glm::vec2 MapGenerator::GetFightingChamberStartCooridinate() {
+    glm::vec2 startCoridinate = this->GetStarterChamberCooridinate();
+
+    switch (m_StartDirection) {
+        case Direction::BOTTOM:
+            return startCoridinate + glm::vec2(0, -1);
+        
+        case Direction::LEFT:
+            return startCoridinate + glm::vec2(1, 0);
+
+        case Direction::RIGHT:
+            return startCoridinate + glm::vec2(-1, 0);
+
+        case Direction::TOP:
+            return startCoridinate + glm::vec2(0, 1);
+    }
 }
 
+GeneratePolicy MapGenerator::GetPortalChamberGenPolicy() {
+    switch (m_StartDirection) {
+        case Direction::BOTTOM:
+            if (m_StartCoordinateOffset > m_MapGridSize.x / 2) {
+                return GeneratePolicy::TOP_LEFT;
+            } else {
+                return GeneratePolicy::TOP_RIGHT;
+            }
+
+        case Direction::TOP:
+            if (m_StartCoordinateOffset > m_MapGridSize.x / 2) {
+                return GeneratePolicy::BOTTOM_LEFT;
+            } else {
+                return GeneratePolicy::BOTTOM_RIGHT;
+            }
+
+        case Direction::LEFT:
+            if (m_StartCoordinateOffset > m_MapGridSize.y / 2) {
+                return GeneratePolicy::TOP_RIGHT;
+            } else {
+                return GeneratePolicy::BOTTOM_RIGHT;
+            }
+        
+        case Direction::RIGHT:
+            if (m_StartCoordinateOffset > m_MapGridSize.y / 2) {
+                return GeneratePolicy::TOP_LEFT;
+            } else {
+                return GeneratePolicy::BOTTOM_LEFT;
+            }
+    }
+}

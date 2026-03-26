@@ -1,23 +1,33 @@
 #ifndef MAP_GENERATOR_HPP
 #define MAP_GENERATOR_HPP
 
+#include "MapBlueprint.hpp"
+#include <glm/fwd.hpp>
 #include <memory>
 #include <string>
 #include <vector>
 
-#include <glm/fwd.hpp>
 #include <glm/vec2.hpp>
 
-#include "../Common/Random.hpp"
-#include "../Common/EnumMask.hpp"
+class GenChamber;
+class RandomChoose;
+
+enum class RoomType;
+enum class RoomPurpose;
+enum class Direction;
+enum class GeneratePolicy;
 
 struct RoomInfo {
-    RoomInfo (RoomType type) {
+public:
+    RoomInfo (RoomType type, RoomPurpose roomPurpose) {
         roomType = type;
+        roomPurpose = roomPurpose;
     }
     
-    // Which of the size is used for this room  
+    // Which of the size is used for this room
     RoomType roomType;
+
+    RoomPurpose roomPurpose;
 };
 
 class MapGenerator {
@@ -27,28 +37,24 @@ public:
     void GenerateRoom();
 
 protected:
-    std::shared_ptr<RoomInfo> GetInfoByCooridinate(glm::vec2 coord);
+    glm::vec2 GetStarterChamberCooridinate();
+    glm::vec2 GetFightingChamberStartCooridinate();
+    GeneratePolicy GetPortalChamberGenPolicy();
 
-    glm::vec2 GetStartCooridinate();
+    std::shared_ptr<GenChamber> m_GenChamber;
 
-    glm::vec2 GetRandomNeighbor();
-    
-private:
-glm::vec2 m_CurrentPosition;
-
-int m_MapGridSize;    
-int m_RemainRoomCount;
-
-int m_FightingChamberCount;
-    int m_RewardChamberCount;
-    int m_PortalChamberCount;
-
+    std::shared_ptr<MapBlueprint> m_Blueprint;
     std::shared_ptr<RandomChoose> m_RandomChoose;
-    std::vector<std::shared_ptr<RoomInfo>> m_MapGrid;
-    
-    void GenerateRoom(glm::vec2 coord);
 
-    void GenerateFightingChamber();
+    bool FightChamberCooridinateValidator(glm::vec2 cooridinate);
+    bool RewardChamberCooridinateValidator(glm::vec2 cooridinate);
+
+private:
+    glm::vec2 m_MapGridSize;
+    glm::vec2 m_CurrentPosition;
+
+    Direction m_StartDirection;
+    int m_StartCoordinateOffset;
 };
 
 #endif
