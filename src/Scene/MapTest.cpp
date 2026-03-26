@@ -80,8 +80,6 @@ void MapTest::Update() {
         }
     }
 
-    this->Scene::Update();
-
     if (this->m_AttachCamera == nullptr) {
         return;
     }
@@ -100,4 +98,6 @@ void MapTest::Update() {
     for (const auto &piece : this->m_Pieces) {
         this->m_AttachCamera->SetTransformByCamera(piece);
     }
+
+    this->Scene::Update();
 }
