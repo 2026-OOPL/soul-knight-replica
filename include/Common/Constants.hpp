@@ -1,7 +1,8 @@
 #ifndef CONSTANTS_HPP
 #define CONSTANTS_HPP
 
-constexpr float MAP_PIXEL_PER_BLOCK = 16;
+constexpr int MAP_PIXEL_PER_BLOCK = 16;
+constexpr int GANGWAY_MINIMAL_MARGIN_BLOCKS = 5; 
 
 namespace MapGeneration {
     constexpr int MINUMUM_FIGHT_ROOM = 6;
