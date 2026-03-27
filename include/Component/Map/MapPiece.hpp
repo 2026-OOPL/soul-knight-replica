@@ -25,7 +25,6 @@ public:
         std::string resource,
         bool isWall = false
     );
-
     
     glm::vec2 GetAbsoluteScale() override;
     Util::Transform GetAbsoluteTransform() override;
@@ -41,7 +40,9 @@ public:
     void SetColliderSize(const glm::vec2 &colliderSize) {
         this->m_ColliderSize = colliderSize;
     }
+    
     Util::Transform m_AbsoluteTransform;
+
 private:
 
     std::shared_ptr<Util::Image> m_Image;//圖片路徑

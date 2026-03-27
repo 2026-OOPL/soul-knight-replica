@@ -40,6 +40,7 @@ public:
 
     static AxisAlignedBox BuildBox(const glm::vec2 &center, const glm::vec2 &size);
 
+    void AddStaticBlockingBoxes(const std::vector<AxisAlignedBox> &blockingBoxes);
     void SetStaticBlockingBoxes(const std::vector<AxisAlignedBox> &blockingBoxes);
     void SetBlockingBoxProvider(BlockingBoxProvider blockingBoxProvider);
 
