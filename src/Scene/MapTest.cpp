@@ -5,11 +5,23 @@
 #include "Component/IStateful.hpp"
 #include "Generator/MapGenerator.hpp"
 #include "Scene/MapTest.hpp"
-#include "Util/Time.hpp"
 
 namespace {
 
-constexpr float kDoorCloseDelayMs = 650.0F;
+void ApplyCameraRecursive(
+    const std::shared_ptr<Camera> &camera,
+    const std::shared_ptr<Util::GameObject> &object
+) {
+    if (camera == nullptr || object == nullptr) {
+        return;
+    }
+
+    camera->SetTransformByCamera(object);
+
+    for (const auto &child : object->GetChildren()) {
+        ApplyCameraRecursive(camera, child);
+    }
+}
 
 } // namespace
 
@@ -19,31 +31,25 @@ MapTest::MapTest() : MapSystem() {
     );
 
     generator->Generate();
+    this->m_RoomsInScene = generator->GetRooms();
+    this->AddRooms(this->m_RoomsInScene);
 
-    this->m_RoomAssemblies = generator->GetRoomAssembly();
-
-    for (const auto &roomAssembly : this->m_RoomAssemblies) {
-        if (roomAssembly == nullptr) {
+    for (const auto &room : this->m_RoomsInScene) {
+        if (room == nullptr) {
             continue;
         }
 
-        this->AddMapPieces(roomAssembly->GetPieces());
-        this->AddRoom(roomAssembly->GetRoom());
+        this->AddChild(room);
 
-        if (this->m_MainRoomAssembly == nullptr &&
-            roomAssembly->GetPurpose() == RoomPurpose::STARTER) {
-            this->m_MainRoomAssembly = roomAssembly;
+        if (this->m_MainRoom == nullptr &&
+            room->GetPurpose() == RoomPurpose::STARTER) {
+            this->m_MainRoom = room;
         }
     }
 
     this->m_MainPlayer = std::make_shared<Player>();
-
-    if (this->m_MainRoomAssembly != nullptr) {
-        this->m_MainPlayer->SetPosition(
-            this->m_MainRoomAssembly->GetRoom()->GetAbsoluteCooridinate()
-        );
-    } else {
-        this->m_MainPlayer->SetPosition({0.0F, 0.0F});
+    if (this->m_MainRoom != nullptr) {
+        this->m_MainPlayer->SetPosition(this->m_MainRoom->GetAbsoluteCooridinate());
     }
 
     this->m_MainPlayer->SetCollisionResolver(
@@ -60,18 +66,9 @@ MapTest::MapTest() : MapSystem() {
         this->m_MainPlayer,
         std::make_shared<EaseOutQubicCurve>()
     );
+    this->m_AttachCamera->SetScale({0.5F, 0.5F});
 
-    this->m_AttachCamera->SetScale({0.5, 0.5});
-
-    if (this->m_MainPlayer != nullptr) {
-        this->AddChild(this->m_MainPlayer);
-    }
-
-    for (const auto &piece : this->m_Pieces) {
-        if (piece != nullptr) {
-            this->AddChild(piece);
-        }
-    }
+    this->AddChild(this->m_MainPlayer);
 }
 
 MapTest::~MapTest() = default;
@@ -79,27 +76,6 @@ MapTest::~MapTest() = default;
 void MapTest::Update() {
     if (this->m_MainPlayer != nullptr) {
         this->UpdateCurrentRoom(this->m_MainPlayer->GetAbsolutePosition());
-    }
-
-    if (!this->m_HasPlayerEnteredMainRoom &&
-        this->m_MainRoomAssembly != nullptr &&
-        this->m_MainPlayer != nullptr &&
-        this->m_MainRoomAssembly->GetRoom()->IsPlayerInside(
-            this->m_MainPlayer->GetAbsolutePosition()
-        )) {
-        this->m_HasPlayerEnteredMainRoom = true;
-        this->m_DoorCloseDelayRemainingMs = kDoorCloseDelayMs;
-    }
-
-    if (this->m_DoorCloseDelayRemainingMs >= 0.0F) {
-        this->m_DoorCloseDelayRemainingMs -= Util::Time::GetDeltaTimeMs();
-
-        if (this->m_DoorCloseDelayRemainingMs <= 0.0F) {
-            if (this->m_MainRoomAssembly != nullptr) {
-                this->m_MainRoomAssembly->CloseAllDoors();
-            }
-            this->m_DoorCloseDelayRemainingMs = -1.0F;
-        }
     }
 
     if (this->m_AttachCamera == nullptr) {
@@ -116,8 +92,8 @@ void MapTest::Update() {
         this->m_AttachCamera->SetTransformByCamera(this->m_MainPlayer);
     }
 
-    for (const auto &piece : this->m_Pieces) {
-        this->m_AttachCamera->SetTransformByCamera(piece);
+    for (const auto &room : this->m_RoomsInScene) {
+        ApplyCameraRecursive(this->m_AttachCamera, room);
     }
 
     this->Scene::Update();

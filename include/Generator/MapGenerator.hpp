@@ -9,7 +9,7 @@
 #include <glm/vec2.hpp>
 
 #include "MapBlueprint.hpp"
-#include "Component/Map/RoomAssembly.hpp"
+#include "Component/Map/BaseRoom.hpp"
 
 class GenChamber;
 class RandomChoose;
@@ -38,7 +38,7 @@ public:
     
     void Generate();
 
-    std::vector<std::shared_ptr<RoomAssembly>> GetRoomAssembly();
+    std::vector<std::shared_ptr<BaseRoom>> GetRooms();
 
     std::shared_ptr<MapBlueprint> m_Blueprint;
 

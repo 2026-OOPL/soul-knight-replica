@@ -25,27 +25,29 @@ enum class RoomPurpose {
     PORTAL
 };
 
-struct WallDoorConfig {
-    bool hasOpening = false;
+struct DoorSideConfig {
     bool hasDoor = false;
-    float openingSize = 0.0F;
-    float openingOffset = 0.0F;
     bool startsOpen = true;
 };
 
-struct RoomBoundaryConfig {
-    WallDoorConfig top;
-    WallDoorConfig right;
-    WallDoorConfig bottom;
-    WallDoorConfig left;
+struct DoorConfig {
+    DoorSideConfig top;
+    DoorSideConfig right;
+    DoorSideConfig bottom;
+    DoorSideConfig left;
 };
 
-struct RoomAssemblyConfig {
-    RoomType type = RoomType::ROOM_13_13;
-    RoomPurpose purpose = RoomPurpose::FIGHTING;
-    glm::vec2 roomCenter = {0.0F, 0.0F};
-    float wallThickness = 20.0F;
-    RoomBoundaryConfig boundaries;
+struct WallSideConfig {
+    bool hasOpening = false;
+    float thickness = 20.0F;
+    float openingOffset = 0.0F;
+};
+
+struct WallConfig {
+    WallSideConfig top;
+    WallSideConfig right;
+    WallSideConfig bottom;
+    WallSideConfig left;
 };
 
 #endif

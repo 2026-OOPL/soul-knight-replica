@@ -1,14 +1,12 @@
 #include "Component/Map/MapSystem.hpp"
 
-#include <utility>
-
 MapSystem::MapSystem()
     : Scene() {
-}
-
-MapSystem::MapSystem(std::vector<std::shared_ptr<MapPiece>> pieces)
-    : Scene(),
-      m_Pieces(std::move(pieces)) {
+    this->m_CollisionSystem.SetBlockingBoxProvider(
+        [this]() {
+            return this->CollectCurrentRoomColliders();
+        }
+    );
 }
 
 bool MapSystem::IsPlayerInsideRoom() const {
@@ -30,12 +28,6 @@ glm::vec2 MapSystem::GetCameraCoor() const {
     }
 
     return this->m_AttachCamera->GetCooridinate();
-}
-
-void MapSystem::AddMapPieces(const std::vector<std::shared_ptr<MapPiece>> &pieces) {
-    for (const auto &piece : pieces) {
-        this->m_Pieces.push_back(piece);
-    }
 }
 
 void MapSystem::AddRoom(const std::shared_ptr<BaseRoom> &room) {
@@ -67,9 +59,28 @@ Collision::MovementResult MapSystem::ResolvePlayerMovement(
     }
 
     const Collision::MovementResult result =
-        this->m_CurrentRoom->ResolvePlayerMovement(currentBox, intendedDelta);
+        this->m_CollisionSystem.ResolveMovement(currentBox, intendedDelta);
     this->UpdateCurrentRoom(currentBox.center + result.resolvedDelta);
     return result;
+}
+
+std::vector<Collision::AxisAlignedBox> MapSystem::CollectCurrentRoomColliders() const {
+    if (this->m_CurrentRoom == nullptr) {
+        return {};
+    }
+
+    std::vector<Collision::AxisAlignedBox> colliders =
+        this->m_CurrentRoom->GetStaticColliders();
+    const std::vector<Collision::AxisAlignedBox> dynamicColliders =
+        this->m_CurrentRoom->GetDynamicColliders();
+
+    colliders.insert(
+        colliders.end(),
+        dynamicColliders.begin(),
+        dynamicColliders.end()
+    );
+
+    return colliders;
 }
 
 std::shared_ptr<BaseRoom> MapSystem::FindRoomByPlayerPosition(const glm::vec2 &playerPos) const {
@@ -83,9 +94,18 @@ std::shared_ptr<BaseRoom> MapSystem::FindRoomByPlayerPosition(const glm::vec2 &p
 }
 
 void MapSystem::UpdateCurrentRoom(const glm::vec2 &playerPos) {
-    if (this->m_CurrentRoom != nullptr && this->m_CurrentRoom->IsPlayerInside(playerPos)) {
+    const std::shared_ptr<BaseRoom> nextRoom = this->FindRoomByPlayerPosition(playerPos);
+    if (nextRoom == this->m_CurrentRoom) {
         return;
     }
 
-    this->m_CurrentRoom = this->FindRoomByPlayerPosition(playerPos);
+    if (this->m_CurrentRoom != nullptr) {
+        this->m_CurrentRoom->OnPlayerLeave();
+    }
+
+    this->m_CurrentRoom = nextRoom;
+
+    if (this->m_CurrentRoom != nullptr) {
+        this->m_CurrentRoom->OnPlayerEnter();
+    }
 }

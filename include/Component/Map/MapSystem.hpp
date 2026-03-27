@@ -9,7 +9,6 @@
 #include "Component/Camera/Camera.hpp"
 #include "Component/Collision/CollisionSystem.hpp"
 #include "Component/Map/BaseRoom.hpp"
-#include "Component/Map/MapPiece.hpp"
 #include "Component/Mob/Mob.hpp"
 #include "Component/Player/Player.hpp"
 #include "Scene.hpp"
@@ -18,14 +17,11 @@ class MapSystem : public Scene {
 public:
     MapSystem();
 
-    explicit MapSystem(std::vector<std::shared_ptr<MapPiece>> pieces);
-
     ~MapSystem() override = default;
 
     bool IsPlayerInsideRoom() const;
     glm::vec2 GetCameraCoor() const;
 
-    void AddMapPieces(const std::vector<std::shared_ptr<MapPiece>> &pieces);
     void AddRoom(const std::shared_ptr<BaseRoom> &room);
     void AddRooms(const std::vector<std::shared_ptr<BaseRoom>> &rooms);
 
@@ -35,13 +31,14 @@ public:
     );
 
 protected:
+    std::vector<Collision::AxisAlignedBox> CollectCurrentRoomColliders() const;
     std::shared_ptr<BaseRoom> FindRoomByPlayerPosition(const glm::vec2 &playerPos) const;
     void UpdateCurrentRoom(const glm::vec2 &playerPos);
 
+    Collision::CollisionSystem m_CollisionSystem;
     std::vector<std::shared_ptr<Mob>> m_Mobs;
     std::vector<std::shared_ptr<Player>> m_Players;
     std::vector<std::shared_ptr<Camera>> m_Cameras;
-    std::vector<std::shared_ptr<MapPiece>> m_Pieces;
     std::vector<std::shared_ptr<BaseRoom>> m_Rooms;
     std::shared_ptr<BaseRoom> m_CurrentRoom;
     std::shared_ptr<Camera> m_AttachCamera;
