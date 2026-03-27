@@ -29,13 +29,27 @@ bool HasRoomAt(
 
 RoomBoundaryConfig BuildBoundaryConfig(
     const std::shared_ptr<MapBlueprint> &blueprint,
-    const glm::ivec2 &coordinate
+    const glm::ivec2 &coordinate,
+    RoomPurpose purpose
 ) {
     RoomBoundaryConfig boundaries;
-    boundaries.top.hasDoor = HasRoomAt(blueprint, coordinate + glm::ivec2(0, 1));
-    boundaries.right.hasDoor = HasRoomAt(blueprint, coordinate + glm::ivec2(1, 0));
-    boundaries.bottom.hasDoor = HasRoomAt(blueprint, coordinate + glm::ivec2(0, -1));
-    boundaries.left.hasDoor = HasRoomAt(blueprint, coordinate + glm::ivec2(-1, 0));
+    const bool hasTopNeighbor = HasRoomAt(blueprint, coordinate + glm::ivec2(0, 1));
+    const bool hasRightNeighbor = HasRoomAt(blueprint, coordinate + glm::ivec2(1, 0));
+    const bool hasBottomNeighbor = HasRoomAt(blueprint, coordinate + glm::ivec2(0, -1));
+    const bool hasLeftNeighbor = HasRoomAt(blueprint, coordinate + glm::ivec2(-1, 0));
+
+    boundaries.top.hasOpening = hasTopNeighbor;
+    boundaries.right.hasOpening = hasRightNeighbor;
+    boundaries.bottom.hasOpening = hasBottomNeighbor;
+    boundaries.left.hasOpening = hasLeftNeighbor;
+
+    if (purpose != RoomPurpose::STARTER) {
+        boundaries.top.hasDoor = hasTopNeighbor;
+        boundaries.right.hasDoor = hasRightNeighbor;
+        boundaries.bottom.hasDoor = hasBottomNeighbor;
+        boundaries.left.hasDoor = hasLeftNeighbor;
+    }
+
     return boundaries;
 }
 
@@ -233,7 +247,11 @@ std::vector<std::shared_ptr<RoomAssembly>> MapGenerator::GetRoomAssembly() {
             config.roomCenter =
                 offset * glm::ivec2(27 * MAP_PIXEL_PER_BLOCK, 27 * MAP_PIXEL_PER_BLOCK);
             config.wallThickness = MapColliderConfig::kDefaultWallThickness;
-            config.boundaries = BuildBoundaryConfig(this->m_Blueprint, chamberCooridinate);
+            config.boundaries = BuildBoundaryConfig(
+                this->m_Blueprint,
+                chamberCooridinate,
+                info->roomPurpose
+            );
 
             assembly.push_back(std::make_shared<RoomAssembly>(config));
         }

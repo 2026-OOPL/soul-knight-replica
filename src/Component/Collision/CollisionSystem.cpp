@@ -278,7 +278,7 @@ std::vector<AxisAlignedBox> BuildRoomBoundaryBoxes(
     float bottomWallsOffest=20.0F;
     const std::vector<AxisAlignedBox> bottomWalls = BuildHorizontalWallSegments(
         roomCenter,
-        roomCenter.y - roomHalfSize.y + halfWallThickness+bottomWallsOffest,//襪操
+        roomCenter.y - roomHalfSize.y + halfWallThickness+bottomWallsOffest, //襪操
         roomSize.x,
         safeWallThickness,
         openings.bottom

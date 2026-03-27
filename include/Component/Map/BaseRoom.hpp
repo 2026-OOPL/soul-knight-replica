@@ -39,6 +39,7 @@ private:
     Collision::RoomBoundaryOpenings BuildWallOpenings() const;
     std::vector<Collision::AxisAlignedBox> CollectClosedDoorColliders() const;
     float GetOpeningSizeForSide(DoorSide side) const;
+    bool HasOpeningForSide(DoorSide side) const;
     void BuildWallColliders();
 
     glm::vec2 m_RoomSize = {0.0F, 0.0F};

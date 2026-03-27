@@ -26,6 +26,7 @@ enum class RoomPurpose {
 };
 
 struct WallDoorConfig {
+    bool hasOpening = false;
     bool hasDoor = false;
     float openingSize = 0.0F;
     float openingOffset = 0.0F;

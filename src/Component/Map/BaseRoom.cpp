@@ -78,22 +78,22 @@ RoomPurpose BaseRoom::GetPurpose() const {
 Collision::RoomBoundaryOpenings BaseRoom::BuildWallOpenings() const {
     Collision::RoomBoundaryOpenings openings;
 
-    if (this->m_Config.boundaries.top.hasDoor) {
+    if (this->HasOpeningForSide(DoorSide::Top)) {
         openings.top.size = this->GetOpeningSizeForSide(DoorSide::Top);
         openings.top.offset = this->m_Config.boundaries.top.openingOffset;
     }
 
-    if (this->m_Config.boundaries.right.hasDoor) {
+    if (this->HasOpeningForSide(DoorSide::Right)) {
         openings.right.size = this->GetOpeningSizeForSide(DoorSide::Right);
         openings.right.offset = this->m_Config.boundaries.right.openingOffset;
     }
 
-    if (this->m_Config.boundaries.bottom.hasDoor) {
+    if (this->HasOpeningForSide(DoorSide::Bottom)) {
         openings.bottom.size = this->GetOpeningSizeForSide(DoorSide::Bottom);
         openings.bottom.offset = this->m_Config.boundaries.bottom.openingOffset;
     }
 
-    if (this->m_Config.boundaries.left.hasDoor) {
+    if (this->HasOpeningForSide(DoorSide::Left)) {
         openings.left.size = this->GetOpeningSizeForSide(DoorSide::Left);
         openings.left.offset = this->m_Config.boundaries.left.openingOffset;
     }
@@ -146,6 +146,28 @@ float BaseRoom::GetOpeningSizeForSide(DoorSide side) const {
     }
 
     return 0.0F;
+}
+
+bool BaseRoom::HasOpeningForSide(DoorSide side) const {
+    switch (side) {
+    case DoorSide::Top:
+        return this->m_Config.boundaries.top.hasOpening ||
+               this->m_Config.boundaries.top.hasDoor;
+
+    case DoorSide::Right:
+        return this->m_Config.boundaries.right.hasOpening ||
+               this->m_Config.boundaries.right.hasDoor;
+
+    case DoorSide::Bottom:
+        return this->m_Config.boundaries.bottom.hasOpening ||
+               this->m_Config.boundaries.bottom.hasDoor;
+
+    case DoorSide::Left:
+        return this->m_Config.boundaries.left.hasOpening ||
+               this->m_Config.boundaries.left.hasDoor;
+    }
+
+    return false;
 }
 
 void BaseRoom::BuildWallColliders() {
