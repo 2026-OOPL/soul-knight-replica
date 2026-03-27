@@ -1,6 +1,8 @@
 #ifndef TYPES_HPP
 #define TYPES_HPP
 
+#include <glm/vec2.hpp>
+
 enum class Direction {
     TOP,
     BOTTOM,
@@ -21,6 +23,12 @@ enum class RoomPurpose {
     FIGHTING,
     REWARD,
     PORTAL
+};
+
+struct RoomAssemblyConfig {
+    RoomType type = RoomType::ROOM_13_13;
+    glm::vec2 roomCenter = {0.0F, 0.0F};
+    float wallThickness = 20.0F;
 };
 
 #endif

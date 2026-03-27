@@ -1,11 +1,22 @@
 #include "App.hpp"
 
 #include "Core/Context.hpp"
+#include "Generator/MapGenerator.hpp"
+#include "Util/Logger.hpp"
+#include <memory>
 
 int main(int, char**) {
     auto context = Core::Context::GetInstance();
-    App app;
+    App app;    
 
+    std::shared_ptr<MapGenerator> generator = std::make_shared<MapGenerator>(
+        "testaaa"
+    );
+
+    generator->Generate();
+
+    generator->m_Blueprint->OutputMapGridType();
+    
     context->SetWindowIcon(RESOURCE_DIR"/icon.png");
 
     while (!context->GetExit()) {
@@ -26,6 +37,8 @@ int main(int, char**) {
         
         context->Update();
     }
+
+    
     
     return 0;
 }

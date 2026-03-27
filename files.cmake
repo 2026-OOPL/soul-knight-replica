@@ -4,6 +4,8 @@ set(SRC_FILES
     Scene.cpp
 
     Scene/MapTest.cpp
+
+    Common/Random.cpp
     
     Component/Camera/Curve.cpp
     Component/Collision/CollisionSystem.cpp
@@ -19,6 +21,13 @@ set(SRC_FILES
     Component/Camera/Camera.cpp
     Component/Camera/TraceCamera.cpp
     Component/Camera/MultiTraceCamere.cpp
+
+    Generator/GenChamber.cpp
+    Generator/GenFightChamber.cpp
+    Generator/GenRewardChamber.cpp
+    Generator/MapBlueprint.cpp
+    Generator/MapGenerator.cpp
+    Generator/GenPortalChamber.cpp
 
 )
 
@@ -59,6 +68,7 @@ set(INCLUDE_FILES
     Component/Camera/Curve.hpp
 
     Generator/GenChamber.hpp
+    Generator/GenPortalChamber.hpp
     Generator/GenFightChamber.hpp
     Generator/GenRewardChamber.hpp
     Generator/MapBlueprint.hpp

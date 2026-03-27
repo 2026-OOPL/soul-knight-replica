@@ -2,6 +2,7 @@
 #include <memory>
 #include <stdexcept>
 
+
 #include "Common/Random.hpp"
 #include "Common/EnumMask.hpp"
 #include "Common/Enums.hpp"
@@ -11,7 +12,7 @@ T RandomChoose::GetEnum() {
     int size = sizeof(Direction);
     int index = this->GetInteger(0, size-1);
 
-    return static_cast<T>(index - 1);
+    return static_cast<T>(index);
 }
 
 template <typename T>
@@ -70,3 +71,8 @@ T RandomChoose::ChooseFromVector(std::vector<T>& vector) {
     int index = this->GetInteger(vector.size()-1);
     return vector[index];
 }
+
+template RoomType RandomChoose::GetEnum<RoomType>();
+template Direction RandomChoose::GetEnum<Direction>();
+
+template glm::ivec2 RandomChoose::ChooseFromVector<glm::ivec2>(std::vector<glm::ivec2>&);

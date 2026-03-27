@@ -23,15 +23,17 @@ public:
         GeneratePolicy generatePolicy,
 
         // The area limiter which tells generator whether this cooridinate could be use
-        std::function<bool(glm::vec2)> limiter,
+        std::function<bool(glm::ivec2)> limiter,
         std::shared_ptr<MapBlueprint> blueprint,
         std::shared_ptr<RandomChoose> random
     );
 
-    void Generate() override;
-    std::vector<glm::vec2> GetAvailableCooridinate() override;
+    ~GenPortalChamber() = default;
 
-    bool SortFunction(glm::vec2 a, glm::vec2 b);
+    void Generate() override;
+    std::vector<glm::ivec2> GetAvailableCooridinate() override;
+
+    bool SortFunction(glm::ivec2 a, glm::ivec2 b);
 
 protected:
     GeneratePolicy m_GeneratePolicy;

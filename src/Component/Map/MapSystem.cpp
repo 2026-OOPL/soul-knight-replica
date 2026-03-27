@@ -47,3 +47,10 @@ glm::vec2 MapSystem::GetCameraCoor() const {
 
     return this->m_AttachCamera->GetCooridinate();
 }
+
+
+void MapSystem::AddMapPieces(const std::vector<std::shared_ptr<MapPiece>>& pieces) {
+    for (auto const &i : pieces) {
+        this->m_Pieces.push_back(i);
+    }
+}

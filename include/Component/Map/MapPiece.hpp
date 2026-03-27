@@ -36,6 +36,7 @@ public:
     }
     
     Util::Transform m_AbsoluteTransform;
+
 private:
 
     std::shared_ptr<Util::Image> m_Image;//圖片路徑

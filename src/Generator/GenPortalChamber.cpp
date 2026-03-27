@@ -13,7 +13,7 @@ GenPortalChamber::GenPortalChamber(
     GeneratePolicy generatePolicy,
 
     // The area limiter which tells generator whether this cooridinate could be use
-    std::function<bool(glm::vec2)> limiter,
+    std::function<bool(glm::ivec2)> limiter,
 
     std::shared_ptr<MapBlueprint> blueprint,
     std::shared_ptr<RandomChoose> random    
@@ -26,34 +26,34 @@ GenPortalChamber::GenPortalChamber(
 }
 
 void GenPortalChamber::Generate() {
-    std::vector<glm::vec2> cooridinates = this->GetAvailableCooridinate();
+    std::vector<glm::ivec2> cooridinates = this->GetAvailableCooridinate();
  
     if (cooridinates.empty()) {
         throw std::runtime_error("Portal room cannot be generated");
     }
     
     std::shared_ptr<RoomInfo> info = std::make_shared<RoomInfo>(
-        RoomType::ROOM_13_13, RoomPurpose::FIGHTING
+        RoomType::ROOM_13_13, RoomPurpose::PORTAL
     );
 
     m_Blueprint->SetElementByCooridinate(cooridinates[0], info);
 }
 
-std::vector<glm::vec2> GenPortalChamber::GetAvailableCooridinate() {
-    std::vector<glm::vec2> candidate;
+std::vector<glm::ivec2> GenPortalChamber::GetAvailableCooridinate() {
+    std::vector<glm::ivec2> candidate;
 
-    std::vector<glm::vec2> chambers = this->m_Blueprint->GetAllFightChamberCooirdinate();
+    std::vector<glm::ivec2> chambers = this->m_Blueprint->GetAllChamberCooirdinate();
 
-    const glm::vec2 directions[] = {
-        glm::vec2(0, 1),
+    const glm::ivec2 directions[] = {
+        glm::ivec2(0, 1),
         glm::vec2(0, -1),
-        glm::vec2(1, 0),
-        glm::vec2(-1, 0),
+        glm::ivec2(1, 0),
+        glm::ivec2(-1, 0),
     };
 
     for (auto const& i : chambers) {
         for (int j=0; j<4; j++) {
-            glm::vec2 newCooridinate = i + directions[j];
+            glm::ivec2 newCooridinate = i + directions[j];
 
             if (!this->isCooridinateInBound(newCooridinate)) {
                 continue;
@@ -78,7 +78,7 @@ std::vector<glm::vec2> GenPortalChamber::GetAvailableCooridinate() {
     return candidate;
 }
 
-bool GenPortalChamber::SortFunction(glm::vec2 a, glm::vec2 b) {
+bool GenPortalChamber::SortFunction(glm::ivec2 a, glm::ivec2 b) {
     switch (m_GeneratePolicy) {
         case GeneratePolicy::TOP_LEFT:
             // 找最小 Y (Top)，若 Y 相同則找最小 X (Left)

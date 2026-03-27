@@ -1,11 +1,17 @@
 #ifndef CONSTANTS_HPP
 #define CONSTANTS_HPP
 
-const int MAP_PIXEL_PER_BLOCK = 16;
+constexpr int MAP_PIXEL_PER_BLOCK = 16;
+constexpr int GANGWAY_MINIMAL_MARGIN_BLOCKS = 5; 
 
-const int MAP_MINUMUM_ROOM_GENERATE_COUNT = 6;
-const int MAP_MAXIMUM_ROOM_GENERATE_COUNT = 10;
+namespace MapGeneration {
+    constexpr int MINUMUM_FIGHT_ROOM = 6;
+    constexpr int MAXUMUM_FIGHT_ROOM = 10;
 
-const int ROOM_MAXIMUM_ATTACH_COUNT = 4;
+    constexpr int MINUMUM_REWARD_ROOM = 6;
+    constexpr int MAXUMUM_REWARD_ROOM = 10;
+};
+
+constexpr int ROOM_MAXIMUM_ATTACH_COUNT = 4;
 
 #endif

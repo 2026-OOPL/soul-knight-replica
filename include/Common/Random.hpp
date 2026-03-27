@@ -22,8 +22,11 @@ public:
         m_Dist = std::uniform_real_distribution<float>(0.0, 1.0);
     }
         
-    template <typename T> T GetEnum();
-    template <typename T> T GetEnum(std::shared_ptr<EnumMask<T>> mask);
+    template <typename T> 
+    T GetEnum();
+    
+    template <typename T> 
+    T GetEnum(std::shared_ptr<EnumMask<T>> mask);
 
     int GetInteger(int end);
     int GetInteger(int start, int end);

@@ -160,8 +160,8 @@ std::vector<DoorConfig> BuildDefaultDoorConfigs() {
 
 } // namespace
 
-RoomAssembly::RoomAssembly(Config config) {
-    this->m_Room = std::make_shared<BaseRoom>(config.roomCenter);
+RoomAssembly::RoomAssembly(RoomAssemblyConfig config) {
+    this->m_Room = std::make_shared<BaseRoom>(config);
     this->m_Pieces.push_back(this->m_Room);
 
     const glm::vec2 roomCenter = this->m_Room->GetAbsoluteCooridinate();

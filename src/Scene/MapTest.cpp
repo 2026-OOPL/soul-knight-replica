@@ -1,11 +1,11 @@
-#include "Scene/MapTest.hpp"
-
 #include <memory>
 
 #include "Component/Camera/Curve.hpp"
 #include "Component/Camera/TraceCamera.hpp"
 #include "Component/IStateful.hpp"
-#include "Util/Logger.hpp"
+#include "Scene/MapTest.hpp"
+#include "Generator/MapBlueprint.hpp"
+#include "Generator/MapGenerator.hpp"
 #include "Util/Time.hpp"
 
 namespace {
@@ -16,18 +16,25 @@ constexpr float kDoorCloseDelayMs = 650.0F;
 } // namespace
 
 MapTest::MapTest() : MapSystem() {
-    RoomAssembly::Config roomConfig;
-    roomConfig.roomCenter = {0.0F, 0.0F};
-    roomConfig.wallThickness = this->m_RoomWallThickness;
+    std::shared_ptr<MapGenerator> generator = std::make_shared<MapGenerator>(
+        "I Love OOP"
+    );
 
-    this->m_MainRoomAssembly = std::make_unique<RoomAssembly>(std::move(roomConfig));
-    this->m_Pieces = this->m_MainRoomAssembly->GetPieces();
-    this->m_CollisionSystem.SetStaticBlockingBoxes(this->m_MainRoomAssembly->GetStaticWallBoxes());
+    generator->Generate();
+
+    std::vector<RoomAssembly> roomAssembly = generator->GetRoomAssembly();
+
+    for (auto const &i : roomAssembly) {
+        this->AddMapPieces(i.GetPieces());
+        this->m_CollisionSystem.AddStaticBlockingBoxes(i.GetStaticWallBoxes());
+    }
     
     this->m_MainPlayer = std::make_shared<Player>();
-    this->m_MainPlayer->SetPosition(
-        this->m_MainRoomAssembly->GetSuggestedBottomSpawn(kPlayerSpawnBelowDoorDistance)
-    );
+
+    this->m_MainPlayer->SetPosition({0, 0});
+    // this->m_MainPlayer->SetPosition(
+    //     this->m_MainRoomAssembly->GetSuggestedBottomSpawn(kPlayerSpawnBelowDoorDistance)
+    // );
     this->m_MainPlayer->SetCollisionResolver(
         [this](const Collision::AxisAlignedBox &currentBox, const glm::vec2 &intendedDelta) {
             return this->m_CollisionSystem.ResolveMovement(currentBox, intendedDelta);
@@ -92,12 +99,10 @@ void MapTest::Update() {
 
     if (this->m_MainPlayer != nullptr) {
         this->m_AttachCamera->SetTransformByCamera(this->m_MainPlayer);
-        this->m_MainPlayer->Update();
     }
 
     for (const auto &piece : this->m_Pieces) {
         this->m_AttachCamera->SetTransformByCamera(piece);
     }
-
     this->Scene::Update();
 }
