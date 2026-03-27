@@ -23,8 +23,7 @@ Door::Door(
 )
     : MapPiece(
           cooridinate,
-          isOpen ? visuals.openIdle : visuals.closedIdle,
-          !isOpen
+          isOpen ? visuals.openIdle : visuals.closedIdle
       ),
       m_Visuals(std::move(visuals)),
       m_Side(side) {
