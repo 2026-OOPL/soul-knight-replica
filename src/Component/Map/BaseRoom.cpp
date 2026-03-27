@@ -1,9 +1,5 @@
 #include "Component/Map/BaseRoom.hpp"
 
-#include <algorithm>
-#include <cmath>
-#include <stdexcept>
-
 #include "Common/Constants.hpp"
 #include "Component/Map/MapColliderConfig.hpp"
 #include "Util/Image.hpp"
@@ -12,123 +8,9 @@ namespace {
 
 constexpr char kHorizontalClosedDoorSprite[] = RESOURCE_DIR "/Map/Room/Wall_5x2.png";
 constexpr char kVerticalClosedDoorSprite[] = RESOURCE_DIR "/Map/Room/Wall_1x5.png";
-constexpr float kBottomDoorVisualOffsetY = 15.0F; // 不能刪除門會歪掉
-constexpr float kTopDoorVisualOffsetY = 10.0F; // 同上
-
-glm::vec2 SafeScaleForSize(
-    const std::shared_ptr<Core::Drawable> &drawable,
-    const glm::vec2 &roomSize
-) {
-    if (drawable == nullptr) {
-        return {1.0F, 1.0F};
-    }
-
-    const glm::vec2 drawableSize = drawable->GetSize();
-    return {
-        roomSize.x / std::max(drawableSize.x, 1.0F),
-        roomSize.y / std::max(drawableSize.y, 1.0F)
-    };
-}
-
-std::vector<Collision::AxisAlignedBox> BuildHorizontalWallSegments(
-    const glm::vec2 &roomCenter,
-    float wallY,
-    float wallWidth,
-    float wallThickness,
-    const Collision::WallOpening &opening
-) {
-    if (wallWidth <= 0.0F || wallThickness <= 0.0F) {
-        return {};
-    }
-
-    const float openingWidth = std::clamp(opening.size, 0.0F, wallWidth);
-    if (openingWidth <= 0.0F) {
-        return {
-            Collision::CollisionSystem::BuildBox(
-                {roomCenter.x, wallY},
-                {wallWidth, wallThickness}
-            )
-        };
-    }
-
-    const float wallLeft = roomCenter.x - wallWidth / 2.0F;
-    const float wallRight = roomCenter.x + wallWidth / 2.0F;
-    const float openingHalfWidth = openingWidth / 2.0F;
-    const float openingCenterX = std::clamp(
-        roomCenter.x + opening.offset,
-        wallLeft + openingHalfWidth,
-        wallRight - openingHalfWidth
-    );
-    const float leftWidth = std::max(0.0F, openingCenterX - openingHalfWidth - wallLeft);
-    const float rightWidth = std::max(0.0F, wallRight - openingCenterX - openingHalfWidth);
-    std::vector<Collision::AxisAlignedBox> segments;
-
-    if (leftWidth > 0.0F) {
-        segments.push_back(Collision::CollisionSystem::BuildBox(
-            {wallLeft + leftWidth / 2.0F, wallY},
-            {leftWidth, wallThickness}
-        ));
-    }
-
-    if (rightWidth > 0.0F) {
-        segments.push_back(Collision::CollisionSystem::BuildBox(
-            {wallRight - rightWidth / 2.0F, wallY},
-            {rightWidth, wallThickness}
-        ));
-    }
-
-    return segments;
-}
-
-std::vector<Collision::AxisAlignedBox> BuildVerticalWallSegments(
-    const glm::vec2 &roomCenter,
-    float wallX,
-    float wallHeight,
-    float wallThickness,
-    const Collision::WallOpening &opening
-) {
-    if (wallHeight <= 0.0F || wallThickness <= 0.0F) {
-        return {};
-    }
-
-    const float openingHeight = std::clamp(opening.size, 0.0F, wallHeight);
-    if (openingHeight <= 0.0F) {
-        return {
-            Collision::CollisionSystem::BuildBox(
-                {wallX, roomCenter.y},
-                {wallThickness, wallHeight}
-            )
-        };
-    }
-
-    const float wallBottom = roomCenter.y - wallHeight / 2.0F;
-    const float wallTop = roomCenter.y + wallHeight / 2.0F;
-    const float openingHalfHeight = openingHeight / 2.0F;
-    const float openingCenterY = std::clamp(
-        roomCenter.y + opening.offset,
-        wallBottom + openingHalfHeight,
-        wallTop - openingHalfHeight
-    );
-    const float bottomHeight = std::max(0.0F, openingCenterY - openingHalfHeight - wallBottom);
-    const float topHeight = std::max(0.0F, wallTop - openingCenterY - openingHalfHeight);
-    std::vector<Collision::AxisAlignedBox> segments;
-
-    if (bottomHeight > 0.0F) {
-        segments.push_back(Collision::CollisionSystem::BuildBox(
-            {wallX, wallBottom + bottomHeight / 2.0F},
-            {wallThickness, bottomHeight}
-        ));
-    }
-
-    if (topHeight > 0.0F) {
-        segments.push_back(Collision::CollisionSystem::BuildBox(
-            {wallX, wallTop - topHeight / 2.0F},
-            {wallThickness, topHeight}
-        ));
-    }
-
-    return segments;
-}
+constexpr float kBottomDoorVisualOffsetY = 15.0F;
+constexpr float kTopDoorVisualOffsetY = 10.0F;
+constexpr float kStarterBottomWallThicknessOffset = 20.0F;
 
 } // namespace
 
@@ -139,19 +21,16 @@ BaseRoom::BaseRoom(
     const DoorConfig &doorConfig,
     const WallConfig &wallConfig
 )
-    : MapPiece(
+    : RectMapArea(
           absolutePosition,
-          BaseRoom::ResolveRoomSprite(roomType)
+          BaseRoom::ResolveRoomSprite(roomType),
+          BaseRoom::ResolveRoomSize(roomType),
+          wallConfig
       ),
-      m_RoomSize(BaseRoom::ResolveRoomSize(roomType)),
       m_RoomType(roomType),
       m_Purpose(purpose),
-      m_DoorConfig(doorConfig),
-      m_WallConfig(wallConfig) {
-    this->m_AbsoluteTransform.scale = SafeScaleForSize(this->m_Drawable, this->m_RoomSize);
-    this->SetColliderSize(this->m_RoomSize);
+      m_DoorConfig(doorConfig) {
     this->BuildDoors();
-    this->BuildWallColliders();
 }
 
 void BaseRoom::Update() {
@@ -165,15 +44,11 @@ void BaseRoom::Update() {
 }
 
 bool BaseRoom::IsPlayerInside(const glm::vec2 &playerPos) const {
-    const glm::vec2 roomHalfSize = this->m_RoomSize / 2.0F;
-    const glm::vec2 offset = playerPos - this->GetAbsoluteCooridinate();
-
-    return std::abs(offset.x) <= roomHalfSize.x &&
-           std::abs(offset.y) <= roomHalfSize.y;
+    return this->IsPointInside(playerPos);
 }
 
 const std::vector<Collision::AxisAlignedBox> &BaseRoom::GetStaticColliders() const {
-    return this->m_StaticColliders;
+    return RectMapArea::GetStaticColliders();
 }
 
 std::vector<Collision::AxisAlignedBox> BaseRoom::GetDynamicColliders(
@@ -242,7 +117,7 @@ void BaseRoom::OnPlayerLeave() {
 }
 
 glm::vec2 BaseRoom::GetRoomSize() const {
-    return this->m_RoomSize;
+    return this->GetAreaSize();
 }
 
 RoomType BaseRoom::GetRoomType() const {
@@ -262,29 +137,28 @@ WallConfig BaseRoom::BuildWallConfigFromDoorConfig(
     const DoorConfig &doorConfig,
     float wallThickness
 ) {
-    float bottomOffest=20.0F;
     WallConfig wallConfig;
     wallConfig.top.thickness = wallThickness;
     wallConfig.right.thickness = wallThickness;
-    wallConfig.bottom.thickness = wallThickness+bottomOffest;
+    wallConfig.bottom.thickness = wallThickness + kStarterBottomWallThicknessOffset;
     wallConfig.left.thickness = wallThickness;
-    wallConfig.top.hasOpening = doorConfig.top.hasDoor;
-    wallConfig.right.hasOpening = doorConfig.right.hasDoor;
-    wallConfig.bottom.hasOpening = doorConfig.bottom.hasDoor;
-    wallConfig.left.hasOpening = doorConfig.left.hasDoor;
 
-    if (!doorConfig.top.hasDoor) {
-        wallConfig.top.openingOffset = 0.0F;
-    }
-    if (!doorConfig.right.hasDoor) {
-        wallConfig.right.openingOffset = 0.0F;
-    }
-    if (!doorConfig.bottom.hasDoor) {
-        wallConfig.bottom.openingOffset = 0.0F;
-    }
-    if (!doorConfig.left.hasDoor) {
-        wallConfig.left.openingOffset = 0.0F;
-    }
+    wallConfig.top.hasOpening = doorConfig.top.hasDoor;
+    wallConfig.top.openingSize = doorConfig.top.hasDoor ?
+        MapColliderConfig::kHorizontalDoorColliderSize.x :
+        0.0F;
+    wallConfig.right.hasOpening = doorConfig.right.hasDoor;
+    wallConfig.right.openingSize = doorConfig.right.hasDoor ?
+        MapColliderConfig::kVerticalDoorColliderSize.y :
+        0.0F;
+    wallConfig.bottom.hasOpening = doorConfig.bottom.hasDoor;
+    wallConfig.bottom.openingSize = doorConfig.bottom.hasDoor ?
+        MapColliderConfig::kHorizontalDoorColliderSize.x :
+        0.0F;
+    wallConfig.left.hasOpening = doorConfig.left.hasDoor;
+    wallConfig.left.openingSize = doorConfig.left.hasDoor ?
+        MapColliderConfig::kVerticalDoorColliderSize.y :
+        0.0F;
 
     return wallConfig;
 }
@@ -345,60 +219,35 @@ Door::Visuals BaseRoom::BuildVerticalDoorVisuals() {
 
 glm::vec2 BaseRoom::BuildDoorPosition(const DoorBuildInfo &doorInfo) const {
     const glm::vec2 roomCenter = this->GetAbsoluteCooridinate();
+    const glm::vec2 roomSize = this->GetAreaSize();
 
     switch (doorInfo.side) {
     case DoorSide::Top:
         return {
             roomCenter.x + doorInfo.openingOffset,
-            roomCenter.y + this->m_RoomSize.y / 2.0F - doorInfo.renderSize.y / 2.0F
+            roomCenter.y + roomSize.y / 2.0F - doorInfo.renderSize.y / 2.0F
         };
 
     case DoorSide::Right:
         return {
-            roomCenter.x + this->m_RoomSize.x / 2.0F - doorInfo.renderSize.x / 2.0F,
+            roomCenter.x + roomSize.x / 2.0F - doorInfo.renderSize.x / 2.0F,
             roomCenter.y + doorInfo.openingOffset
         };
 
     case DoorSide::Bottom:
         return {
             roomCenter.x + doorInfo.openingOffset,
-            roomCenter.y - this->m_RoomSize.y / 2.0F + doorInfo.renderSize.y / 2.0F
+            roomCenter.y - roomSize.y / 2.0F + doorInfo.renderSize.y / 2.0F
         };
 
     case DoorSide::Left:
         return {
-            roomCenter.x - this->m_RoomSize.x / 2.0F + doorInfo.renderSize.x / 2.0F,
+            roomCenter.x - roomSize.x / 2.0F + doorInfo.renderSize.x / 2.0F,
             roomCenter.y + doorInfo.openingOffset
         };
     }
 
     return roomCenter;
-}
-
-Collision::RoomBoundaryOpenings BaseRoom::BuildWallOpenings() const {
-    Collision::RoomBoundaryOpenings openings;
-
-    if (this->m_WallConfig.top.hasOpening || this->m_DoorConfig.top.hasDoor) {
-        openings.top.size = this->GetOpeningSizeForSide(DoorSide::Top);
-        openings.top.offset = this->m_WallConfig.top.openingOffset;
-    }
-
-    if (this->m_WallConfig.right.hasOpening || this->m_DoorConfig.right.hasDoor) {
-        openings.right.size = this->GetOpeningSizeForSide(DoorSide::Right);
-        openings.right.offset = this->m_WallConfig.right.openingOffset;
-    }
-
-    if (this->m_WallConfig.bottom.hasOpening || this->m_DoorConfig.bottom.hasDoor) {
-        openings.bottom.size = this->GetOpeningSizeForSide(DoorSide::Bottom);
-        openings.bottom.offset = this->m_WallConfig.bottom.openingOffset;
-    }
-
-    if (this->m_WallConfig.left.hasOpening || this->m_DoorConfig.left.hasDoor) {
-        openings.left.size = this->GetOpeningSizeForSide(DoorSide::Left);
-        openings.left.offset = this->m_WallConfig.left.openingOffset;
-    }
-
-    return openings;
 }
 
 const DoorSideConfig &BaseRoom::GetDoorSideConfig(DoorSide side) const {
@@ -435,20 +284,6 @@ const WallSideConfig &BaseRoom::GetWallSideConfig(DoorSide side) const {
     }
 
     return this->m_WallConfig.bottom;
-}
-
-float BaseRoom::GetOpeningSizeForSide(DoorSide side) const {
-    switch (side) {
-    case DoorSide::Top:
-    case DoorSide::Bottom:
-        return MapColliderConfig::kHorizontalDoorColliderSize.x;
-
-    case DoorSide::Right:
-    case DoorSide::Left:
-        return MapColliderConfig::kVerticalDoorColliderSize.y;
-    }
-
-    return 0.0F;
 }
 
 void BaseRoom::BuildDoors() {
@@ -511,64 +346,4 @@ void BaseRoom::BuildDoors() {
         this->m_Doors.push_back(door);
         this->AddChild(door);
     }
-}
-
-void BaseRoom::BuildWallColliders() {
-    this->m_StaticColliders.clear();
-
-    const glm::vec2 roomCenter = this->GetAbsoluteCooridinate();
-    const glm::vec2 roomHalfSize = this->m_RoomSize / 2.0F;
-    const Collision::RoomBoundaryOpenings openings = this->BuildWallOpenings();
-
-    const std::vector<Collision::AxisAlignedBox> topWalls = BuildHorizontalWallSegments(
-        roomCenter,
-        roomCenter.y + roomHalfSize.y - this->m_WallConfig.top.thickness / 2.0F,
-        this->m_RoomSize.x,
-        this->m_WallConfig.top.thickness,
-        openings.top
-    );
-    this->m_StaticColliders.insert(
-        this->m_StaticColliders.end(),
-        topWalls.begin(),
-        topWalls.end()
-    );
-
-    const std::vector<Collision::AxisAlignedBox> rightWalls = BuildVerticalWallSegments(
-        roomCenter,
-        roomCenter.x + roomHalfSize.x - this->m_WallConfig.right.thickness / 2.0F,
-        this->m_RoomSize.y,
-        this->m_WallConfig.right.thickness,
-        openings.right
-    );
-    this->m_StaticColliders.insert(
-        this->m_StaticColliders.end(),
-        rightWalls.begin(),
-        rightWalls.end()
-    );
-
-    const std::vector<Collision::AxisAlignedBox> bottomWalls = BuildHorizontalWallSegments(
-        roomCenter,
-        roomCenter.y - roomHalfSize.y + this->m_WallConfig.bottom.thickness / 2.0F,
-        this->m_RoomSize.x,
-        this->m_WallConfig.bottom.thickness,
-        openings.bottom
-    );
-    this->m_StaticColliders.insert(
-        this->m_StaticColliders.end(),
-        bottomWalls.begin(),
-        bottomWalls.end()
-    );
-
-    const std::vector<Collision::AxisAlignedBox> leftWalls = BuildVerticalWallSegments(
-        roomCenter,
-        roomCenter.x - roomHalfSize.x + this->m_WallConfig.left.thickness / 2.0F,
-        this->m_RoomSize.y,
-        this->m_WallConfig.left.thickness,
-        openings.left
-    );
-    this->m_StaticColliders.insert(
-        this->m_StaticColliders.end(),
-        leftWalls.begin(),
-        leftWalls.end()
-    );
 }

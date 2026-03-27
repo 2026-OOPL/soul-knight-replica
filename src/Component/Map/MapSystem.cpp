@@ -1,5 +1,7 @@
 #include "Component/Map/MapSystem.hpp"
 
+#include <unordered_set>
+
 namespace {
 
 constexpr float kDoorPassageCommitDepth = 32.0F;
@@ -48,6 +50,20 @@ void MapSystem::AddRoom(const std::shared_ptr<BaseRoom> &room) {
 void MapSystem::AddRooms(const std::vector<std::shared_ptr<BaseRoom>> &rooms) {
     for (const auto &room : rooms) {
         this->AddRoom(room);
+    }
+}
+
+void MapSystem::AddGangway(const std::shared_ptr<Gangway> &gangway) {
+    if (gangway == nullptr) {
+        return;
+    }
+
+    this->m_Gangways.push_back(gangway);
+}
+
+void MapSystem::AddGangways(const std::vector<std::shared_ptr<Gangway>> &gangways) {
+    for (const auto &gangway : gangways) {
+        this->AddGangway(gangway);
     }
 }
 
@@ -109,6 +125,8 @@ std::vector<Collision::AxisAlignedBox> MapSystem::CollectCurrentRoomColliders() 
         playerBox = &currentPlayerBox;
     }
 
+    std::unordered_set<const Gangway *> collectedGangways;
+
     const std::vector<Collision::AxisAlignedBox> currentRoomColliders =
         this->CollectRoomColliders(this->m_CurrentRoom, playerBox);
     colliders.insert(
@@ -116,6 +134,23 @@ std::vector<Collision::AxisAlignedBox> MapSystem::CollectCurrentRoomColliders() 
         currentRoomColliders.begin(),
         currentRoomColliders.end()
     );
+
+    if (this->m_CurrentRoom != nullptr) {
+        for (const auto &gangway : this->m_Gangways) {
+            if (gangway == nullptr ||
+                !gangway->ConnectsRoom(this->m_CurrentRoom) ||
+                !collectedGangways.insert(gangway.get()).second) {
+                continue;
+            }
+
+            const auto &gangwayColliders = gangway->GetStaticColliders();
+            colliders.insert(
+                colliders.end(),
+                gangwayColliders.begin(),
+                gangwayColliders.end()
+            );
+        }
+    }
 
     if (this->m_DoorPassage.state == DoorPassageState::Traversing &&
         this->m_DoorPassage.targetRoom != nullptr &&
@@ -127,6 +162,21 @@ std::vector<Collision::AxisAlignedBox> MapSystem::CollectCurrentRoomColliders() 
             targetRoomColliders.begin(),
             targetRoomColliders.end()
         );
+
+        for (const auto &gangway : this->m_Gangways) {
+            if (gangway == nullptr ||
+                !gangway->ConnectsRoom(this->m_DoorPassage.targetRoom) ||
+                !collectedGangways.insert(gangway.get()).second) {
+                continue;
+            }
+
+            const auto &gangwayColliders = gangway->GetStaticColliders();
+            colliders.insert(
+                colliders.end(),
+                gangwayColliders.begin(),
+                gangwayColliders.end()
+            );
+        }
     }
 
     return colliders;

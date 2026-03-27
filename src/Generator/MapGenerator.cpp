@@ -1,4 +1,6 @@
+#include <cmath>
 #include <memory>
+#include <unordered_map>
 #include <vector>
 
 #include <glm/fwd.hpp>
@@ -8,6 +10,7 @@
 #include "Common/Enums.hpp"
 #include "Common/Random.hpp"
 #include "Component/Map/FightRoom.hpp"
+#include "Component/Map/Gangway.hpp"
 #include "Component/Map/MapColliderConfig.hpp"
 #include "Component/Map/StarterRoom.hpp"
 #include "Generator/GenFightChamber.hpp"
@@ -76,6 +79,44 @@ std::shared_ptr<BaseRoom> BuildRoom(
     return nullptr;
 }
 
+std::string MakeCoordinateKey(const glm::ivec2 &coordinate) {
+    return std::to_string(coordinate.x) + ":" + std::to_string(coordinate.y);
+}
+
+Gangway::Config BuildGangwayConfig(
+    const std::shared_ptr<BaseRoom> &firstRoom,
+    const std::shared_ptr<BaseRoom> &secondRoom
+) {
+    Gangway::Config config;
+    const glm::vec2 delta =
+        secondRoom->GetAbsoluteCooridinate() - firstRoom->GetAbsoluteCooridinate();
+
+    if (std::abs(delta.x) >= std::abs(delta.y)) {
+        config.orientation = GangwayOrientation::Horizontal;
+        config.width = MapColliderConfig::kHorizontalDoorColliderSize.x;
+        const float gap = std::max(
+            0.0F,
+            std::abs(delta.x) -
+                firstRoom->GetRoomSize().x / 2.0F -
+                secondRoom->GetRoomSize().x / 2.0F
+        );
+        config.length = gap + MapColliderConfig::kDefaultWallThickness;
+    } else {
+        config.orientation = GangwayOrientation::Vertical;
+        config.width = MapColliderConfig::kVerticalDoorColliderSize.y;
+        const float gap = std::max(
+            0.0F,
+            std::abs(delta.y) -
+                firstRoom->GetRoomSize().y / 2.0F -
+                secondRoom->GetRoomSize().y / 2.0F
+        );
+        config.length = gap + MapColliderConfig::kDefaultWallThickness;
+    }
+
+    config.wallThickness = MapColliderConfig::kDefaultWallThickness;
+    return config;
+}
+
 } // namespace
 
 MapGenerator::MapGenerator(std::string seed) {
@@ -128,6 +169,10 @@ bool MapGenerator::RewardChamberCooridinateValidator(glm::ivec2 cooridinate) {
 }
 
 void MapGenerator::Generate() {
+    this->m_RuntimeMapBuilt = false;
+    this->m_RoomInstances.clear();
+    this->m_GangwayInstances.clear();
+
     m_GenChamber = std::make_shared<GenFightChamber>(
         this->GetFightingChamberStartCooridinate(),
         [this](glm::vec2 p) { return this->FightChamberCooridinateValidator(p); },
@@ -230,8 +275,15 @@ GeneratePolicy MapGenerator::GetPortalChamberGenPolicy() {
     return GeneratePolicy::TOP_LEFT;
 }
 
-std::vector<std::shared_ptr<BaseRoom>> MapGenerator::GetRooms() {
-    std::vector<std::shared_ptr<BaseRoom>> rooms;
+void MapGenerator::BuildRuntimeMap() {
+    if (this->m_RuntimeMapBuilt) {
+        return;
+    }
+
+    this->m_RoomInstances.clear();
+    this->m_GangwayInstances.clear();
+
+    std::unordered_map<std::string, std::shared_ptr<BaseRoom>> roomsByCoordinate;
 
     for (int x = 0; x < this->m_MapGridSize.x; x++) {
         for (int y = 0; y < this->m_MapGridSize.y; y++) {
@@ -250,11 +302,64 @@ std::vector<std::shared_ptr<BaseRoom>> MapGenerator::GetRooms() {
 
             const std::shared_ptr<BaseRoom> room =
                 BuildRoom(absolutePosition, info, doorConfig);
-            if (room != nullptr) {
-                rooms.push_back(room);
+            if (room == nullptr) {
+                continue;
+            }
+
+            this->m_RoomInstances.push_back(room);
+            roomsByCoordinate.emplace(MakeCoordinateKey(chamberCooridinate), room);
+        }
+    }
+
+    for (int x = 0; x < this->m_MapGridSize.x; x++) {
+        for (int y = 0; y < this->m_MapGridSize.y; y++) {
+            const glm::ivec2 chamberCoordinate = {x, y};
+            const auto sourceIt = roomsByCoordinate.find(MakeCoordinateKey(chamberCoordinate));
+            if (sourceIt == roomsByCoordinate.end()) {
+                continue;
+            }
+
+            const std::shared_ptr<BaseRoom> sourceRoom = sourceIt->second;
+
+            const glm::ivec2 rightCoordinate = chamberCoordinate + glm::ivec2(1, 0);
+            const auto rightIt = roomsByCoordinate.find(MakeCoordinateKey(rightCoordinate));
+            if (rightIt != roomsByCoordinate.end()) {
+                const std::shared_ptr<BaseRoom> targetRoom = rightIt->second;
+
+                auto gangway = std::make_shared<Gangway>(
+                    (sourceRoom->GetAbsoluteCooridinate() + targetRoom->GetAbsoluteCooridinate()) /
+                        2.0F,
+                    BuildGangwayConfig(sourceRoom, targetRoom)
+                );
+                gangway->ConnectRooms(sourceRoom, targetRoom);
+                this->m_GangwayInstances.push_back(gangway);
+            }
+
+            const glm::ivec2 topCoordinate = chamberCoordinate + glm::ivec2(0, 1);
+            const auto topIt = roomsByCoordinate.find(MakeCoordinateKey(topCoordinate));
+            if (topIt != roomsByCoordinate.end()) {
+                const std::shared_ptr<BaseRoom> targetRoom = topIt->second;
+
+                auto gangway = std::make_shared<Gangway>(
+                    (sourceRoom->GetAbsoluteCooridinate() + targetRoom->GetAbsoluteCooridinate()) /
+                        2.0F,
+                    BuildGangwayConfig(sourceRoom, targetRoom)
+                );
+                gangway->ConnectRooms(sourceRoom, targetRoom);
+                this->m_GangwayInstances.push_back(gangway);
             }
         }
     }
 
-    return rooms;
+    this->m_RuntimeMapBuilt = true;
+}
+
+std::vector<std::shared_ptr<BaseRoom>> MapGenerator::GetRooms() {
+    this->BuildRuntimeMap();
+    return this->m_RoomInstances;
+}
+
+std::vector<std::shared_ptr<Gangway>> MapGenerator::GetGangways() {
+    this->BuildRuntimeMap();
+    return this->m_GangwayInstances;
 }

@@ -41,6 +41,7 @@ struct WallSideConfig {
     bool hasOpening = false;
     float thickness = 20.0F;
     float openingOffset = 0.0F;
+    float openingSize = 0.0F;
 };
 
 struct WallConfig {

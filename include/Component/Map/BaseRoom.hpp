@@ -11,10 +11,10 @@
 #include "Component/Collision/CollisionSystem.hpp"
 #include "Component/IStateful.hpp"
 #include "Component/Map/Door.hpp"
-#include "Component/Map/MapPiece.hpp"
+#include "Component/Map/RectMapArea.hpp"
 #include "Component/Mob/Mob.hpp"
 
-class BaseRoom : public MapPiece, public IStateful {
+class BaseRoom : public RectMapArea, public IStateful {
 public:
     BaseRoom(
         const glm::vec2 &absolutePosition,
@@ -74,21 +74,15 @@ private:
     static Door::Visuals BuildVerticalDoorVisuals();
 
     glm::vec2 BuildDoorPosition(const DoorBuildInfo &doorInfo) const;
-    Collision::RoomBoundaryOpenings BuildWallOpenings() const;
     const DoorSideConfig &GetDoorSideConfig(DoorSide side) const;
     const WallSideConfig &GetWallSideConfig(DoorSide side) const;
-    float GetOpeningSizeForSide(DoorSide side) const;
     void BuildDoors();
-    void BuildWallColliders();
 
-    glm::vec2 m_RoomSize = {0.0F, 0.0F};
     RoomType m_RoomType = RoomType::ROOM_13_13;
     RoomPurpose m_Purpose = RoomPurpose::FIGHTING;
     DoorConfig m_DoorConfig;
-    WallConfig m_WallConfig;
     std::vector<std::shared_ptr<Door>> m_Doors;
     std::vector<std::shared_ptr<Mob>> m_Mobs;
-    std::vector<Collision::AxisAlignedBox> m_StaticColliders;
 };
 
 #endif

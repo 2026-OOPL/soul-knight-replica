@@ -34,7 +34,9 @@ MapTest::MapTest() : MapSystem() {
 
     generator->Generate();
     this->m_RoomsInScene = generator->GetRooms();
+    this->m_GangwaysInScene = generator->GetGangways();
     this->AddRooms(this->m_RoomsInScene);
+    this->AddGangways(this->m_GangwaysInScene);
 
     for (const auto &room : this->m_RoomsInScene) {
         if (room == nullptr) {
@@ -46,6 +48,12 @@ MapTest::MapTest() : MapSystem() {
         if (this->m_MainRoom == nullptr &&
             room->GetPurpose() == RoomPurpose::STARTER) {
             this->m_MainRoom = room;
+        }
+    }
+
+    for (const auto &gangway : this->m_GangwaysInScene) {
+        if (gangway != nullptr) {
+            this->AddChild(gangway);
         }
     }
 
@@ -68,7 +76,7 @@ MapTest::MapTest() : MapSystem() {
         this->m_MainPlayer,
         std::make_shared<EaseOutQubicCurve>()
     );
-    this->m_AttachCamera->SetScale({0.5F, 0.5F});
+    this->m_AttachCamera->SetScale({1.5F, 1.5F});
 
     this->AddChild(this->m_MainPlayer);
 }
@@ -101,6 +109,12 @@ void MapTest::Update() {
 
     for (const auto &room : this->m_RoomsInScene) {
         ApplyCameraRecursive(this->m_AttachCamera, room);
+    }
+
+    for (const auto &gangway : this->m_GangwaysInScene) {
+        if (gangway != nullptr) {
+            this->m_AttachCamera->SetTransformByCamera(gangway);
+        }
     }
 
     this->Scene::Update();

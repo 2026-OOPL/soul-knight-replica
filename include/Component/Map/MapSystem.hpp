@@ -9,6 +9,7 @@
 #include "Component/Camera/Camera.hpp"
 #include "Component/Collision/CollisionSystem.hpp"
 #include "Component/Map/BaseRoom.hpp"
+#include "Component/Map/Gangway.hpp"
 #include "Component/Mob/Mob.hpp"
 #include "Component/Player/Player.hpp"
 #include "Scene.hpp"
@@ -29,6 +30,8 @@ public:
 
     void AddRoom(const std::shared_ptr<BaseRoom> &room);
     void AddRooms(const std::vector<std::shared_ptr<BaseRoom>> &rooms);
+    void AddGangway(const std::shared_ptr<Gangway> &gangway);
+    void AddGangways(const std::vector<std::shared_ptr<Gangway>> &gangways);
 
     Collision::MovementResult ResolvePlayerMovement(
         const Collision::AxisAlignedBox &currentBox,
@@ -66,6 +69,7 @@ protected:
     std::vector<std::shared_ptr<Player>> m_Players;
     std::vector<std::shared_ptr<Camera>> m_Cameras;
     std::vector<std::shared_ptr<BaseRoom>> m_Rooms;
+    std::vector<std::shared_ptr<Gangway>> m_Gangways;
     std::shared_ptr<BaseRoom> m_CurrentRoom;
     DoorPassageContext m_DoorPassage;
     std::shared_ptr<Camera> m_AttachCamera;
