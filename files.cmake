@@ -59,6 +59,7 @@ set(INCLUDE_FILES
     Component/Map/Door.hpp
     Component/Map/FightRoom.hpp
     Component/Map/Gangway.hpp
+    Component/Map/GangwayLayoutConfig.hpp
     Component/Map/MapColliderConfig.hpp
     Component/Map/MapPiece.hpp
     Component/Map/MapSystem.hpp

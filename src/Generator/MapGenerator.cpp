@@ -11,6 +11,7 @@
 #include "Common/Random.hpp"
 #include "Component/Map/FightRoom.hpp"
 #include "Component/Map/Gangway.hpp"
+#include "Component/Map/GangwayLayoutConfig.hpp"
 #include "Component/Map/MapColliderConfig.hpp"
 #include "Component/Map/StarterRoom.hpp"
 #include "Generator/GenFightChamber.hpp"
@@ -83,10 +84,14 @@ std::string MakeCoordinateKey(const glm::ivec2 &coordinate) {
     return std::to_string(coordinate.x) + ":" + std::to_string(coordinate.y);
 }
 
-Gangway::Config BuildGangwayConfig(
+std::shared_ptr<Gangway> BuildGangway(
     const std::shared_ptr<BaseRoom> &firstRoom,
     const std::shared_ptr<BaseRoom> &secondRoom
 ) {
+    if (firstRoom == nullptr || secondRoom == nullptr) {
+        return nullptr;
+    }
+
     Gangway::Config config;
     const glm::vec2 delta =
         secondRoom->GetAbsoluteCooridinate() - firstRoom->GetAbsoluteCooridinate();
@@ -94,6 +99,7 @@ Gangway::Config BuildGangwayConfig(
     if (std::abs(delta.x) >= std::abs(delta.y)) {
         config.orientation = GangwayOrientation::Horizontal;
         config.width = MapColliderConfig::kHorizontalDoorColliderSize.x;
+        config.positionOffset = GangwayLayoutConfig::kHorizontalPositionOffset;
         const float gap = std::max(
             0.0F,
             std::abs(delta.x) -
@@ -104,6 +110,7 @@ Gangway::Config BuildGangwayConfig(
     } else {
         config.orientation = GangwayOrientation::Vertical;
         config.width = MapColliderConfig::kVerticalDoorColliderSize.y;
+        config.positionOffset = GangwayLayoutConfig::kVerticalPositionOffset;
         const float gap = std::max(
             0.0F,
             std::abs(delta.y) -
@@ -114,7 +121,11 @@ Gangway::Config BuildGangwayConfig(
     }
 
     config.wallThickness = MapColliderConfig::kDefaultWallThickness;
-    return config;
+    const glm::vec2 center =
+        (firstRoom->GetAbsoluteCooridinate() + secondRoom->GetAbsoluteCooridinate()) / 2.0F;
+    const std::shared_ptr<Gangway> gangway = std::make_shared<Gangway>(center, config);
+    gangway->ConnectRooms(firstRoom, secondRoom);
+    return gangway;
 }
 
 } // namespace
@@ -325,28 +336,22 @@ void MapGenerator::BuildRuntimeMap() {
             const auto rightIt = roomsByCoordinate.find(MakeCoordinateKey(rightCoordinate));
             if (rightIt != roomsByCoordinate.end()) {
                 const std::shared_ptr<BaseRoom> targetRoom = rightIt->second;
-
-                auto gangway = std::make_shared<Gangway>(
-                    (sourceRoom->GetAbsoluteCooridinate() + targetRoom->GetAbsoluteCooridinate()) /
-                        2.0F,
-                    BuildGangwayConfig(sourceRoom, targetRoom)
-                );
-                gangway->ConnectRooms(sourceRoom, targetRoom);
-                this->m_GangwayInstances.push_back(gangway);
+                const std::shared_ptr<Gangway> gangway =
+                    BuildGangway(sourceRoom, targetRoom);
+                if (gangway != nullptr) {
+                    this->m_GangwayInstances.push_back(gangway);
+                }
             }
 
             const glm::ivec2 topCoordinate = chamberCoordinate + glm::ivec2(0, 1);
             const auto topIt = roomsByCoordinate.find(MakeCoordinateKey(topCoordinate));
             if (topIt != roomsByCoordinate.end()) {
                 const std::shared_ptr<BaseRoom> targetRoom = topIt->second;
-
-                auto gangway = std::make_shared<Gangway>(
-                    (sourceRoom->GetAbsoluteCooridinate() + targetRoom->GetAbsoluteCooridinate()) /
-                        2.0F,
-                    BuildGangwayConfig(sourceRoom, targetRoom)
-                );
-                gangway->ConnectRooms(sourceRoom, targetRoom);
-                this->m_GangwayInstances.push_back(gangway);
+                const std::shared_ptr<Gangway> gangway =
+                    BuildGangway(sourceRoom, targetRoom);
+                if (gangway != nullptr) {
+                    this->m_GangwayInstances.push_back(gangway);
+                }
             }
         }
     }

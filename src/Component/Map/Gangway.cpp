@@ -13,7 +13,7 @@ constexpr char kVerticalGangwaySprite[] = RESOURCE_DIR "/Map/Gangway/Gangway_5x1
 
 Gangway::Gangway(const glm::vec2 &absolutePosition, Config config)
     : RectMapArea(
-          absolutePosition,
+          absolutePosition + config.positionOffset,
           Gangway::ResolveGangwaySprite(config.orientation),
           Gangway::BuildAreaSize(config),
           Gangway::BuildWallConfig(config)
