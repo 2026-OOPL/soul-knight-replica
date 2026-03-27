@@ -76,9 +76,18 @@ MapTest::MapTest() : MapSystem() {
         this->m_MainPlayer,
         std::make_shared<EaseOutQubicCurve>()
     );
-    this->m_AttachCamera->SetScale({1.5F, 1.5F});
+    this->m_AttachCamera->SetScale({2.5F, 2.5F});
 
-    this->AddChild(this->m_MainPlayer);
+    if (this->m_MainPlayer != nullptr) {
+        this->AddChild(this->m_MainPlayer);
+    }
+
+    // TODO: 我不知道可不可以山，反正不山是編譯不了
+    // for (const auto &piece : this->m_Pieces) {
+    //     if (piece != nullptr) {
+    //         this->AddChild(piece);
+    //     }
+    // }
 }
 
 MapTest::~MapTest() = default;

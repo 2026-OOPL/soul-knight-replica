@@ -165,23 +165,24 @@ WallConfig BaseRoom::BuildWallConfigFromDoorConfig(
 
 glm::vec2 BaseRoom::ResolveRoomSize(RoomType roomType) {
     switch (roomType) {
+    
     case RoomType::ROOM_13_13:
-        return {13.0F * MAP_PIXEL_PER_BLOCK, 13.0F * MAP_PIXEL_PER_BLOCK};
+        return {13.0F * MAP_PIXEL_PER_BLOCK, 14.5F * MAP_PIXEL_PER_BLOCK};
 
     case RoomType::ROOM_15_15:
-        return {15.0F * MAP_PIXEL_PER_BLOCK, 15.0F * MAP_PIXEL_PER_BLOCK};
+        return {15.0F * MAP_PIXEL_PER_BLOCK, 16.5F * MAP_PIXEL_PER_BLOCK};
 
     case RoomType::ROOM_17_17:
-        return {17.0F * MAP_PIXEL_PER_BLOCK, 17.0F * MAP_PIXEL_PER_BLOCK};
+        return {17.0F * MAP_PIXEL_PER_BLOCK, 18.5F * MAP_PIXEL_PER_BLOCK};
 
     case RoomType::ROOM_17_23:
-        return {17.0F * MAP_PIXEL_PER_BLOCK, 23.0F * MAP_PIXEL_PER_BLOCK};
+        return {17.0F * MAP_PIXEL_PER_BLOCK, 24.5F * MAP_PIXEL_PER_BLOCK};
 
     case RoomType::ROOM_23_17:
-        return {23.0F * MAP_PIXEL_PER_BLOCK, 17.0F * MAP_PIXEL_PER_BLOCK};
+        return {23.0F * MAP_PIXEL_PER_BLOCK, 18.5F * MAP_PIXEL_PER_BLOCK};
     }
 
-    return {13.0F * MAP_PIXEL_PER_BLOCK, 13.0F * MAP_PIXEL_PER_BLOCK};
+    return {13.0F * MAP_PIXEL_PER_BLOCK, 14.5F * MAP_PIXEL_PER_BLOCK};
 }
 
 std::string BaseRoom::ResolveRoomSprite(RoomType roomType) {

@@ -115,11 +115,11 @@ std::shared_ptr<Gangway> BuildGangway(
             0.0F,
             std::abs(delta.y) -
                 firstRoom->GetRoomSize().y / 2.0F -
-                secondRoom->GetRoomSize().y / 2.0F
+                secondRoom->GetRoomSize().y / 2.0F  
         );
         config.length = gap + MapColliderConfig::kDefaultWallThickness;
     }
-
+    
     config.wallThickness = MapColliderConfig::kDefaultWallThickness;
     const glm::vec2 center =
         (firstRoom->GetAbsoluteCooridinate() + secondRoom->GetAbsoluteCooridinate()) / 2.0F;
