@@ -5,6 +5,8 @@
 #include "Component/IStateful.hpp"
 #include "Generator/MapGenerator.hpp"
 #include "Scene/MapTest.hpp"
+#include "Util/Input.hpp"
+#include "Util/Keycode.hpp"
 
 namespace {
 
@@ -74,6 +76,11 @@ MapTest::MapTest() : MapSystem() {
 MapTest::~MapTest() = default;
 
 void MapTest::Update() {
+    if (Util::Input::IsKeyDown(Util::Keycode::E) &&
+        this->m_CurrentRoom != nullptr) {
+        this->m_CurrentRoom->OpenAllDoors();
+    }
+
     if (this->m_MainPlayer != nullptr) {
         this->UpdateCurrentRoom(this->m_MainPlayer->GetAbsolutePosition());
     }

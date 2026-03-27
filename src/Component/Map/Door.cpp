@@ -3,8 +3,15 @@
 #include <utility>
 
 #include "Util/Animation.hpp"
+#include "Util/Time.hpp"
 
 #include "Component/Map/Door.hpp"
+
+namespace {
+
+constexpr float kDoorOpenDelayMs = 200.0F; // Tune this value to change the door-open delay in ms.
+
+} // namespace
 
 Door::Door(
     glm::vec2 cooridinate,
@@ -45,6 +52,19 @@ Door::Door(
 }
 
 void Door::Update() {
+    if (this->m_State == State::OpenDelay) {
+        this->m_OpenDelayRemainingMs =
+            std::max(0.0F, this->m_OpenDelayRemainingMs - Util::Time::GetDeltaTimeMs());
+
+        if (this->m_OpenDelayRemainingMs <= 0.0F) {
+            if (this->m_Visuals.opening != nullptr) {
+                this->EnterState(State::Opening);
+            } else {
+                this->EnterState(State::Open);
+            }
+        }
+    }
+
     if (this->m_State == State::Opening &&
         this->m_Visuals.opening != nullptr &&
         this->m_Visuals.opening->GetState() == Util::Animation::State::ENDED) {
@@ -67,14 +87,20 @@ glm::vec2 Door::GetAbsoluteScale() {
 }
 
 void Door::Open() {
-    if (this->m_State == State::Open || this->m_State == State::Opening) {
+    if (this->m_State == State::Open ||
+        this->m_State == State::OpenDelay ||
+        this->m_State == State::Opening) {
         return;
     }
 
-    if (this->m_Visuals.opening != nullptr) {
-        this->EnterState(State::Opening);
+    if (kDoorOpenDelayMs > 0.0F) {
+        this->EnterState(State::OpenDelay);
     } else {
-        this->EnterState(State::Open);
+        if (this->m_Visuals.opening != nullptr) {
+            this->EnterState(State::Opening);
+        } else {
+            this->EnterState(State::Open);
+        }
     }
 }
 
@@ -91,7 +117,9 @@ void Door::Close() {
 }
 
 void Door::Toggle() {
-    if (this->m_State == State::Open || this->m_State == State::Opening) {
+    if (this->m_State == State::Open ||
+        this->m_State == State::OpenDelay ||
+        this->m_State == State::Opening) {
         this->Close();
     } else {
         this->Open();
@@ -108,6 +136,14 @@ Door::State Door::GetState() const {
 
 DoorSide Door::GetSide() const {
     return this->m_Side;
+}
+
+void Door::SetColliderOffset(const glm::vec2 &colliderOffset) {
+    this->m_ColliderOffset = colliderOffset;
+}
+
+glm::vec2 Door::GetColliderCenter() const {
+    return this->GetAbsoluteCooridinate() + this->m_ColliderOffset;
 }
 
 void Door::ApplyDrawable(const std::shared_ptr<Core::Drawable> &drawable) {
@@ -131,11 +167,19 @@ void Door::EnterState(State state) {
 
     switch (state) {
     case State::Closed:
+        this->m_OpenDelayRemainingMs = 0.0F;
+        this->SetIsWall(true);
+        this->ApplyDrawable(this->m_Visuals.closedIdle);
+        break;
+
+    case State::OpenDelay:
+        this->m_OpenDelayRemainingMs = kDoorOpenDelayMs;
         this->SetIsWall(true);
         this->ApplyDrawable(this->m_Visuals.closedIdle);
         break;
 
     case State::Opening:
+        this->m_OpenDelayRemainingMs = 0.0F;
         this->SetIsWall(true);
         this->m_Visuals.opening->SetCurrentFrame(0);
         this->m_Visuals.opening->Play();
@@ -143,11 +187,13 @@ void Door::EnterState(State state) {
         break;
 
     case State::Open:
+        this->m_OpenDelayRemainingMs = 0.0F;
         this->SetIsWall(false);
         this->ApplyDrawable(this->m_Visuals.openIdle);
         break;
 
     case State::Closing:
+        this->m_OpenDelayRemainingMs = 0.0F;
         this->SetIsWall(false);
         this->m_Visuals.closing->SetCurrentFrame(0);
         this->m_Visuals.closing->Play();

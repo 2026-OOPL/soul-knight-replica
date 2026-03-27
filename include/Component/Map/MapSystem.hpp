@@ -15,6 +15,11 @@
 
 class MapSystem : public Scene {
 public:
+    enum class DoorPassageState {
+        Idle,
+        Traversing
+    };
+
     MapSystem();
 
     ~MapSystem() override = default;
@@ -31,7 +36,28 @@ public:
     );
 
 protected:
+    struct DoorPassageContext {
+        DoorPassageState state = DoorPassageState::Idle;
+        std::shared_ptr<BaseRoom> sourceRoom = nullptr;
+        std::shared_ptr<BaseRoom> targetRoom = nullptr;
+        DoorSide targetEntrySide = DoorSide::Bottom;
+    };
+
     std::vector<Collision::AxisAlignedBox> CollectCurrentRoomColliders() const;
+    std::vector<Collision::AxisAlignedBox> CollectRoomColliders(
+        const std::shared_ptr<BaseRoom> &room,
+        const Collision::AxisAlignedBox *playerBox
+    ) const;
+    bool HasRoomPassageBetween(
+        const std::shared_ptr<BaseRoom> &sourceRoom,
+        const std::shared_ptr<BaseRoom> &targetRoom,
+        DoorSide &targetEntrySide
+    ) const;
+    bool TryStartDoorPassage(const std::shared_ptr<BaseRoom> &targetRoom);
+    bool HasCommittedDoorPassage(const glm::vec2 &playerPos) const;
+    void CommitDoorPassage();
+    void CancelDoorPassage();
+    void PrepareDoorPassage(const glm::vec2 &playerPos);
     std::shared_ptr<BaseRoom> FindRoomByPlayerPosition(const glm::vec2 &playerPos) const;
     void UpdateCurrentRoom(const glm::vec2 &playerPos);
 
@@ -41,6 +67,7 @@ protected:
     std::vector<std::shared_ptr<Camera>> m_Cameras;
     std::vector<std::shared_ptr<BaseRoom>> m_Rooms;
     std::shared_ptr<BaseRoom> m_CurrentRoom;
+    DoorPassageContext m_DoorPassage;
     std::shared_ptr<Camera> m_AttachCamera;
 };
 

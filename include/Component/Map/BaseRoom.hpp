@@ -31,7 +31,9 @@ public:
     bool IsPlayerInside(const glm::vec2 &playerPos) const;
 
     const std::vector<Collision::AxisAlignedBox> &GetStaticColliders() const;
-    std::vector<Collision::AxisAlignedBox> GetDynamicColliders() const;
+    std::vector<Collision::AxisAlignedBox> GetDynamicColliders(
+        const Collision::AxisAlignedBox *ignoreOverlapBox = nullptr
+    ) const;
 
     const std::vector<std::shared_ptr<Door>> &GetDoors() const;
     const std::vector<std::shared_ptr<Mob>> &GetMobs() const;
@@ -46,6 +48,7 @@ public:
     glm::vec2 GetRoomSize() const;
     RoomType GetRoomType() const;
     RoomPurpose GetPurpose() const;
+    bool HasPassageOnSide(DoorSide side) const;
 
     static WallConfig BuildWallConfigFromDoorConfig(
         const DoorConfig &doorConfig,

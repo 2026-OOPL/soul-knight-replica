@@ -12,8 +12,8 @@ namespace {
 
 constexpr char kHorizontalClosedDoorSprite[] = RESOURCE_DIR "/Map/Room/Wall_5x2.png";
 constexpr char kVerticalClosedDoorSprite[] = RESOURCE_DIR "/Map/Room/Wall_1x5.png";
-constexpr float kBottomDoorVisualOffsetY = 15.0F;
-constexpr float kTopDoorVisualOffsetY = 10.0F;
+constexpr float kBottomDoorVisualOffsetY = 15.0F; // 不能刪除門會歪掉
+constexpr float kTopDoorVisualOffsetY = 10.0F; // 同上
 
 glm::vec2 SafeScaleForSize(
     const std::shared_ptr<Core::Drawable> &drawable,
@@ -176,18 +176,27 @@ const std::vector<Collision::AxisAlignedBox> &BaseRoom::GetStaticColliders() con
     return this->m_StaticColliders;
 }
 
-std::vector<Collision::AxisAlignedBox> BaseRoom::GetDynamicColliders() const {
+std::vector<Collision::AxisAlignedBox> BaseRoom::GetDynamicColliders(
+    const Collision::AxisAlignedBox *ignoreOverlapBox
+) const {
     std::vector<Collision::AxisAlignedBox> dynamicColliders;
+    Collision::CollisionSystem collisionSystem;
 
     for (const auto &door : this->m_Doors) {
         if (door == nullptr || door->IsOpen()) {
             continue;
         }
 
-        dynamicColliders.push_back(Collision::CollisionSystem::BuildBox(
-            door->GetAbsoluteCooridinate(),
+        const Collision::AxisAlignedBox doorBox = Collision::CollisionSystem::BuildBox(
+            door->GetColliderCenter(),
             door->GetColliderSize()
-        ));
+        );
+        if (ignoreOverlapBox != nullptr &&
+            collisionSystem.IsOverlapping(doorBox, *ignoreOverlapBox)) {
+            continue;
+        }
+
+        dynamicColliders.push_back(doorBox);
     }
 
     return dynamicColliders;
@@ -242,6 +251,11 @@ RoomType BaseRoom::GetRoomType() const {
 
 RoomPurpose BaseRoom::GetPurpose() const {
     return this->m_Purpose;
+}
+
+bool BaseRoom::HasPassageOnSide(DoorSide side) const {
+    return this->GetWallSideConfig(side).hasOpening ||
+           this->GetDoorSideConfig(side).hasDoor;
 }
 
 WallConfig BaseRoom::BuildWallConfigFromDoorConfig(
@@ -491,6 +505,7 @@ void BaseRoom::BuildDoors() {
             doorInfo.visuals,
             doorInfo.startsOpen
         );
+        door->SetColliderOffset(-doorInfo.positionOffset);
 
         this->m_Doors.push_back(door);
         this->AddChild(door);
