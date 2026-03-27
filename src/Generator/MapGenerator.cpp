@@ -11,10 +11,35 @@
 #include "Generator/GenFightChamber.hpp"
 #include "Generator/GenPortalChamber.hpp"
 #include "Generator/GenRewardChamber.hpp"
+#include "Component/Map/MapColliderConfig.hpp"
 #include "Util/Logger.hpp"
 #include "Generator/MapGenerator.hpp"
 
 #include "Component/Map/RoomAssembly.hpp"
+
+namespace {
+
+bool HasRoomAt(
+    const std::shared_ptr<MapBlueprint> &blueprint,
+    const glm::ivec2 &coordinate
+) {
+    return blueprint->isCooridinateInBound(coordinate) &&
+           blueprint->GetElementByCooridinate(coordinate) != nullptr;
+}
+
+RoomBoundaryConfig BuildBoundaryConfig(
+    const std::shared_ptr<MapBlueprint> &blueprint,
+    const glm::ivec2 &coordinate
+) {
+    RoomBoundaryConfig boundaries;
+    boundaries.top.hasDoor = HasRoomAt(blueprint, coordinate + glm::ivec2(0, 1));
+    boundaries.right.hasDoor = HasRoomAt(blueprint, coordinate + glm::ivec2(1, 0));
+    boundaries.bottom.hasDoor = HasRoomAt(blueprint, coordinate + glm::ivec2(0, -1));
+    boundaries.left.hasDoor = HasRoomAt(blueprint, coordinate + glm::ivec2(-1, 0));
+    return boundaries;
+}
+
+} // namespace
 
 
 MapGenerator::MapGenerator(std::string seed) {
@@ -92,7 +117,7 @@ void MapGenerator::Generate() {
 
     m_GenChamber = std::make_shared<GenPortalChamber>(
         this->GetPortalChamberGenPolicy(),
-        [](glm::vec2 _) {return true;},
+        [](glm::vec2) { return true; },
         this->m_Blueprint,
         m_RandomChoose
     );
@@ -189,8 +214,8 @@ GeneratePolicy MapGenerator::GetPortalChamberGenPolicy() {
     return GeneratePolicy::TOP_LEFT;
 }
 
-std::vector<RoomAssembly> MapGenerator::GetRoomAssembly() {
-    std::vector<RoomAssembly> assembly;
+std::vector<std::shared_ptr<RoomAssembly>> MapGenerator::GetRoomAssembly() {
+    std::vector<std::shared_ptr<RoomAssembly>> assembly;
 
     for (int x=0; x<this->m_MapGridSize.x; x++) {
         for (int y=0; y<this->m_MapGridSize.y; y++) {
@@ -202,27 +227,15 @@ std::vector<RoomAssembly> MapGenerator::GetRoomAssembly() {
             }
 
             glm::ivec2 offset = chamberCooridinate - m_StartChamberCooridinate;
+            RoomAssemblyConfig config;
+            config.type = info->roomType;
+            config.purpose = info->roomPurpose;
+            config.roomCenter =
+                offset * glm::ivec2(27 * MAP_PIXEL_PER_BLOCK, 27 * MAP_PIXEL_PER_BLOCK);
+            config.wallThickness = MapColliderConfig::kDefaultWallThickness;
+            config.boundaries = BuildBoundaryConfig(this->m_Blueprint, chamberCooridinate);
 
-            glm::ivec2 rightChamberCooridinate = chamberCooridinate + glm::ivec2(1, 0);
-            // If right has room 
-            if (this->m_Blueprint->isCooridinateInBound(rightChamberCooridinate) &&
-                this->m_Blueprint->GetElementByCooridinate(rightChamberCooridinate)) {
-                // TODO: Generate left gangway
-            }
-
-            // If bottom has room
-            glm::ivec2 bottomChamberCooridinate = chamberCooridinate + glm::ivec2(0, 1);
-            if (this->m_Blueprint->isCooridinateInBound(bottomChamberCooridinate) &&
-                this->m_Blueprint->GetElementByCooridinate(bottomChamberCooridinate)) {
-                // TODO: Generate bottom gangway
-            }
-
-            assembly.push_back(RoomAssembly(
-                RoomAssemblyConfig{
-                    info->roomType,
-                    offset * glm::ivec2(27 * MAP_PIXEL_PER_BLOCK, 27 * MAP_PIXEL_PER_BLOCK)
-                }
-            ));
+            assembly.push_back(std::make_shared<RoomAssembly>(config));
         }
 
     }

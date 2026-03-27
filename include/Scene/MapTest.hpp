@@ -2,6 +2,7 @@
 #define MAP_TEST_HPP
 
 #include <memory>
+#include <vector>
 
 #include "Component/Map/RoomAssembly.hpp"
 #include "Component/Map/MapSystem.hpp"
@@ -13,8 +14,8 @@ public:
     void Update() override;
 
 private:
-    Collision::CollisionSystem m_CollisionSystem;
-    std::unique_ptr<RoomAssembly> m_MainRoomAssembly;
+    std::vector<std::shared_ptr<RoomAssembly>> m_RoomAssemblies;
+    std::shared_ptr<RoomAssembly> m_MainRoomAssembly;
     std::shared_ptr<Player> m_MainPlayer;
     bool m_HasPlayerEnteredMainRoom = false;
     float m_DoorCloseDelayRemainingMs = -1.0F;

@@ -3,14 +3,12 @@
 #include "Component/Camera/Curve.hpp"
 #include "Component/Camera/TraceCamera.hpp"
 #include "Component/IStateful.hpp"
-#include "Scene/MapTest.hpp"
-#include "Generator/MapBlueprint.hpp"
 #include "Generator/MapGenerator.hpp"
+#include "Scene/MapTest.hpp"
 #include "Util/Time.hpp"
 
 namespace {
 
-constexpr float kPlayerSpawnBelowDoorDistance = 70.0F;
 constexpr float kDoorCloseDelayMs = 650.0F;
 
 } // namespace
@@ -22,40 +20,48 @@ MapTest::MapTest() : MapSystem() {
 
     generator->Generate();
 
-    std::vector<RoomAssembly> roomAssembly = generator->GetRoomAssembly();
+    this->m_RoomAssemblies = generator->GetRoomAssembly();
 
-    for (auto const &i : roomAssembly) {
-        this->AddMapPieces(i.GetPieces());
-        this->m_CollisionSystem.AddStaticBlockingBoxes(i.GetStaticWallBoxes());
+    for (const auto &roomAssembly : this->m_RoomAssemblies) {
+        if (roomAssembly == nullptr) {
+            continue;
+        }
+
+        this->AddMapPieces(roomAssembly->GetPieces());
+        this->AddRoom(roomAssembly->GetRoom());
+
+        if (this->m_MainRoomAssembly == nullptr &&
+            roomAssembly->GetPurpose() == RoomPurpose::STARTER) {
+            this->m_MainRoomAssembly = roomAssembly;
+        }
     }
-    
+
     this->m_MainPlayer = std::make_shared<Player>();
 
-    this->m_MainPlayer->SetPosition({0, 0});
-    // this->m_MainPlayer->SetPosition(
-    //     this->m_MainRoomAssembly->GetSuggestedBottomSpawn(kPlayerSpawnBelowDoorDistance)
-    // );
+    if (this->m_MainRoomAssembly != nullptr) {
+        this->m_MainPlayer->SetPosition(
+            this->m_MainRoomAssembly->GetRoom()->GetAbsoluteCooridinate()
+        );
+    } else {
+        this->m_MainPlayer->SetPosition({0.0F, 0.0F});
+    }
+
     this->m_MainPlayer->SetCollisionResolver(
         [this](const Collision::AxisAlignedBox &currentBox, const glm::vec2 &intendedDelta) {
-            return this->m_CollisionSystem.ResolveMovement(currentBox, intendedDelta);
+            return this->ResolvePlayerMovement(currentBox, intendedDelta);
         }
     );
 
-    m_MainPlayer->m_AbsoluteTransform.scale = {.5, .5};
-
-    this->m_CollisionSystem.SetBlockingBoxProvider(
-        [this]() {
-            return Collision::BuildWallBoxes(this->m_Pieces);
-        }
-    );
+    this->m_MainPlayer->m_AbsoluteTransform.scale = {.5F, .5F};
     this->m_Players.push_back(this->m_MainPlayer);
+    this->UpdateCurrentRoom(this->m_MainPlayer->GetAbsolutePosition());
 
     this->m_AttachCamera = std::make_shared<TraceCamera>(
         this->m_MainPlayer,
         std::make_shared<EaseOutQubicCurve>()
     );
 
-    this->m_AttachCamera->SetScale({3, 3});
+    this->m_AttachCamera->SetScale({0.5, 0.5});
 
     if (this->m_MainPlayer != nullptr) {
         this->AddChild(this->m_MainPlayer);
@@ -71,7 +77,16 @@ MapTest::MapTest() : MapSystem() {
 MapTest::~MapTest() = default;
 
 void MapTest::Update() {
-    if (!this->m_HasPlayerEnteredMainRoom && this->IsPlayerInsideRoom()) {
+    if (this->m_MainPlayer != nullptr) {
+        this->UpdateCurrentRoom(this->m_MainPlayer->GetAbsolutePosition());
+    }
+
+    if (!this->m_HasPlayerEnteredMainRoom &&
+        this->m_MainRoomAssembly != nullptr &&
+        this->m_MainPlayer != nullptr &&
+        this->m_MainRoomAssembly->GetRoom()->IsPlayerInside(
+            this->m_MainPlayer->GetAbsolutePosition()
+        )) {
         this->m_HasPlayerEnteredMainRoom = true;
         this->m_DoorCloseDelayRemainingMs = kDoorCloseDelayMs;
     }
@@ -104,5 +119,6 @@ void MapTest::Update() {
     for (const auto &piece : this->m_Pieces) {
         this->m_AttachCamera->SetTransformByCamera(piece);
     }
+
     this->Scene::Update();
 }

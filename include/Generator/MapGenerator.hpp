@@ -38,7 +38,7 @@ public:
     
     void Generate();
 
-    std::vector<RoomAssembly> GetRoomAssembly();
+    std::vector<std::shared_ptr<RoomAssembly>> GetRoomAssembly();
 
     std::shared_ptr<MapBlueprint> m_Blueprint;
 

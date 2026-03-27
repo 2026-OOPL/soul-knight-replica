@@ -15,6 +15,11 @@ set(SRC_FILES
     Component/Map/BaseRoom.cpp
     Component/Map/MapPiece.cpp
     Component/Map/Door.cpp
+    Component/Map/Room13x13.cpp
+    Component/Map/Room15x15.cpp
+    Component/Map/Room17x17.cpp
+    Component/Map/Room17x23.cpp
+    Component/Map/Room23x17.cpp
     Component/Map/MapSystem.cpp
     Component/Map/RoomAssembly.cpp
     
@@ -54,8 +59,14 @@ set(INCLUDE_FILES
 
     Component/Map/BaseRoom.hpp
     Component/Map/Door.hpp
+    Component/Map/MapColliderConfig.hpp
     Component/Map/MapPiece.hpp
     Component/Map/MapSystem.hpp
+    Component/Map/Room13x13.hpp
+    Component/Map/Room15x15.hpp
+    Component/Map/Room17x17.hpp
+    Component/Map/Room17x23.hpp
+    Component/Map/Room23x17.hpp
     Component/Map/RoomAssembly.hpp
 
     Component/Camera/Camera.hpp

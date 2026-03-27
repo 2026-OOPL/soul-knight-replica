@@ -1,20 +1,19 @@
 #include "Component/Map/RoomAssembly.hpp"
 
-#include <array>
-#include <stdexcept>
 #include <utility>
 
+#include "Component/Map/MapColliderConfig.hpp"
+#include "Component/Map/Room13x13.hpp"
+#include "Component/Map/Room15x15.hpp"
+#include "Component/Map/Room17x17.hpp"
+#include "Component/Map/Room17x23.hpp"
+#include "Component/Map/Room23x17.hpp"
 #include "Util/Image.hpp"
-#include "Util/Logger.hpp"
 
 namespace {
 
 constexpr char kHorizontalClosedDoorSprite[] = RESOURCE_DIR "/Map/Room/Wall_5x2.png";
 constexpr char kVerticalClosedDoorSprite[] = RESOURCE_DIR "/Map/Room/Wall_1x5.png";
-const glm::vec2 kHorizontalDoorColliderSize = {80.0F, 15.0F};
-const glm::vec2 kHorizontalDoorRenderSize = {80.0F, 32.0F};
-const glm::vec2 kVerticalDoorColliderSize = {15.0F, 80.0F};
-const glm::vec2 kVerticalDoorRenderSize = {16.0F, 96.0F};
 constexpr float kBottomDoorVisualOffsetY = 15.0F;
 constexpr float kTopDoorVisualOffsetY = 10.0F;
 
@@ -28,19 +27,37 @@ struct DoorConfig {
     bool isOpen = true;
 };
 
-std::size_t SideToIndex(DoorSide side) {
-    switch (side) {
-    case DoorSide::Top:
-        return 0;
-    case DoorSide::Right:
-        return 1;
-    case DoorSide::Bottom:
-        return 2;
-    case DoorSide::Left:
-        return 3;
+Door::Visuals BuildHorizontalDoorVisuals() {
+    Door::Visuals visuals;
+    visuals.closedIdle = std::make_shared<Util::Image>(kHorizontalClosedDoorSprite);
+    return visuals;
+}
+
+Door::Visuals BuildVerticalDoorVisuals() {
+    Door::Visuals visuals;
+    visuals.closedIdle = std::make_shared<Util::Image>(kVerticalClosedDoorSprite);
+    return visuals;
+}
+
+std::shared_ptr<BaseRoom> BuildRoom(RoomAssemblyConfig config) {
+    switch (config.type) {
+    case RoomType::ROOM_13_13:
+        return std::make_shared<Room13x13>(std::move(config));
+
+    case RoomType::ROOM_15_15:
+        return std::make_shared<Room15x15>(std::move(config));
+
+    case RoomType::ROOM_17_17:
+        return std::make_shared<Room17x17>(std::move(config));
+
+    case RoomType::ROOM_17_23:
+        return std::make_shared<Room17x23>(std::move(config));
+
+    case RoomType::ROOM_23_17:
+        return std::make_shared<Room23x17>(std::move(config));
     }
 
-    return 0;
+    return std::make_shared<Room13x13>(std::move(config));
 }
 
 glm::vec2 BuildDoorPosition(
@@ -77,109 +94,90 @@ glm::vec2 BuildDoorPosition(
     return roomCenter;
 }
 
-void ApplyDoorOpening(
-    Collision::RoomBoundaryOpenings &wallOpenings,
-    std::array<bool, 4> &occupiedSides,
-    const DoorConfig &doorConfig
+void AppendDoorConfig(
+    std::vector<DoorConfig> &doorConfigs,
+    const WallDoorConfig &wallConfig,
+    DoorSide side
 ) {
-    const std::size_t sideIndex = SideToIndex(doorConfig.side);
-    if (occupiedSides[sideIndex]) {
-        throw std::invalid_argument("RoomAssembly supports at most one door per side.");
+    if (!wallConfig.hasDoor) {
+        return;
     }
-    occupiedSides[sideIndex] = true;
 
-    switch (doorConfig.side) {
+    DoorConfig doorConfig;
+    doorConfig.side = side;
+    doorConfig.openingOffset = wallConfig.openingOffset;
+    doorConfig.isOpen = wallConfig.startsOpen;
+
+    switch (side) {
     case DoorSide::Top:
-        wallOpenings.top.size = doorConfig.colliderSize.x;
-        wallOpenings.top.offset = doorConfig.openingOffset;
+        doorConfig.colliderSize = {
+            wallConfig.openingSize > 0.0F ?
+            wallConfig.openingSize :
+            MapColliderConfig::kHorizontalDoorColliderSize.x,
+            MapColliderConfig::kHorizontalDoorColliderSize.y
+        };
+        doorConfig.renderSize = MapColliderConfig::kHorizontalDoorRenderSize;
+        doorConfig.visuals = BuildHorizontalDoorVisuals();
+        doorConfig.positionOffset = {0.0F, kTopDoorVisualOffsetY};
         break;
 
     case DoorSide::Right:
-        wallOpenings.right.size = doorConfig.colliderSize.y;
-        wallOpenings.right.offset = doorConfig.openingOffset;
+        doorConfig.colliderSize = {
+            MapColliderConfig::kVerticalDoorColliderSize.x,
+            wallConfig.openingSize > 0.0F ?
+            wallConfig.openingSize :
+            MapColliderConfig::kVerticalDoorColliderSize.y
+        };
+        doorConfig.renderSize = MapColliderConfig::kVerticalDoorRenderSize;
+        doorConfig.visuals = BuildVerticalDoorVisuals();
         break;
 
     case DoorSide::Bottom:
-        wallOpenings.bottom.size = doorConfig.colliderSize.x;
-        wallOpenings.bottom.offset = doorConfig.openingOffset;
+        doorConfig.colliderSize = {
+            wallConfig.openingSize > 0.0F ?
+            wallConfig.openingSize :
+            MapColliderConfig::kHorizontalDoorColliderSize.x,
+            MapColliderConfig::kHorizontalDoorColliderSize.y
+        };
+        doorConfig.renderSize = MapColliderConfig::kHorizontalDoorRenderSize;
+        doorConfig.visuals = BuildHorizontalDoorVisuals();
+        doorConfig.positionOffset = {0.0F, kBottomDoorVisualOffsetY};
         break;
 
     case DoorSide::Left:
-        wallOpenings.left.size = doorConfig.colliderSize.y;
-        wallOpenings.left.offset = doorConfig.openingOffset;
+        doorConfig.colliderSize = {
+            MapColliderConfig::kVerticalDoorColliderSize.x,
+            wallConfig.openingSize > 0.0F ?
+            wallConfig.openingSize :
+            MapColliderConfig::kVerticalDoorColliderSize.y
+        };
+        doorConfig.renderSize = MapColliderConfig::kVerticalDoorRenderSize;
+        doorConfig.visuals = BuildVerticalDoorVisuals();
         break;
     }
+
+    doorConfigs.push_back(doorConfig);
 }
 
-Door::Visuals BuildHorizontalDoorVisuals() {
-    Door::Visuals visuals;
-    visuals.closedIdle = std::make_shared<Util::Image>(kHorizontalClosedDoorSprite);
-    return visuals;
-}
-
-Door::Visuals BuildVerticalDoorVisuals() {
-    Door::Visuals visuals;
-    visuals.closedIdle = std::make_shared<Util::Image>(kVerticalClosedDoorSprite);
-    return visuals;
-}
-
-std::vector<DoorConfig> BuildDefaultDoorConfigs() {
-    DoorConfig bottomDoorConfig;
-    bottomDoorConfig.side = DoorSide::Bottom;
-    bottomDoorConfig.colliderSize = kHorizontalDoorColliderSize;
-    bottomDoorConfig.renderSize = kHorizontalDoorRenderSize;
-    bottomDoorConfig.visuals = BuildHorizontalDoorVisuals();
-    bottomDoorConfig.positionOffset = {0.0F, kBottomDoorVisualOffsetY};
-
-    DoorConfig topDoorConfig;
-    topDoorConfig.side = DoorSide::Top;
-    topDoorConfig.colliderSize = kHorizontalDoorColliderSize;
-    topDoorConfig.renderSize = kHorizontalDoorRenderSize;
-    topDoorConfig.visuals = BuildHorizontalDoorVisuals();
-    topDoorConfig.positionOffset = {0.0F, kTopDoorVisualOffsetY};
-
-    DoorConfig leftDoorConfig;
-    leftDoorConfig.side = DoorSide::Left;
-    leftDoorConfig.colliderSize = kVerticalDoorColliderSize;
-    leftDoorConfig.renderSize = kVerticalDoorRenderSize;
-    leftDoorConfig.visuals = BuildVerticalDoorVisuals();
-
-    DoorConfig rightDoorConfig;
-    rightDoorConfig.side = DoorSide::Right;
-    rightDoorConfig.colliderSize = kVerticalDoorColliderSize;
-    rightDoorConfig.renderSize = kVerticalDoorRenderSize;
-    rightDoorConfig.visuals = BuildVerticalDoorVisuals();
-
-    return {
-        bottomDoorConfig,
-        topDoorConfig,
-        leftDoorConfig,
-        rightDoorConfig
-    };
+std::vector<DoorConfig> BuildDoorConfigs(const RoomBoundaryConfig &boundaries) {
+    std::vector<DoorConfig> doorConfigs;
+    AppendDoorConfig(doorConfigs, boundaries.top, DoorSide::Top);
+    AppendDoorConfig(doorConfigs, boundaries.right, DoorSide::Right);
+    AppendDoorConfig(doorConfigs, boundaries.bottom, DoorSide::Bottom);
+    AppendDoorConfig(doorConfigs, boundaries.left, DoorSide::Left);
+    return doorConfigs;
 }
 
 } // namespace
 
-RoomAssembly::RoomAssembly(RoomAssemblyConfig config) {
-    this->m_Room = std::make_shared<BaseRoom>(config);
+RoomAssembly::RoomAssembly(RoomAssemblyConfig config)
+    : m_Config(config) {
+    this->m_Room = BuildRoom(config);
     this->m_Pieces.push_back(this->m_Room);
 
     const glm::vec2 roomCenter = this->m_Room->GetAbsoluteCooridinate();
-    const glm::vec2 roomSize = this->m_Room->GetAbsoluteScale();
-    const std::vector<DoorConfig> doorConfigs = BuildDefaultDoorConfigs();
-    Collision::RoomBoundaryOpenings wallOpenings;
-    std::array<bool, 4> occupiedSides = {false, false, false, false};
-
-    for (const DoorConfig &doorConfig : doorConfigs) {
-        ApplyDoorOpening(wallOpenings, occupiedSides, doorConfig);
-    }
-
-    this->m_StaticWallBoxes = Collision::BuildRoomBoundaryBoxes(
-        roomCenter,
-        roomSize,
-        config.wallThickness,
-        wallOpenings
-    );
+    const glm::vec2 roomSize = this->m_Room->GetRoomSize();
+    const std::vector<DoorConfig> doorConfigs = BuildDoorConfigs(this->m_Config.boundaries);
 
     for (const DoorConfig &doorConfig : doorConfigs) {
         const glm::vec2 doorPosition =
@@ -197,6 +195,8 @@ RoomAssembly::RoomAssembly(RoomAssemblyConfig config) {
         this->m_Doors.push_back(door);
         this->m_Pieces.push_back(door);
     }
+
+    this->m_Room->SetDoors(this->m_Doors);
 }
 
 const std::shared_ptr<BaseRoom> &RoomAssembly::GetRoom() const {
@@ -211,22 +211,22 @@ const std::vector<std::shared_ptr<MapPiece>> &RoomAssembly::GetPieces() const {
     return this->m_Pieces;
 }
 
-const std::vector<Collision::AxisAlignedBox> &RoomAssembly::GetStaticWallBoxes() const {
-    return this->m_StaticWallBoxes;
-}
-
 glm::vec2 RoomAssembly::GetSuggestedBottomSpawn(float distanceFromRoom) const {
     if (this->m_Room == nullptr) {
         return {0.0F, 0.0F};
     }
 
     const glm::vec2 roomCenter = this->m_Room->GetAbsoluteCooridinate();
-    const glm::vec2 roomSize = this->m_Room->GetAbsoluteScale();
+    const glm::vec2 roomSize = this->m_Room->GetRoomSize();
 
     return {
         roomCenter.x,
         roomCenter.y - roomSize.y / 2.0F - distanceFromRoom
     };
+}
+
+RoomPurpose RoomAssembly::GetPurpose() const {
+    return this->m_Config.purpose;
 }
 
 void RoomAssembly::CloseAllDoors() {

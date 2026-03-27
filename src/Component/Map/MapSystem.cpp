@@ -1,8 +1,5 @@
 #include "Component/Map/MapSystem.hpp"
-#include "Util/Logger.hpp"
-#include "Util/Transform.hpp"
 
-#include <cmath>
 #include <utility>
 
 MapSystem::MapSystem()
@@ -15,29 +12,16 @@ MapSystem::MapSystem(std::vector<std::shared_ptr<MapPiece>> pieces)
 }
 
 bool MapSystem::IsPlayerInsideRoom() const {
-    if (this->m_Pieces.empty() || this->m_Players.empty()) {
+    if (this->m_Players.empty()) {
         return false;
     }
 
-    const std::shared_ptr<MapPiece> room = this->m_Pieces.front();
-    const std::shared_ptr<Player> player = this->m_Players.front();
-
-    if (room == nullptr || player == nullptr) {
-        return false;
+    std::shared_ptr<BaseRoom> room = this->m_CurrentRoom;
+    if (room == nullptr) {
+        room = this->FindRoomByPlayerPosition(this->m_Players.front()->GetAbsolutePosition());
     }
 
-    const Util::Transform roomTransform = room->GetAbsoluteTransform();
-    const Util::Transform playerTransform = player->GetAbsoluteTransform();
-
-    const glm::vec2 roomCenter = roomTransform.translation;
-    const glm::vec2 roomHalfSize = room->GetAbsoluteScale() / 2.0F;
-
-    const glm::vec2 innerHalfSize =
-        roomHalfSize - glm::vec2(this->m_RoomWallThickness * 1.5F);
-    const glm::vec2 playerOffset = playerTransform.translation - roomCenter;
-
-    return std::abs(playerOffset.x) <= innerHalfSize.x &&
-           std::abs(playerOffset.y) <= innerHalfSize.y;
+    return room != nullptr;
 }
 
 glm::vec2 MapSystem::GetCameraCoor() const {
@@ -48,9 +32,60 @@ glm::vec2 MapSystem::GetCameraCoor() const {
     return this->m_AttachCamera->GetCooridinate();
 }
 
-
-void MapSystem::AddMapPieces(const std::vector<std::shared_ptr<MapPiece>>& pieces) {
-    for (auto const &i : pieces) {
-        this->m_Pieces.push_back(i);
+void MapSystem::AddMapPieces(const std::vector<std::shared_ptr<MapPiece>> &pieces) {
+    for (const auto &piece : pieces) {
+        this->m_Pieces.push_back(piece);
     }
+}
+
+void MapSystem::AddRoom(const std::shared_ptr<BaseRoom> &room) {
+    if (room == nullptr) {
+        return;
+    }
+
+    this->m_Rooms.push_back(room);
+}
+
+void MapSystem::AddRooms(const std::vector<std::shared_ptr<BaseRoom>> &rooms) {
+    for (const auto &room : rooms) {
+        this->AddRoom(room);
+    }
+}
+
+Collision::MovementResult MapSystem::ResolvePlayerMovement(
+    const Collision::AxisAlignedBox &currentBox,
+    const glm::vec2 &intendedDelta
+) {
+    this->UpdateCurrentRoom(currentBox.center);
+
+    if (this->m_CurrentRoom == nullptr) {
+        return {
+            intendedDelta,
+            false,
+            false
+        };
+    }
+
+    const Collision::MovementResult result =
+        this->m_CurrentRoom->ResolvePlayerMovement(currentBox, intendedDelta);
+    this->UpdateCurrentRoom(currentBox.center + result.resolvedDelta);
+    return result;
+}
+
+std::shared_ptr<BaseRoom> MapSystem::FindRoomByPlayerPosition(const glm::vec2 &playerPos) const {
+    for (const auto &room : this->m_Rooms) {
+        if (room != nullptr && room->IsPlayerInside(playerPos)) {
+            return room;
+        }
+    }
+
+    return nullptr;
+}
+
+void MapSystem::UpdateCurrentRoom(const glm::vec2 &playerPos) {
+    if (this->m_CurrentRoom != nullptr && this->m_CurrentRoom->IsPlayerInside(playerPos)) {
+        return;
+    }
+
+    this->m_CurrentRoom = this->FindRoomByPlayerPosition(playerPos);
 }
