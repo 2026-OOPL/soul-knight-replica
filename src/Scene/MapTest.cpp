@@ -1,11 +1,9 @@
-#include "Scene/MapTest.hpp"
-
 #include <memory>
 
 #include "Component/Camera/Curve.hpp"
 #include "Component/Camera/TraceCamera.hpp"
 #include "Component/IStateful.hpp"
-#include "Util/Logger.hpp"
+#include "Scene/MapTest.hpp"
 #include "Util/Time.hpp"
 
 namespace {

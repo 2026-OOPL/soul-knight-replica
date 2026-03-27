@@ -20,8 +20,8 @@ enum class GeneratePolicy;
 struct RoomInfo {
 public:
     RoomInfo (RoomType type, RoomPurpose roomPurpose) {
-        roomType = type;
-        roomPurpose = roomPurpose;
+        this->roomType = type;
+        this->roomPurpose = roomPurpose;
     }
     
     // Which of the size is used for this room
@@ -34,7 +34,9 @@ class MapGenerator {
 public:
     MapGenerator(std::string seed) ;
     
-    void GenerateRoom();
+    void Generate();
+
+    std::shared_ptr<MapBlueprint> m_Blueprint;
 
 protected:
     glm::vec2 GetStarterChamberCooridinate();
@@ -42,8 +44,6 @@ protected:
     GeneratePolicy GetPortalChamberGenPolicy();
 
     std::shared_ptr<GenChamber> m_GenChamber;
-
-    std::shared_ptr<MapBlueprint> m_Blueprint;
     std::shared_ptr<RandomChoose> m_RandomChoose;
 
     bool FightChamberCooridinateValidator(glm::vec2 cooridinate);
@@ -52,6 +52,8 @@ protected:
 private:
     glm::vec2 m_MapGridSize;
     glm::vec2 m_CurrentPosition;
+
+    glm::vec2 m_StartChamberCooridinate;
 
     Direction m_StartDirection;
     int m_StartCoordinateOffset;

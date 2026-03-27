@@ -16,4 +16,11 @@ enum class RoomType {
     ROOM_23_17
 };
 
+enum class RoomPurpose {
+    STARTER,
+    FIGHTING,
+    REWARD,
+    PORTAL
+};
+
 #endif

@@ -1,10 +1,13 @@
 #include "App.hpp"
 
 #include "Core/Context.hpp"
+#include "Generator/MapGenerator.hpp"
+#include "Util/Logger.hpp"
+#include <memory>
 
 int main(int, char**) {
     auto context = Core::Context::GetInstance();
-    App app;
+    App app;    
 
     context->SetWindowIcon(RESOURCE_DIR"/icon.png");
 
@@ -26,6 +29,8 @@ int main(int, char**) {
         
         context->Update();
     }
+
+    
     
     return 0;
 }

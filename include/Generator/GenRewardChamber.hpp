@@ -12,7 +12,7 @@ class GenRewardChamber : public GenChamber {
 public:
     GenRewardChamber(
         // The area limiter which tells generator whether this cooridinate could be use
-        std::function<bool(glm::vec2)> limiter,
+        std::function<bool(glm::ivec2)> limiter,
 
         // The chamber count limiter
         int maxChamberCount,
@@ -25,10 +25,10 @@ public:
     ~GenRewardChamber() = default;
 
     void Generate() override;
-    std::vector<glm::vec2> GetAvailableCooridinate() override;
+    std::vector<glm::ivec2> GetAvailableCooridinate() override;
 
 protected:
-    void CreateRoom(glm::vec2 cooridinate);
+    void CreateRoom(glm::ivec2 cooridinate);
 
     int m_MinChamberCount;
     int m_MaxChamberCount;

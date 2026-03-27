@@ -16,10 +16,10 @@ class MapBlueprint;
 class GenFightChamber : public GenChamber {
 public:
     GenFightChamber(
-        glm::vec2 start,
+        glm::ivec2 start,
 
         // The area limiter which tells generator whether this cooridinate could be use
-        std::function<bool(glm::vec2)> limiter,
+        std::function<bool(glm::ivec2)> limiter,
 
         // The chamber count limiter
         int maxChamberCount,
@@ -32,12 +32,12 @@ public:
     ~GenFightChamber() = default;
 
     void Generate() override;
-    std::vector<glm::vec2> GetAvailableCooridinate() override;
+    std::vector<glm::ivec2> GetAvailableCooridinate() override;
 
 protected:
-    void CreateRoom(glm::vec2 position);
+    void CreateRoom(glm::ivec2 position);
 
-    glm::vec2 m_Start;
+    glm::ivec2 m_Start;
 
     int m_MaxChamberCount;
     int m_MinChamberCount;

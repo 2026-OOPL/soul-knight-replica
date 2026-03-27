@@ -1,9 +1,8 @@
-#include <glm/fwd.hpp>
+#include <vector>
 #include <memory>
 #include <stdexcept>
 
 #include <glm/vec2.hpp>
-#include <vector>
 
 #include "Common/Enums.hpp"
 #include "Common/Random.hpp"
@@ -11,10 +10,10 @@
 #include "Generator/GenFightChamber.hpp"
 
 GenFightChamber::GenFightChamber(
-    glm::vec2 start,
+    glm::ivec2 start,
 
     // The area limiter which tells generator whether this cooridinate could be use
-    std::function<bool(glm::vec2)> limiter,
+    std::function<bool(glm::ivec2)> limiter,
 
     // The chamber count limiter
     int maxChamberCount,
@@ -34,9 +33,9 @@ GenFightChamber::GenFightChamber(
 }
 
 void GenFightChamber::Generate() {
-    glm::vec2 currentPosition = m_Start;
+    glm::ivec2 currentPosition = m_Start;
 
-    std::vector<glm::vec2> candidateCooridinate;
+    std::vector<glm::ivec2> candidateCooridinate;
 
     int i=0;
 
@@ -61,7 +60,7 @@ void GenFightChamber::Generate() {
     } while (i < m_MaxChamberCount);
 }
 
-void GenFightChamber::CreateRoom(glm::vec2 position) {
+void GenFightChamber::CreateRoom(glm::ivec2 position) {
     RoomType type = this->m_RandomChoose->GetEnum<RoomType>();
 
     // Ensure the chamber size is not 13x13
@@ -76,26 +75,26 @@ void GenFightChamber::CreateRoom(glm::vec2 position) {
     m_Blueprint->SetElementByCooridinate(position, info);
 }
 
-std::vector<glm::vec2> GenFightChamber::GetAvailableCooridinate() {
-    std::vector<glm::vec2> chambers = this->m_Blueprint->GetAllFightChamberCooirdinate();
+std::vector<glm::ivec2> GenFightChamber::GetAvailableCooridinate() {
+    std::vector<glm::ivec2> chambers = this->m_Blueprint->GetAllFightChamberCooirdinate();
 
-    std::vector<glm::vec2> results;
+    std::vector<glm::ivec2> results;
 
     // Make start position the first priority to be choose
     if (this->m_Blueprint->GetElementByCooridinate(m_Start) == nullptr) {
         return {m_Start};
     }
 
-    const glm::vec2 directions[] = {
-        glm::vec2(0, 1),
-        glm::vec2(0, -1),
-        glm::vec2(1, 0),
-        glm::vec2(-1, 0),
+    const glm::ivec2 directions[] = {
+        glm::ivec2(0, 1),
+        glm::ivec2(0, -1),
+        glm::ivec2(1, 0),
+        glm::ivec2(-1, 0),
     };
 
     for (auto const& i : chambers) {
         for (int j=0; j<4; j++) {
-            glm::vec2 newCooridinate = i + directions[j];
+            glm::ivec2 newCooridinate = i + directions[j];
 
             if (!this->isCooridinateInBound(newCooridinate)) {
                 continue;

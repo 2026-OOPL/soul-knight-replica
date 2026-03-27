@@ -11,42 +11,67 @@
 #include "Generator/GenFightChamber.hpp"
 #include "Generator/GenPortalChamber.hpp"
 #include "Generator/GenRewardChamber.hpp"
+#include "Util/Logger.hpp"
 #include "Generator/MapGenerator.hpp"
 
 MapGenerator::MapGenerator(std::string seed) {
     this->m_RandomChoose = std::make_shared<RandomChoose>(seed);
 
     int mapSize = m_RandomChoose->GetInteger(5, 10);
+
+    this->m_Blueprint = std::make_shared<MapBlueprint>(glm::vec2(mapSize, mapSize));
     
-    this->m_MapGridSize = glm::vec2(mapSize, mapSize);
+    this->m_MapGridSize = m_Blueprint->GetSize();
     this->m_StartDirection = m_RandomChoose->GetEnum<Direction>();
-    this->m_StartCoordinateOffset = m_RandomChoose->GetInteger(mapSize-1);
+    this->m_StartCoordinateOffset = m_RandomChoose->GetInteger(1, mapSize-1);
+    
+    this->m_StartChamberCooridinate = this->GetStarterChamberCooridinate();
 }
 
 bool MapGenerator::FightChamberCooridinateValidator(glm::vec2 cooridinate) {
-    if (cooridinate.x <= 0 || cooridinate.x >= m_MapGridSize.x-1) {
-        return false;
-    }
 
-    if (cooridinate.y <= 0 || cooridinate.y >= m_MapGridSize.y-1) {
-        return false;
+    switch (m_StartDirection) {
+        case Direction::BOTTOM:
+            return (cooridinate.y < m_StartChamberCooridinate.y);
+
+        case Direction::LEFT:
+            return (cooridinate.x > m_StartChamberCooridinate.x);
+
+        case Direction::RIGHT:
+            return (cooridinate.x > m_StartChamberCooridinate.x);
+
+        case Direction::TOP:
+            return (cooridinate.y > m_StartChamberCooridinate.y);
     }
 
     return true;
 }
 
 bool MapGenerator::RewardChamberCooridinateValidator(glm::vec2 cooridinate) {
+    switch (m_StartDirection) {
+        case Direction::BOTTOM:
+            return (cooridinate.y < m_StartChamberCooridinate.y);
+
+        case Direction::LEFT:
+            return (cooridinate.x > m_StartChamberCooridinate.x);
+
+        case Direction::RIGHT:
+            return (cooridinate.x > m_StartChamberCooridinate.x);
+
+        case Direction::TOP:
+            return (cooridinate.y > m_StartChamberCooridinate.y);
+    }
+    
     return true;
 }
 
-void MapGenerator::GenerateRoom() {
-
+void MapGenerator::Generate() {
     m_GenChamber = std::make_shared<GenFightChamber>(
         this->GetFightingChamberStartCooridinate(),
         [this](glm::vec2 p) {return this->FightChamberCooridinateValidator(p);},
-        2,
         4,
-        m_Blueprint,
+        2,
+        this->m_Blueprint,
         m_RandomChoose
     );
 
@@ -54,9 +79,9 @@ void MapGenerator::GenerateRoom() {
 
     m_GenChamber = std::make_shared<GenRewardChamber>(
         [this](glm::vec2 p) {return this->RewardChamberCooridinateValidator(p);},
-        2,
         4,
-        m_Blueprint,
+        2,
+        this->m_Blueprint,
         m_RandomChoose
     );
     
@@ -65,7 +90,7 @@ void MapGenerator::GenerateRoom() {
     m_GenChamber = std::make_shared<GenPortalChamber>(
         this->GetPortalChamberGenPolicy(),
         [](glm::vec2 _) {return true;},
-        m_Blueprint,
+        this->m_Blueprint,
         m_RandomChoose
     );
     
@@ -75,7 +100,7 @@ void MapGenerator::GenerateRoom() {
         RoomType::ROOM_13_13, RoomPurpose::STARTER
     );
 
-    m_Blueprint->SetElementByCooridinate(
+    this->m_Blueprint->SetElementByCooridinate(
         this->GetStarterChamberCooridinate(),
         starterRoom
     );
@@ -84,13 +109,13 @@ void MapGenerator::GenerateRoom() {
 glm::vec2 MapGenerator::GetStarterChamberCooridinate() {
     switch (m_StartDirection) {
         case Direction::BOTTOM:
-            return glm::vec2(m_StartCoordinateOffset, m_MapGridSize.x-1);
+            return glm::vec2(m_StartCoordinateOffset, m_MapGridSize.y-1);
         
         case Direction::LEFT:
             return glm::vec2(m_StartCoordinateOffset, 0);
 
         case Direction::RIGHT:
-            return glm::vec2(m_MapGridSize.y-1, m_StartCoordinateOffset);
+            return glm::vec2(m_MapGridSize.x-1, m_StartCoordinateOffset);
 
         case Direction::TOP:
             return glm::vec2(m_StartCoordinateOffset, 0);
@@ -123,6 +148,8 @@ glm::vec2 MapGenerator::GetFightingChamberStartCooridinate() {
         case Direction::TOP:
             return startCoridinate + glm::vec2(0, 1);
     }
+
+    return glm::vec2(0, 0);
 }
 
 GeneratePolicy MapGenerator::GetPortalChamberGenPolicy() {
@@ -155,4 +182,6 @@ GeneratePolicy MapGenerator::GetPortalChamberGenPolicy() {
                 return GeneratePolicy::BOTTOM_LEFT;
             }
     }
+    // Random return a value
+    return GeneratePolicy::TOP_LEFT;
 }
