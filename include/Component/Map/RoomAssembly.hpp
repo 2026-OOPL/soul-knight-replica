@@ -6,6 +6,7 @@
 
 #include <glm/vec2.hpp>
 
+#include "Common/Enums.hpp"
 #include "Component/Collision/CollisionSystem.hpp"
 #include "Component/Map/BaseRoom.hpp"
 #include "Component/Map/Door.hpp"
@@ -13,12 +14,7 @@
 
 class RoomAssembly {
 public:
-    struct Config {
-        glm::vec2 roomCenter = {0.0F, 0.0F};
-        float wallThickness = 20.0F;
-    };
-
-    explicit RoomAssembly(Config config);
+    explicit RoomAssembly(RoomAssemblyConfig config);
 
     const std::shared_ptr<BaseRoom> &GetRoom() const;
     const std::vector<std::shared_ptr<Door>> &GetDoors() const; 

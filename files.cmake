@@ -3,6 +3,11 @@ set(SRC_FILES
     MainMenu.cpp
     Scene.cpp
 
+    Scene/MapTest.cpp
+
+    Common/Random.cpp
+    
+    Component/Camera/Curve.cpp
     Component/Collision/CollisionSystem.cpp
     Component/Player/Player.cpp
     Component/TextButton/TextButton.cpp
@@ -17,9 +22,13 @@ set(SRC_FILES
     Component/Camera/TraceCamera.cpp
     Component/Camera/MultiTraceCamere.cpp
 
-    Scene/MapTest.cpp
+    Generator/GenChamber.cpp
+    Generator/GenFightChamber.cpp
+    Generator/GenRewardChamber.cpp
+    Generator/MapBlueprint.cpp
+    Generator/MapGenerator.cpp
+    Generator/GenPortalChamber.cpp
 
-    Component/Camera/Curve.cpp
 )
 
 set(INCLUDE_FILES
@@ -57,11 +66,13 @@ set(INCLUDE_FILES
     Component/Map/MapPiece.hpp
     Component/Camera/MultiTraceCamere.hpp
     Component/Camera/Curve.hpp
-    
-    Generator/MapGenerator.hpp
-    Generator/JointRoomGen.hpp
 
-    Scene/MapTest.hpp
+    Generator/GenChamber.hpp
+    Generator/GenPortalChamber.hpp
+    Generator/GenFightChamber.hpp
+    Generator/GenRewardChamber.hpp
+    Generator/MapBlueprint.hpp
+    Generator/MapGenerator.hpp
 )
 
 set(TEST_FILES

@@ -132,6 +132,12 @@ AxisAlignedBox CollisionSystem::BuildBox(const glm::vec2 &center, const glm::vec
     };
 }
 
+void CollisionSystem::AddStaticBlockingBoxes(const std::vector<AxisAlignedBox> &blockingBoxes) {
+    for (auto const &i : blockingBoxes) {
+        this->m_StaticBlockingBoxes.push_back(i);
+    }
+}
+
 void CollisionSystem::SetStaticBlockingBoxes(const std::vector<AxisAlignedBox> &blockingBoxes) {
     this->m_StaticBlockingBoxes = blockingBoxes;
 }

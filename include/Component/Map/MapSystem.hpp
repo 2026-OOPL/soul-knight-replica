@@ -23,6 +23,8 @@ public:
     bool IsPlayerInsideRoom() const;
     glm::vec2 GetCameraCoor() const;
 
+    void AddMapPieces(const std::vector<std::shared_ptr<MapPiece>>& pieces);
+
 protected:
     std::vector<std::shared_ptr<Mob>> m_Mobs;
     std::vector<std::shared_ptr<Player>> m_Players;
