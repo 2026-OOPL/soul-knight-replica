@@ -3,6 +3,7 @@
 #include "Component/Camera/Curve.hpp"
 #include "Component/Camera/TraceCamera.hpp"
 #include "Component/IStateful.hpp"
+#include "Component/Player/Knight.hpp"
 #include "Generator/MapGenerator.hpp"
 #include "Scene/MapTest.hpp"
 #include "Util/Input.hpp"
@@ -57,7 +58,7 @@ MapTest::MapTest() : MapSystem() {
         }
     }
 
-    this->m_MainPlayer = std::make_shared<Player>();
+    this->m_MainPlayer = std::make_shared<Knight>();
     if (this->m_MainRoom != nullptr) {
         this->m_MainPlayer->SetPosition(this->m_MainRoom->GetAbsoluteCooridinate());
     }
@@ -68,7 +69,7 @@ MapTest::MapTest() : MapSystem() {
         }
     );
 
-    this->m_MainPlayer->m_AbsoluteTransform.scale = {.5F, .5F};
+    this->m_MainPlayer->SetAbsoluteScale({.75F, .75F});
     this->m_Players.push_back(this->m_MainPlayer);
     this->UpdateCurrentRoom(this->m_MainPlayer->GetAbsolutePosition());
 
