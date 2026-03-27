@@ -23,15 +23,15 @@ Character::Character(
     int zIndex
 ) : GameObject(nullptr, zIndex) {
     this->m_WalkAnimation = std::make_shared<Util::Animation>(
-        WalkSprite, true, 20, true, 0, false
+        WalkSprite, true, 20, true, 0
     );
     
     this->m_DieAnimation = std::make_shared<Util::Animation>(
-        DieSprite, true, 20, true, 0, false
+        DieSprite, true, 20, true, 0
     );
 
     this->m_StandAnimation = std::make_shared<Util::Animation>(
-        StandSprite, true, 20, true, 0, false
+        StandSprite, true, 20, true, 0
     );
 
     this->SetDrawable(this->m_StandAnimation);

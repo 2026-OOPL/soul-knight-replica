@@ -4,7 +4,7 @@
 #include "Component/IMapObject.hpp"
 #include "Component/Character/Character.hpp"
 
-class Mob : public Character, public IMapObject {
+class Mob : public Character {
 public:
 };
 

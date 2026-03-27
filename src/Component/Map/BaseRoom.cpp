@@ -208,13 +208,13 @@ std::string BaseRoom::ResolveRoomSprite(RoomType roomType) {
 
 Door::Visuals BaseRoom::BuildHorizontalDoorVisuals() {
     Door::Visuals visuals;
-    visuals.closedIdle = std::make_shared<Util::Image>(kHorizontalClosedDoorSprite, false);
+    visuals.closedIdle = std::make_shared<Util::Image>(kHorizontalClosedDoorSprite);
     return visuals;
 }
 
 Door::Visuals BaseRoom::BuildVerticalDoorVisuals() {
     Door::Visuals visuals;
-    visuals.closedIdle = std::make_shared<Util::Image>(kVerticalClosedDoorSprite, false);
+    visuals.closedIdle = std::make_shared<Util::Image>(kVerticalClosedDoorSprite);
     return visuals;
 }
 
