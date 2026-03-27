@@ -1,17 +1,18 @@
 #include "Component/Map/MapPiece.hpp"
 
 #include <glm/fwd.hpp>
+#include <memory>
 
+#include "Core/Drawable.hpp"
+#include "Util/GameObject.hpp"
+#include "Util/Image.hpp"
 #include "Util/Transform.hpp"
 
 MapPiece::MapPiece(
     glm::vec2 cooridinate,
-    const std::shared_ptr<Core::Drawable> &drawable,
-    bool isWall
+    const std::shared_ptr<Core::Drawable> &drawable
 ) {
     this->m_AbsoluteTransform.translation = cooridinate;
-    this->m_IsWall = isWall;
-
 
     this->SetDrawable(drawable);
     this->m_Image = std::dynamic_pointer_cast<Util::Image>(drawable);
@@ -21,11 +22,10 @@ MapPiece::MapPiece(
     }
 }
 
-MapPiece::MapPiece(glm::vec2 cooridinate, std::string resource, bool isWall)
+MapPiece::MapPiece(glm::vec2 cooridinate, std::string resource)
     : MapPiece(
           cooridinate,
-          std::make_shared<Util::Image>(resource),
-          isWall
+          std::make_shared<Util::Image>(resource)
       ) {
 }
 

@@ -16,27 +16,21 @@ class MapPiece : public Util::GameObject, public IMapObject {
 public:
     MapPiece(
         glm::vec2 cooridinate,
-        const std::shared_ptr<Core::Drawable> &drawable,
-        bool isWall = false
+        const std::shared_ptr<Core::Drawable> &drawable
     );
 
     MapPiece(
         glm::vec2 cooridinate,
-        std::string resource,
-        bool isWall = false
+        std::string resource
     );
     
     glm::vec2 GetAbsoluteScale() override;
-    Util::Transform GetAbsoluteTransform() override;
-    Util::Transform GetObjectTransform() override;
-
-    bool IsWall() const { return this->m_IsWall; }
-    void SetIsWall(bool isWall) { this->m_IsWall = isWall; }
-
     glm::vec2 GetAbsoluteCooridinate() const { return this->m_AbsoluteTransform.translation; }
-
-    glm::vec2 GetColliderSize() const { return this->m_ColliderSize; }
+    Util::Transform GetAbsoluteTransform() override;
     
+    Util::Transform GetObjectTransform() override;
+    
+    glm::vec2 GetColliderSize() const { return this->m_ColliderSize; }
     void SetColliderSize(const glm::vec2 &colliderSize) {
         this->m_ColliderSize = colliderSize;
     }
@@ -46,7 +40,6 @@ public:
 private:
 
     std::shared_ptr<Util::Image> m_Image;//圖片路徑
-    bool m_IsWall = false;//設定這塊地圖是否為牆
     glm::vec2 m_ColliderSize = {48.0F, 48.0F};//碰撞盒大小
 
 };
