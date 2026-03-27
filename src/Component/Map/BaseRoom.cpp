@@ -262,10 +262,11 @@ WallConfig BaseRoom::BuildWallConfigFromDoorConfig(
     const DoorConfig &doorConfig,
     float wallThickness
 ) {
+    float bottomOffest=30.0F;
     WallConfig wallConfig;
     wallConfig.top.thickness = wallThickness;
     wallConfig.right.thickness = wallThickness;
-    wallConfig.bottom.thickness = wallThickness;
+    wallConfig.bottom.thickness = wallThickness+bottomOffest;
     wallConfig.left.thickness = wallThickness;
     wallConfig.top.hasOpening = doorConfig.top.hasDoor;
     wallConfig.right.hasOpening = doorConfig.right.hasDoor;
