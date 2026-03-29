@@ -1,9 +1,8 @@
-#include "App.hpp"
+#include <memory>
 
+#include "App.hpp"
 #include "Core/Context.hpp"
 #include "Generator/MapGenerator.hpp"
-#include "Util/Logger.hpp"
-#include <memory>
 
 int main(int, char**) {
     auto context = Core::Context::GetInstance();

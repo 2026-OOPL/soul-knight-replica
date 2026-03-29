@@ -26,12 +26,12 @@ public:
 
     glm::vec2 GetColliderSize();
     void SetColliderSize(const glm::vec2 &colliderSize);
-    void SetPosition(const glm::vec2 &position);
+    
     Collision::AxisAlignedBox GetCollisionBox() const;
     Collision::AxisAlignedBox GetCollisionBoxAt(const glm::vec2 &coordinate) const;
     void SetCollisionResolver(CollisionResolver collisionResolver);
 
-    glm::vec2 GetMoveIntent() const;
+    virtual glm::vec2 GetMoveIntent() const override;
 
 private:
     glm::vec2 m_ColliderSize = {24.0F, 24.0F};

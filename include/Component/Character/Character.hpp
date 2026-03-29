@@ -5,13 +5,14 @@
 #include <memory>
 #include <string>
 
-#include "Component/IMapObject.hpp"
+#include "Common/MapObject.hpp"
 #include "Component/IStateful.hpp"
+#include "Component/Weapon/Weapon.hpp"
 #include "Util/Animation.hpp"
 #include "Util/GameObject.hpp"
 #include "Util/Transform.hpp"
 
-class Character : public IMapObject, public IStateful, public Util::GameObject {
+class Character : public MapObject, public IStateful, public Util::GameObject {
 public:
     Character(
         std::shared_ptr<Util::Animation> StandAnimation,
@@ -27,32 +28,32 @@ public:
         int zIndex
     );
 
-    // These are the getter of the m_Transform in Util::GameObject
-    glm::vec2 GetAbsoluteScale() override;
-    Util::Transform GetObjectTransform() override;
+    // Override for MapObject
+    Util::Transform GetObjectTransform() const override; 
 
-    // These are the getter of the m_AbsoluteTransform in MapSystem
-    glm::vec2 GetAbsolutePosition() const;
-    Util::Transform GetAbsoluteTransform() override;
+    std::shared_ptr<Weapon> GetWeapon();
+    void SetWeapon(std::shared_ptr<Weapon> weapon);
 
-    void SetLookDirectionByMoveIntent(glm::vec2 moveIntent);
-    void SetSpriteTypeByMoveIntent(glm::vec2 moveIntent);
+    void Update() override;
 
-
-    // Absolute transform setter 
-    void SetAbsoluteScale(glm::vec2 scale);
-    void SetAbsoluteTransform(glm::vec2 transform);
-    void SetAbsoluteRotation(float degree);
+    virtual glm::vec2 GetMoveIntent() const;
 
 protected:
-    float m_PlayerSpeed = 0.15F;
+    float m_Health = 10;
     
-    Util::Transform m_AbsoluteTransform; // The absolute position on the map
+    float m_PlayerSpeed = 0.15F;
 
+    glm::vec2 m_LastMomentum;
+
+    std::shared_ptr<Weapon> m_Weapon;
+ 
     std::shared_ptr<Util::Animation> m_DieAnimation;
     std::shared_ptr<Util::Animation> m_StandAnimation;
     std::shared_ptr<Util::Animation> m_WalkAnimation;
 
+private:
+    void SetLookDirectionByMoveIntent(glm::vec2 moveIntent);
+    void SetSpriteTypeByMoveIntent(glm::vec2 moveIntent);
 };
 
 #endif

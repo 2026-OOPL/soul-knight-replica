@@ -249,7 +249,7 @@ std::vector<AxisAlignedBox> BuildWallBoxes(
         }
 
         wallBoxes.push_back(CollisionSystem::BuildBox(
-            piece->GetAbsoluteCooridinate(),
+            piece->GetAbsoluteTranslation(),
             piece->GetColliderSize()
         ));
     }

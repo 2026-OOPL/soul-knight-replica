@@ -1,6 +1,11 @@
 #include <algorithm>
+#include <glm/gtx/dual_quaternion.hpp>
+#include <memory>
 #include <utility>
 
+#include "Component/Bullet.hpp"
+#include "Component/Bullets/TestBullet.hpp"
+#include "Component/Character/Character.hpp"
 #include "Util/Input.hpp"
 #include "Util/Keycode.hpp"
 #include "Util/Time.hpp"
@@ -27,19 +32,12 @@ Player::Player(
     this->m_AbsoluteTransform.translation = {0.0F, 0.0F};
 }
 
-
-
 glm::vec2 Player::GetColliderSize() {
     return this->m_ColliderSize;
 }
 
 void Player::SetColliderSize(const glm::vec2 &colliderSize) {
     this->m_ColliderSize = colliderSize;
-}
-
-
-void Player::SetPosition(const glm::vec2 &position) {
-    this->m_AbsoluteTransform.translation = position;
 }
 
 Collision::AxisAlignedBox Player::GetCollisionBox() const {
@@ -74,36 +72,33 @@ glm::vec2 Player::GetMoveIntent() const {
         return moveIntent;
     }
 
-
     return glm::normalize(moveIntent);
 }
 
 void Player::Update() {
-    const glm::vec2 moveDirection = this->GetMoveIntent();
+    Character::Update();
 
-    this->SetLookDirectionByMoveIntent(moveDirection);
-    this->SetSpriteTypeByMoveIntent(moveDirection);
+    const glm::vec2 moveDirection = this->GetMoveIntent();
 
     if (moveDirection == glm::vec2(0.0F, 0.0F)) {
         this->m_PendingMoveDelta = {0.0F, 0.0F};
-        return;
-    }
-
-    const float movementDeltaTimeMs =
-        std::min(Util::Time::GetDeltaTimeMs(), kMaxPlayerMovementDeltaTimeMs);
-    const glm::vec2 frameDelta =
-        moveDirection * this->m_PlayerSpeed * movementDeltaTimeMs;
-
-    this->m_PendingMoveDelta = frameDelta;
-
-    if (this->m_CollisionResolver) {
-        const Collision::MovementResult movementResult = this->m_CollisionResolver(
-            this->GetCollisionBox(),
-            frameDelta
-        );
-
-        this->m_AbsoluteTransform.translation += movementResult.resolvedDelta;
     } else {
-        this->m_AbsoluteTransform.translation += frameDelta;
+        const float movementDeltaTimeMs =
+            std::min(Util::Time::GetDeltaTimeMs(), kMaxPlayerMovementDeltaTimeMs);
+        const glm::vec2 frameDelta =
+            moveDirection * this->m_PlayerSpeed * movementDeltaTimeMs;
+
+        this->m_PendingMoveDelta = frameDelta;
+
+        if (this->m_CollisionResolver) {
+            const Collision::MovementResult movementResult = this->m_CollisionResolver(
+                this->GetCollisionBox(),
+                frameDelta
+            );
+
+            this->m_AbsoluteTransform.translation += movementResult.resolvedDelta;
+        } else {
+            this->m_AbsoluteTransform.translation += frameDelta;
+        }
     }
 }

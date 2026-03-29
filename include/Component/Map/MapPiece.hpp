@@ -6,13 +6,13 @@
 #include <string>
 #include <sys/types.h>
 
-#include "Component/IMapObject.hpp"
+#include "Common/MapObject.hpp"
 #include "Core/Drawable.hpp"
 #include "Util/GameObject.hpp"
 #include "Util/Image.hpp"
 #include "Util/Transform.hpp"
 
-class MapPiece : public Util::GameObject, public IMapObject {
+class MapPiece : public Util::GameObject, public MapObject {
 public:
     MapPiece(
         glm::vec2 cooridinate,
@@ -25,24 +25,19 @@ public:
         std::string resource,
         bool isWall = false
     );
-    
-    glm::vec2 GetAbsoluteScale() override;
-    Util::Transform GetAbsoluteTransform() override;
-    Util::Transform GetObjectTransform() override;
 
     bool IsWall() const { return this->m_IsWall; }
     void SetIsWall(bool isWall) { this->m_IsWall = isWall; }
-
-    glm::vec2 GetAbsoluteCooridinate() const { return this->m_AbsoluteTransform.translation; }
 
     glm::vec2 GetColliderSize() const { return this->m_ColliderSize; }
     
     void SetColliderSize(const glm::vec2 &colliderSize) {
         this->m_ColliderSize = colliderSize;
     }
-    
-    Util::Transform m_AbsoluteTransform;
 
+    // Override for the MapObject
+    Util::Transform GetObjectTransform() const override;
+    
 private:
 
     std::shared_ptr<Util::Image> m_Image;//圖片路徑

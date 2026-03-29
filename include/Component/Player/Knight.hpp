@@ -14,7 +14,7 @@
 
 #include "Component/Character/Character.hpp"
 #include "Component/Collision/CollisionSystem.hpp"
-#include "Component/IMapObject.hpp"
+#include "Common/MapObject.hpp"
 #include "Component/IStateful.hpp"
 
 namespace KnightPlayer {

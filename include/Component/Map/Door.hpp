@@ -50,7 +50,7 @@ public:
 
     void Update() override;
 
-    glm::vec2 GetAbsoluteScale() override;
+    glm::vec2 GetAbsoluteScale() const override;
 
     void Open();
     void Close();

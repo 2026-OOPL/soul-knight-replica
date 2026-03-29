@@ -1,10 +1,10 @@
-#include "Util/Logger.hpp"
-#include "Util/Transform.hpp"
-#include <Component/Camera/TraceCamera.hpp>
-#include <Component/IMapObject.hpp>
-#include <glm/fwd.hpp>
+#include <glm/vec2.hpp>
 
-Util::Transform TraceCamera::GetTransformByCamera(std::shared_ptr<IMapObject> object) {
+#include "Common/MapObject.hpp"
+#include "Component/Camera/TraceCamera.hpp"
+#include "Util/Transform.hpp"
+
+Util::Transform TraceCamera::GetTransformByCamera(std::shared_ptr<MapObject> object) {
     Util::Transform objectAbs = object->GetAbsoluteTransform();
     Util::Transform cameraAbs = this->m_Transform;
 

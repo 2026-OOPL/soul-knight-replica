@@ -1,6 +1,7 @@
 #include "Component/Map/BaseRoom.hpp"
 
 #include "Common/Constants.hpp"
+#include "Component/Character/Character.hpp"
 #include "Component/Map/MapColliderConfig.hpp"
 #include "Util/Image.hpp"
 
@@ -81,11 +82,11 @@ const std::vector<std::shared_ptr<Door>> &BaseRoom::GetDoors() const {
     return this->m_Doors;
 }
 
-const std::vector<std::shared_ptr<Mob>> &BaseRoom::GetMobs() const {
+const std::vector<std::shared_ptr<Character>> &BaseRoom::GetMobs() const {
     return this->m_Mobs;
 }
 
-void BaseRoom::AddMob(const std::shared_ptr<Mob> &mob) {
+void BaseRoom::AddMob(const std::shared_ptr<Character> &mob) {
     if (mob == nullptr) {
         return;
     }
@@ -219,7 +220,7 @@ Door::Visuals BaseRoom::BuildVerticalDoorVisuals() {
 }
 
 glm::vec2 BaseRoom::BuildDoorPosition(const DoorBuildInfo &doorInfo) const {
-    const glm::vec2 roomCenter = this->GetAbsoluteCooridinate();
+    const glm::vec2 roomCenter = this->GetAbsoluteTranslation();
     const glm::vec2 roomSize = this->GetAreaSize();
 
     switch (doorInfo.side) {

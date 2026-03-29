@@ -163,7 +163,7 @@ RectMapArea::RectMapArea(
 
 bool RectMapArea::IsPointInside(const glm::vec2 &point) const {
     const glm::vec2 halfSize = this->m_AreaSize / 2.0F;
-    const glm::vec2 offset = point - this->GetAbsoluteCooridinate();
+    const glm::vec2 offset = point - this->GetAbsoluteTranslation();
 
     return std::abs(offset.x) <= halfSize.x &&
            std::abs(offset.y) <= halfSize.y;
@@ -192,7 +192,7 @@ void RectMapArea::SetWallConfig(const WallConfig &wallConfig) {
 void RectMapArea::RebuildStaticColliders() {
     this->m_StaticColliders.clear();
 
-    const glm::vec2 areaCenter = this->GetAbsoluteCooridinate();
+    const glm::vec2 areaCenter = this->GetAbsoluteTranslation();
     const glm::vec2 areaHalfSize = this->m_AreaSize / 2.0F;
 
     const std::vector<Collision::AxisAlignedBox> topWalls = BuildHorizontalWallSegments(

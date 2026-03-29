@@ -14,6 +14,9 @@ public:
     virtual void Update();
 
     virtual std::shared_ptr<Scene> GetRedirection();
+
+private:
+    void Update(std::shared_ptr<Util::GameObject> child);
 };
 
 #endif

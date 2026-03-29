@@ -1,7 +1,13 @@
+#include <glm/fwd.hpp>
+#include <glm/geometric.hpp>
 #include <memory>
+#include <cmath>
+
+#include "Component/Weapon/Weapon.hpp"
+#include "Util/Animation.hpp"
+#include "Util/Logger.hpp"
 
 #include "Component/Character/Character.hpp"
-#include "Util/Animation.hpp"
 
 Character::Character(
     std::shared_ptr<Util::Animation> StandAnimation,
@@ -13,6 +19,11 @@ Character::Character(
     this->m_DieAnimation = DieAnimation;
     this->m_StandAnimation = StandAnimation;
 
+    this->m_Weapon = std::make_shared<Weapon>(
+        RESOURCE_DIR"/Weapon/BadPistol.png"
+    );
+
+    this->AddChild(m_Weapon);
     this->SetDrawable(this->m_StandAnimation);
 };
 
@@ -34,6 +45,11 @@ Character::Character(
         StandSprite, true, 20, true, 0
     );
 
+    this->m_Weapon = std::make_shared<Weapon>(
+        RESOURCE_DIR"/Weapon/BadPistol.png"
+    );
+
+    this->AddChild(m_Weapon);
     this->SetDrawable(this->m_StandAnimation);
 };
 
@@ -57,30 +73,36 @@ void Character::SetSpriteTypeByMoveIntent(glm::vec2 moveIntent) {
     this->SetDrawable(this->m_WalkAnimation);
 }
 
-glm::vec2 Character::GetAbsoluteScale() {
-    return this->m_Drawable->GetSize() * this->m_AbsoluteTransform.scale;
-}
-
-Util::Transform Character::GetAbsoluteTransform() {
-    return this->m_AbsoluteTransform;
-}
-
-Util::Transform Character::GetObjectTransform() {
+Util::Transform Character::GetObjectTransform() const {
     return this->m_Transform;
 }
 
-glm::vec2 Character::GetAbsolutePosition() const {
-    return this->m_AbsoluteTransform.translation;
+std::shared_ptr<Weapon> Character::GetWeapon() {
+    return m_Weapon;
 }
 
-void Character::SetAbsoluteScale(glm::vec2 scale) {
-    this->m_AbsoluteTransform.scale = scale;
+void Character::SetWeapon(std::shared_ptr<Weapon> weapon) {
+    this->m_Weapon = weapon;
 }
 
-void Character::SetAbsoluteTransform(glm::vec2 transform) {
-    this->m_AbsoluteTransform.translation = transform;
+glm::vec2 Character::GetMoveIntent() const {
+    return glm::vec2(0, 0);
 }
 
-void Character::SetAbsoluteRotation(float degree) {
-    this->m_AbsoluteTransform.rotation = degree;
+void Character::Update() {
+    const glm::vec2 moveIntent = this->GetMoveIntent();
+
+    // Set weapon position
+    if (this->m_Weapon != nullptr && moveIntent != glm::vec2(0, 0)) {
+        m_Weapon->SetAnchorPoint(this->GetAbsoluteTranslation());
+        m_Weapon->SetFacingDirection(moveIntent);
+    }
+
+    this->SetSpriteTypeByMoveIntent(moveIntent);
+
+    if (moveIntent != glm::vec2(0, 0)) {
+        this->SetLookDirectionByMoveIntent(moveIntent);
+        m_LastMomentum = moveIntent;
+    }
+
 }

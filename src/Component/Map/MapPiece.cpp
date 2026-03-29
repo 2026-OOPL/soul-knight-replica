@@ -29,14 +29,6 @@ MapPiece::MapPiece(glm::vec2 cooridinate, std::string resource, bool isWall)
       ) {
 }
 
-glm::vec2 MapPiece::GetAbsoluteScale() {
-    return this->m_Drawable->GetSize() * this->m_AbsoluteTransform.scale;
-}
-
-Util::Transform MapPiece::GetAbsoluteTransform() {
-    return this->m_AbsoluteTransform;
-}
-
-Util::Transform MapPiece::GetObjectTransform() {
+Util::Transform MapPiece::GetObjectTransform() const {
     return this->m_Transform;
 }

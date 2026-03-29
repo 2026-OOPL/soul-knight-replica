@@ -94,7 +94,7 @@ std::shared_ptr<Gangway> BuildGangway(
 
     Gangway::Config config;
     const glm::vec2 delta =
-        secondRoom->GetAbsoluteCooridinate() - firstRoom->GetAbsoluteCooridinate();
+        secondRoom->GetAbsoluteTranslation() - firstRoom->GetAbsoluteTranslation();
 
     if (std::abs(delta.x) >= std::abs(delta.y)) {
         config.orientation = GangwayOrientation::Horizontal;
@@ -122,7 +122,7 @@ std::shared_ptr<Gangway> BuildGangway(
     
     config.wallThickness = MapColliderConfig::kDefaultWallThickness;
     const glm::vec2 center =
-        (firstRoom->GetAbsoluteCooridinate() + secondRoom->GetAbsoluteCooridinate()) / 2.0F;
+        (firstRoom->GetAbsoluteTranslation() + secondRoom->GetAbsoluteTranslation()) / 2.0F;
     const std::shared_ptr<Gangway> gangway = std::make_shared<Gangway>(center, config);
     gangway->ConnectRooms(firstRoom, secondRoom);
     return gangway;

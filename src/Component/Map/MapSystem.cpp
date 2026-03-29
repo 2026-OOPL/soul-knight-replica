@@ -1,6 +1,8 @@
 #include "Component/Map/MapSystem.hpp"
 
+#include <stdexcept>
 #include <unordered_set>
+#include "Component/IStateful.hpp"
 
 namespace {
 
@@ -18,6 +20,47 @@ MapSystem::MapSystem()
     );
 }
 
+void MapSystem::Update() {
+    Scene::Update();
+
+    if (this->m_AttachCamera != nullptr) {
+        const std::shared_ptr<IStateful> statefulCamera =
+            std::dynamic_pointer_cast<IStateful>(this->m_AttachCamera);
+
+        if (statefulCamera != nullptr) {
+            statefulCamera->Update();
+        }
+
+        for (const auto& player : this->m_Players) {
+            this->ApplyCameraRecursive(player);
+        }
+        for (const auto& room : this->m_Rooms) {
+            this->ApplyCameraRecursive(room);
+        }
+        for (const auto& gangway : this->m_Gangways) {
+            this->ApplyCameraRecursive(gangway);
+        }
+        for (const auto& mob : this->m_Mobs) {
+            this->ApplyCameraRecursive(mob);
+        }
+        for (const auto& bullet : this->m_Bullets) {
+            this->ApplyCameraRecursive(bullet);
+        }
+    }
+}
+
+void MapSystem::ApplyCameraRecursive(const std::shared_ptr<Util::GameObject> &object) {
+    if (this->m_AttachCamera == nullptr || object == nullptr) {
+        return;
+    }
+
+    this->m_AttachCamera->SetTransformByCamera(object);
+
+    for (const auto &child : object->GetChildren()) {
+        this->ApplyCameraRecursive(child);
+    }
+}
+
 bool MapSystem::IsPlayerInsideRoom() const {
     if (this->m_Players.empty()) {
         return false;
@@ -25,7 +68,7 @@ bool MapSystem::IsPlayerInsideRoom() const {
 
     std::shared_ptr<BaseRoom> room = this->m_CurrentRoom;
     if (room == nullptr) {
-        room = this->FindRoomByPlayerPosition(this->m_Players.front()->GetAbsolutePosition());
+        room = this->FindRoomByPlayerPosition(this->m_Players.front()->GetAbsoluteTranslation());
     }
 
     return room != nullptr;
@@ -192,7 +235,7 @@ bool MapSystem::HasRoomPassageBetween(
     }
 
     const glm::vec2 delta =
-        targetRoom->GetAbsoluteCooridinate() - sourceRoom->GetAbsoluteCooridinate();
+        targetRoom->GetAbsoluteTranslation() - sourceRoom->GetAbsoluteTranslation();
     DoorSide sourceExitSide = DoorSide::Bottom;
 
     if (std::abs(delta.x) > std::abs(delta.y)) {
@@ -253,7 +296,7 @@ bool MapSystem::HasCommittedDoorPassage(const glm::vec2 &playerPos) const {
         return false;
     }
 
-    const glm::vec2 roomCenter = this->m_DoorPassage.targetRoom->GetAbsoluteCooridinate();
+    const glm::vec2 roomCenter = this->m_DoorPassage.targetRoom->GetAbsoluteTranslation();
     const glm::vec2 roomHalfSize = this->m_DoorPassage.targetRoom->GetRoomSize() / 2.0F;
 
     switch (this->m_DoorPassage.targetEntrySide) {
@@ -360,4 +403,29 @@ void MapSystem::UpdateCurrentRoom(const glm::vec2 &playerPos) {
     if (this->m_CurrentRoom != nullptr) {
         this->m_CurrentRoom->OnPlayerEnter();
     }
+}
+
+// Getter and settter for children
+const std::vector<std::shared_ptr<Bullet>>& MapSystem::GetBullets() const {
+    return this->m_Bullets;
+}
+
+void MapSystem::AddBullet(std::shared_ptr<Bullet> bullet) {
+    this->AddEntity(bullet, this->m_Bullets, "bullet");
+}
+
+void MapSystem::RemoveBullet(std::shared_ptr<Bullet> bullet) {
+    this->RemoveEntity(bullet, this->m_Bullets, "bullet");
+}
+
+void MapSystem::AddMob(std::shared_ptr<Character> mob) {
+    this->AddEntity(mob, this->m_Mobs, "mob");
+}
+
+void MapSystem::RemoveMob(std::shared_ptr<Character> mob) {
+    this->RemoveEntity(mob, this->m_Mobs, "mob");
+}
+
+const std::vector<std::shared_ptr<Character>>& MapSystem::GetMob() const {
+    return this->m_Mobs;
 }

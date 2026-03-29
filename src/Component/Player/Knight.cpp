@@ -15,6 +15,4 @@ Knight::Knight() : Player(
     KnightPlayer::STAND_SPRITES,
     KnightPlayer::WALK_SPRITES,
     KnightPlayer::DIE_SPRITES
-) {
-    
-}
+) {}
