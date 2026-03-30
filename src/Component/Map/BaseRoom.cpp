@@ -7,8 +7,8 @@
 
 namespace {
 
-constexpr char kHorizontalClosedDoorSprite[] = RESOURCE_DIR "/Map/Room/Wall_5x2.png";
-constexpr char kVerticalClosedDoorSprite[] = RESOURCE_DIR "/Map/Room/Wall_1x5.png";
+constexpr char kHorizontalClosedDoorSprite[] = RESOURCE_DIR "/Map/Room/Fence_5x2.png";
+constexpr char kVerticalClosedDoorSprite[] = RESOURCE_DIR "/Map/Room/Fence_1x5.png";
 constexpr float kBottomDoorVisualOffsetY = 15.0F;
 constexpr float kTopDoorVisualOffsetY = 10.0F;
 constexpr float kStarterBottomWallThicknessOffset = 20.0F;
