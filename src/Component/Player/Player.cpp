@@ -1,5 +1,4 @@
 #include <algorithm>
-#include <glm/gtx/dual_quaternion.hpp>
 #include <memory>
 #include <utility>
 

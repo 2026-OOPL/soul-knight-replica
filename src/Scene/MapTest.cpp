@@ -3,14 +3,12 @@
 
 #include "Component/Camera/Curve.hpp"
 #include "Component/Camera/TraceCamera.hpp"
-#include "Component/IStateful.hpp"
 #include "Component/Player/Knight.hpp"
-#include "Component/Weapon/Weapon.hpp"
+#include "Component/Weapon.hpp"
 #include "Generator/MapGenerator.hpp"
 #include "Scene/MapTest.hpp"
 #include "Util/Input.hpp"
 #include "Util/Keycode.hpp"
-#include "Util/Logger.hpp"
 
 MapTest::MapTest() : MapSystem() {
     std::shared_ptr<MapGenerator> generator = std::make_shared<MapGenerator>(

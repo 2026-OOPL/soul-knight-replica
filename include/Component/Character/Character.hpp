@@ -7,7 +7,7 @@
 
 #include "Common/MapObject.hpp"
 #include "Component/IStateful.hpp"
-#include "Component/Weapon/Weapon.hpp"
+#include "Component/Weapon.hpp"
 #include "Util/Animation.hpp"
 #include "Util/GameObject.hpp"
 #include "Util/Transform.hpp"

@@ -23,7 +23,8 @@ class Bullet;
 class Weapon : public Util::GameObject, public MapObject, public IStateful {
 public:
     Weapon(
-        std::string resource
+        std::string resource,
+        int fireDelay
     );
 
     void Update() override;
@@ -44,6 +45,7 @@ public:
 
 protected:
     void SetWeaponPointingByMoveDirection();
+    float m_LastShotTime = 0;
     float m_WeaponRadius = 20;
     
     glm::vec2 m_AnchorPoint = glm::vec2(0 ,0);
@@ -52,7 +54,9 @@ protected:
     std::function<void(std::shared_ptr<Bullet>)> m_OnBulletFired;
     
     std::shared_ptr<Util::Image> m_Resource;
-    float m_LastShotTime = 0;
+
+private:
+    int m_FireDelay;
 };
 
 #endif

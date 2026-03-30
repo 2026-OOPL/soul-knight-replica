@@ -1,17 +1,23 @@
-#include "Component/Weapon/Weapon.hpp"
-#include "Component/Bullet.hpp"
-#include "Component/Bullets/TestBullet.hpp"
-#include "Util/Image.hpp"
-#include "Util/Logger.hpp"
+#include <memory>
 #include <cstdlib>
 #include <glm/vec2.hpp>
-#include <memory>
+
+#include "Util/Image.hpp"
 #include "Util/Input.hpp"
+#include "Util/Keycode.hpp"
+#include "Util/Time.hpp"
+
+#include "Component/Weapon.hpp"
+#include "Component/Bullet.hpp"
+#include "Component/Bullets/TestBullet.hpp"
 
 Weapon::Weapon(
-    std::string resource
+    std::string resource,
+    int fireDelay
 ) : Util::GameObject(nullptr, 5) {
     m_Resource = std::make_shared<Util::Image>(resource);
+
+    this->m_FireDelay = fireDelay;
 
     this->SetDrawable(m_Resource);
 }
@@ -29,7 +35,7 @@ void Weapon::Update() {
     // Apply the rotation for the weapon
 
     if (Util::Input::IsKeyPressed(Util::Keycode::SPACE) &&
-        Util::Time::GetElapsedTimeMs() - m_LastShotTime > 600
+        Util::Time::GetElapsedTimeMs() - m_LastShotTime > m_FireDelay
     ) {
         this->ShotBullet();
     }

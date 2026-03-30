@@ -1,6 +1,6 @@
-#include "Component/Weapon/Weapon.hpp"
 #include <string>
-#include <vector>
+
+#include "Component/Weapon.hpp"
 
 namespace {
     const std::string WEAPON_SKIN = RESOURCE_DIR"/Weapon/BadPistol.png";
@@ -8,7 +8,10 @@ namespace {
 
 class BadPistol : public Weapon {
 public:
-    BadPistol() : Weapon(WEAPON_SKIN) {};
+    BadPistol() : Weapon(
+        WEAPON_SKIN,
+        300
+    ) {};
 
     WeaponType GetWeaponType() override { return WeaponType::RANGED; }
 };
