@@ -24,8 +24,7 @@ MapPiece::MapPiece(
 MapPiece::MapPiece(glm::vec2 cooridinate, std::string resource, bool isWall)
     : MapPiece(
           cooridinate,
-          std::make_shared<Util::Image>(resource),
-          isWall
+          std::make_shared<Util::Image>(resource, false)
       ) {
 }
 

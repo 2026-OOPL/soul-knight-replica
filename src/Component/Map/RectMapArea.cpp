@@ -155,7 +155,7 @@ RectMapArea::RectMapArea(
 )
     : RectMapArea(
           absolutePosition,
-          std::make_shared<Util::Image>(resource),
+          std::make_shared<Util::Image>(resource, false),
           areaSize,
           wallConfig
       ) {
