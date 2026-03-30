@@ -8,8 +8,10 @@ set(SRC_FILES
     Common/Random.cpp
     
     Component/Camera/Curve.cpp
+    Component/Character/Character.cpp
     Component/Collision/CollisionSystem.cpp
     Component/Player/Player.cpp
+    Component/Player/Knight.cpp
     Component/TextButton/TextButton.cpp
 
     Component/Map/BaseRoom.cpp
@@ -74,6 +76,9 @@ set(INCLUDE_FILES
     Component/Map/MapPiece.hpp
     Component/Camera/MultiTraceCamere.hpp
     Component/Camera/Curve.hpp
+    Component/Player/Knight.hpp
+    Component/Player/Player.hpp
+
 
     Generator/GenChamber.hpp
     Generator/GenPortalChamber.hpp

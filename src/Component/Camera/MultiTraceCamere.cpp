@@ -1,9 +1,10 @@
-#include "Util/Transform.hpp"
-#include <Component/Camera/MultiTraceCamere.hpp>
-#include <Component/IMapObject.hpp>
-#include <glm/fwd.hpp>
+#include <glm/vec2.hpp>
 
-Util::Transform MultiTraceCamera::GetTransformByCamera(std::shared_ptr<IMapObject> object) {
+#include "Util/Transform.hpp"
+#include "Common/MapObject.hpp"
+#include "Component/Camera/MultiTraceCamere.hpp"
+
+Util::Transform MultiTraceCamera::GetTransformByCamera(std::shared_ptr<MapObject> object) {
     Util::Transform objectTransform = object->GetAbsoluteTransform();
 
     // The view center of this camera 

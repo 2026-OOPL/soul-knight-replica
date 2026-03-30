@@ -9,10 +9,22 @@ std::shared_ptr<Scene> Scene::GetRedirection() {
 
 void Scene::Update() {
     for (auto& i : m_Children) {
-        std::shared_ptr<IStateful> stateful = std::dynamic_pointer_cast<IStateful>(i);
+        this->Update(i);
+    }
+}
 
-        if (stateful) {
-            stateful->Update();
-        }
+void Scene::Update(std::shared_ptr<Util::GameObject> child) {
+    if (child == nullptr) {
+        return;
+    }
+    
+    std::shared_ptr<IStateful> stateful = std::dynamic_pointer_cast<IStateful>(child);
+
+    if (stateful) {
+        stateful->Update();
+    }
+
+    for (auto& i : child->GetChildren()) {
+        this->Update(i);
     }
 }

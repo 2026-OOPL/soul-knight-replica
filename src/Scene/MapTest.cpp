@@ -1,31 +1,16 @@
+#include <glm/fwd.hpp>
 #include <memory>
 
 #include "Component/Camera/Curve.hpp"
 #include "Component/Camera/TraceCamera.hpp"
 #include "Component/IStateful.hpp"
+#include "Component/Player/Knight.hpp"
+#include "Component/Weapon/Weapon.hpp"
 #include "Generator/MapGenerator.hpp"
 #include "Scene/MapTest.hpp"
 #include "Util/Input.hpp"
 #include "Util/Keycode.hpp"
-
-namespace {
-
-void ApplyCameraRecursive(
-    const std::shared_ptr<Camera> &camera,
-    const std::shared_ptr<Util::GameObject> &object
-) {
-    if (camera == nullptr || object == nullptr) {
-        return;
-    }
-
-    camera->SetTransformByCamera(object);
-
-    for (const auto &child : object->GetChildren()) {
-        ApplyCameraRecursive(camera, child);
-    }
-}
-
-} // namespace
+#include "Util/Logger.hpp"
 
 MapTest::MapTest() : MapSystem() {
     std::shared_ptr<MapGenerator> generator = std::make_shared<MapGenerator>(
@@ -57,9 +42,9 @@ MapTest::MapTest() : MapSystem() {
         }
     }
 
-    this->m_MainPlayer = std::make_shared<Player>();
+    this->m_MainPlayer = std::make_shared<Knight>();
     if (this->m_MainRoom != nullptr) {
-        this->m_MainPlayer->SetPosition(this->m_MainRoom->GetAbsoluteCooridinate());
+        this->m_MainPlayer->SetAbsoluteTranslation(glm::vec2(0 ,0));
     }
 
     this->m_MainPlayer->SetCollisionResolver(
@@ -68,26 +53,30 @@ MapTest::MapTest() : MapSystem() {
         }
     );
 
-    this->m_MainPlayer->m_AbsoluteTransform.scale = {.5F, .5F};
-    this->m_Players.push_back(this->m_MainPlayer);
-    this->UpdateCurrentRoom(this->m_MainPlayer->GetAbsolutePosition());
+    // Set call function while player shots a bullet
+    if (this->m_MainPlayer->GetWeapon() != nullptr) {
+        this->m_MainPlayer->GetWeapon()->SetOnBulletFired(
+            [this](std::shared_ptr<Bullet> bullet) {
+                this->AddBullet(bullet);
+            }
+        );
+    }
+
+    this->m_MainPlayer->SetAbsoluteScale({.75F, .75F});
+    if (this->m_MainPlayer != nullptr) {
+        this->m_Players.push_back(this->m_MainPlayer);
+        this->AddChild(this->m_MainPlayer);
+    }
+
+    this->UpdateCurrentRoom(this->m_MainPlayer->GetAbsoluteTranslation());
 
     this->m_AttachCamera = std::make_shared<TraceCamera>(
         this->m_MainPlayer,
         std::make_shared<EaseOutQubicCurve>()
     );
+
     this->m_AttachCamera->SetScale({2.5F, 2.5F});
 
-    if (this->m_MainPlayer != nullptr) {
-        this->AddChild(this->m_MainPlayer);
-    }
-
-    // TODO: 我不知道可不可以山，反正不山是編譯不了
-    // for (const auto &piece : this->m_Pieces) {
-    //     if (piece != nullptr) {
-    //         this->AddChild(piece);
-    //     }
-    // }
 }
 
 MapTest::~MapTest() = default;
@@ -99,32 +88,9 @@ void MapTest::Update() {
     }
 
     if (this->m_MainPlayer != nullptr) {
-        this->UpdateCurrentRoom(this->m_MainPlayer->GetAbsolutePosition());
+        this->UpdateCurrentRoom(this->m_MainPlayer->GetAbsoluteTranslation());
     }
-
-    if (this->m_AttachCamera == nullptr) {
-        return;
-    }
-
-    const std::shared_ptr<IStateful> statefulCamera =
-        std::dynamic_pointer_cast<IStateful>(this->m_AttachCamera);
-    if (statefulCamera != nullptr) {
-        statefulCamera->Update();
-    }
-
-    if (this->m_MainPlayer != nullptr) {
-        this->m_AttachCamera->SetTransformByCamera(this->m_MainPlayer);
-    }
-
-    for (const auto &room : this->m_RoomsInScene) {
-        ApplyCameraRecursive(this->m_AttachCamera, room);
-    }
-
-    for (const auto &gangway : this->m_GangwaysInScene) {
-        if (gangway != nullptr) {
-            this->m_AttachCamera->SetTransformByCamera(gangway);
-        }
-    }
-
-    this->Scene::Update();
+    
+    // 呼叫父類別 MapSystem 的 Update，它會自動處理好所有相機轉換與 Scene::Update()
+    MapSystem::Update(); 
 }

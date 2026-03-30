@@ -3,15 +3,19 @@
 
 #include <glm/fwd.hpp>
 #include <glm/vec2.hpp>
+#include <algorithm>
 #include <memory>
+#include <stdexcept>
 #include <vector>
 
+#include "Component/Bullet.hpp"
 #include "Component/Camera/Camera.hpp"
+#include "Component/Character/Character.hpp"
 #include "Component/Collision/CollisionSystem.hpp"
 #include "Component/Map/BaseRoom.hpp"
 #include "Component/Map/Gangway.hpp"
-#include "Component/Mob/Mob.hpp"
 #include "Component/Player/Player.hpp"
+#include "Util/GameObject.hpp"
 #include "Scene.hpp"
 
 class MapSystem : public Scene {
@@ -25,6 +29,8 @@ public:
 
     ~MapSystem() override = default;
 
+    void Update() override;
+
     bool IsPlayerInsideRoom() const;
     glm::vec2 GetCameraCoor() const;
 
@@ -37,6 +43,16 @@ public:
         const Collision::AxisAlignedBox &currentBox,
         const glm::vec2 &intendedDelta
     );
+
+    // Getter and setter for children
+    void AddBullet(std::shared_ptr<Bullet> bullet);
+    void RemoveBullet(std::shared_ptr<Bullet> bullet);
+    const std::vector<std::shared_ptr<Bullet>>& GetBullets() const;
+
+    void AddMob(std::shared_ptr<Character> bullet);
+    void RemoveMob(std::shared_ptr<Character> bullet);
+    const std::vector<std::shared_ptr<Character>>& GetMob() const;
+
 
 protected:
     struct DoorPassageContext {
@@ -65,14 +81,46 @@ protected:
     void UpdateCurrentRoom(const glm::vec2 &playerPos);
 
     Collision::CollisionSystem m_CollisionSystem;
-    std::vector<std::shared_ptr<Mob>> m_Mobs;
+    
     std::vector<std::shared_ptr<Player>> m_Players;
     std::vector<std::shared_ptr<Camera>> m_Cameras;
     std::vector<std::shared_ptr<BaseRoom>> m_Rooms;
     std::vector<std::shared_ptr<Gangway>> m_Gangways;
+    
     std::shared_ptr<BaseRoom> m_CurrentRoom;
-    DoorPassageContext m_DoorPassage;
     std::shared_ptr<Camera> m_AttachCamera;
+
+    DoorPassageContext m_DoorPassage;
+
+private:
+    // Template for adding child to both m_Children and custom container
+    template <typename T>
+    void AddEntity(std::shared_ptr<T> entity, std::vector<std::shared_ptr<T>>& container, const std::string& entityName = "entity") {
+        if (entity == nullptr) {
+            throw std::runtime_error("You are trying to add a null " + entityName);
+        }
+        this->AddChild(entity);
+        container.push_back(entity);
+    }
+
+    // Template for removing child to both m_Children and custom container
+    template <typename T>
+    void RemoveEntity(std::shared_ptr<T> entity, std::vector<std::shared_ptr<T>>& container, const std::string& entityName = "entity") {
+        if (entity == nullptr) {
+            throw std::runtime_error("You are trying to erase a null " + entityName);
+        }
+        this->RemoveChild(entity);
+        container.erase(
+            std::remove(container.begin(), container.end(), entity),
+            container.end()
+        );
+    }
+
+    // Apply transform for each object
+    void ApplyCameraRecursive(const std::shared_ptr<Util::GameObject> &object);
+
+    std::vector<std::shared_ptr<Bullet>> m_Bullets;
+    std::vector<std::shared_ptr<Character>> m_Mobs;
 };
 
 #endif

@@ -8,11 +8,11 @@
 #include <glm/vec2.hpp>
 
 #include "Common/Enums.hpp"
+#include "Component/Character/Character.hpp"
 #include "Component/Collision/CollisionSystem.hpp"
 #include "Component/IStateful.hpp"
 #include "Component/Map/Door.hpp"
 #include "Component/Map/RectMapArea.hpp"
-#include "Component/Mob/Mob.hpp"
 
 class BaseRoom : public RectMapArea, public IStateful {
 public:
@@ -36,9 +36,9 @@ public:
     ) const;
 
     const std::vector<std::shared_ptr<Door>> &GetDoors() const;
-    const std::vector<std::shared_ptr<Mob>> &GetMobs() const;
+    const std::vector<std::shared_ptr<Character>> &GetMobs() const;
 
-    void AddMob(const std::shared_ptr<Mob> &mob);
+    void AddMob(const std::shared_ptr<Character> &mob);
 
     virtual void OpenAllDoors();
     virtual void CloseAllDoors();
@@ -82,7 +82,7 @@ private:
     RoomPurpose m_Purpose = RoomPurpose::FIGHTING;
     DoorConfig m_DoorConfig;
     std::vector<std::shared_ptr<Door>> m_Doors;
-    std::vector<std::shared_ptr<Mob>> m_Mobs;
+    std::vector<std::shared_ptr<Character>> m_Mobs;
 };
 
 #endif

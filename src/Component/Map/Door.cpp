@@ -23,7 +23,8 @@ Door::Door(
 )
     : MapPiece(
           cooridinate,
-          isOpen ? visuals.openIdle : visuals.closedIdle
+          isOpen ? visuals.openIdle : visuals.closedIdle,
+          !isOpen
       ),
       m_Visuals(std::move(visuals)),
       m_Side(side) {
@@ -77,7 +78,7 @@ void Door::Update() {
     }
 }
 
-glm::vec2 Door::GetAbsoluteScale() {
+glm::vec2 Door::GetAbsoluteScale() const {
     if (this->m_Drawable == nullptr) {
         return {0,0 };
     }
@@ -142,7 +143,7 @@ void Door::SetColliderOffset(const glm::vec2 &colliderOffset) {
 }
 
 glm::vec2 Door::GetColliderCenter() const {
-    return this->GetAbsoluteCooridinate() + this->m_ColliderOffset;
+    return this->GetAbsoluteTranslation() + this->m_ColliderOffset;
 }
 
 void Door::ApplyDrawable(const std::shared_ptr<Core::Drawable> &drawable) {

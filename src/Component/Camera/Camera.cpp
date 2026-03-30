@@ -4,7 +4,7 @@
 #include <glm/vec2.hpp>
 
 #include "Core/Context.hpp"
-#include "Component/IMapObject.hpp"
+#include "Common/MapObject.hpp"
 #include "Component/Camera/Camera.hpp"
 #include "Util/GameObject.hpp"
 #include "Util/Transform.hpp"
@@ -14,7 +14,7 @@ glm::vec2 Camera::GetCameraSize() {
     return {context->GetWindowWidth(), context->GetWindowHeight()};
 }
 
-bool Camera::GetVisibilityByCamera(std::shared_ptr<IMapObject> object) {
+bool Camera::GetVisibilityByCamera(std::shared_ptr<MapObject> object) {
     Util::Transform objectTransform = object->GetAbsoluteTransform();
 
     glm::vec2 objectSize = object->GetAbsoluteScale();
@@ -59,7 +59,7 @@ bool Camera::GetVisibilityByCamera(std::shared_ptr<IMapObject> object) {
 }
 
 void Camera::SetTransformByCamera(std::shared_ptr<Util::GameObject> object) {
-    std::shared_ptr<IMapObject> mapObject = std::dynamic_pointer_cast<IMapObject>(object);
+    std::shared_ptr<MapObject> mapObject = std::dynamic_pointer_cast<MapObject>(object);
 
     if (mapObject == nullptr) {
         throw std::runtime_error("This object cannot be cast to IMapObject.");

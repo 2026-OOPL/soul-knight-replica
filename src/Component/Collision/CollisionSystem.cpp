@@ -5,7 +5,6 @@
 #include <memory>
 #include <utility>
 
-#include "Component/ICollidiable.hpp"
 #include "Component/Map/MapPiece.hpp"
 
 namespace {
@@ -246,15 +245,13 @@ std::vector<AxisAlignedBox> BuildWallBoxes(
     std::vector<AxisAlignedBox> wallBoxes;
 
     for (const auto &piece : pieces) {
-        
-        std::shared_ptr<ICollidable> collidable = std::dynamic_pointer_cast<ICollidable>(piece);
-        if (collidable == nullptr) {
+        if (piece == nullptr || !piece->IsWall()) {
             continue;
         }
 
         wallBoxes.push_back(CollisionSystem::BuildBox(
-            collidable->GetColliderCooridinate(),
-            collidable->GetColliderSize()
+            piece->GetAbsoluteTranslation(),
+            piece->GetColliderSize()
         ));
     }
 
