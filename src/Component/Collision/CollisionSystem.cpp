@@ -1,6 +1,7 @@
 #include "Component/Collision/CollisionSystem.hpp"
 
 #include <algorithm>
+#include <cmath>
 #include <memory>
 #include <utility>
 
@@ -8,6 +9,8 @@
 #include "Component/Map/MapPiece.hpp"
 
 namespace {
+
+constexpr float kMaxCollisionSubstepDistance = 8.0F; // 單次碰撞解算的最大位移，避免大位移跨牆。
 
 bool IsBoxBlocked(
     const Collision::AxisAlignedBox &candidate,
@@ -198,28 +201,39 @@ MovementResult CollisionSystem::ResolveMovement(
     const std::vector<AxisAlignedBox> blockingBoxes = this->GetBlockingBoxes();
     MovementResult result;
     AxisAlignedBox resolvedBox = currentBox;
+    const float maxComponentDelta = std::max(
+        std::abs(intendedDelta.x),
+        std::abs(intendedDelta.y)
+    );
+    const int stepCount = std::max(
+        1,
+        static_cast<int>(std::ceil(maxComponentDelta / kMaxCollisionSubstepDistance))
+    );
+    const glm::vec2 stepDelta = intendedDelta / static_cast<float>(stepCount);
 
-    if (intendedDelta.x != 0.0F) {
-        AxisAlignedBox horizontalCandidate = resolvedBox;
-        horizontalCandidate.center.x += intendedDelta.x;
+    for (int step = 0; step < stepCount; ++step) {
+        if (stepDelta.x != 0.0F) {
+            AxisAlignedBox horizontalCandidate = resolvedBox;
+            horizontalCandidate.center.x += stepDelta.x;
 
-        if (IsBoxBlocked(horizontalCandidate, blockingBoxes, *this)) {
-            result.blockedX = true;
-        } else {
-            result.resolvedDelta.x = intendedDelta.x;
-            resolvedBox.center.x += intendedDelta.x;
+            if (IsBoxBlocked(horizontalCandidate, blockingBoxes, *this)) {
+                result.blockedX = true;
+            } else {
+                result.resolvedDelta.x += stepDelta.x;
+                resolvedBox.center.x += stepDelta.x;
+            }
         }
-    }
 
-    if (intendedDelta.y != 0.0F) {
-        AxisAlignedBox verticalCandidate = resolvedBox;
-        verticalCandidate.center.y += intendedDelta.y;
+        if (stepDelta.y != 0.0F) {
+            AxisAlignedBox verticalCandidate = resolvedBox;
+            verticalCandidate.center.y += stepDelta.y;
 
-        if (IsBoxBlocked(verticalCandidate, blockingBoxes, *this)) {
-            result.blockedY = true;
-        } else {
-            result.resolvedDelta.y = intendedDelta.y;
-            resolvedBox.center.y += intendedDelta.y;
+            if (IsBoxBlocked(verticalCandidate, blockingBoxes, *this)) {
+                result.blockedY = true;
+            } else {
+                result.resolvedDelta.y += stepDelta.y;
+                resolvedBox.center.y += stepDelta.y;
+            }
         }
     }
 
@@ -282,7 +296,7 @@ std::vector<AxisAlignedBox> BuildRoomBoundaryBoxes(
     float bottomWallsOffest=20.0F;
     const std::vector<AxisAlignedBox> bottomWalls = BuildHorizontalWallSegments(
         roomCenter,
-        roomCenter.y - roomHalfSize.y + halfWallThickness+bottomWallsOffest,//襪操
+        roomCenter.y - roomHalfSize.y + halfWallThickness+bottomWallsOffest, //襪操
         roomSize.x,
         safeWallThickness,
         openings.bottom

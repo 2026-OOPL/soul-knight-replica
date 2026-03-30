@@ -26,6 +26,7 @@ class Door : public MapPiece, public IStateful {
 public:
     enum class State {
         Closed,
+        OpenDelay,
         Opening,
         Open,
         Closing
@@ -58,6 +59,8 @@ public:
     bool IsOpen() const; 
     State GetState() const; 
     DoorSide GetSide() const; 
+    void SetColliderOffset(const glm::vec2 &colliderOffset);
+    glm::vec2 GetColliderCenter() const;
 
 private:
     void ApplyDrawable(const std::shared_ptr<Core::Drawable> &drawable);
@@ -67,6 +70,8 @@ private:
     DoorSide m_Side;
     State m_State = State::Closed;
     glm::vec2 m_RenderSize = {1.0F, 1.0F};
+    glm::vec2 m_ColliderOffset = {0.0F, 0.0F};
+    float m_OpenDelayRemainingMs = 0.0F;
     float m_BaseRotation = 0.0F;
 };
 

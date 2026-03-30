@@ -1,50 +1,161 @@
+#include <cmath>
 #include <memory>
+#include <unordered_map>
 #include <vector>
-#include <stdexcept>
 
 #include <glm/fwd.hpp>
 #include <glm/vec2.hpp>
 
-#include "Common/Enums.hpp"
 #include "Common/Constants.hpp"
+#include "Common/Enums.hpp"
 #include "Common/Random.hpp"
+#include "Component/Map/FightRoom.hpp"
+#include "Component/Map/Gangway.hpp"
+#include "Component/Map/GangwayLayoutConfig.hpp"
+#include "Component/Map/MapColliderConfig.hpp"
+#include "Component/Map/StarterRoom.hpp"
 #include "Generator/GenFightChamber.hpp"
 #include "Generator/GenPortalChamber.hpp"
 #include "Generator/GenRewardChamber.hpp"
-#include "Util/Logger.hpp"
 #include "Generator/MapGenerator.hpp"
 
-#include "Component/Map/RoomAssembly.hpp"
+namespace {
 
+bool HasRoomAt(
+    const std::shared_ptr<MapBlueprint> &blueprint,
+    const glm::ivec2 &coordinate
+) {
+    return blueprint->isCooridinateInBound(coordinate) &&
+           blueprint->GetElementByCooridinate(coordinate) != nullptr;
+}
+
+DoorConfig BuildDoorConfig(
+    const std::shared_ptr<MapBlueprint> &blueprint,
+    const glm::ivec2 &coordinate
+) {
+    DoorConfig doorConfig;
+    doorConfig.top.hasDoor = HasRoomAt(blueprint, coordinate + glm::ivec2(0, 1));
+    doorConfig.right.hasDoor = HasRoomAt(blueprint, coordinate + glm::ivec2(1, 0));
+    doorConfig.bottom.hasDoor = HasRoomAt(blueprint, coordinate + glm::ivec2(0, -1));
+    doorConfig.left.hasDoor = HasRoomAt(blueprint, coordinate + glm::ivec2(-1, 0));
+    return doorConfig;
+}
+
+std::shared_ptr<BaseRoom> BuildRoom(
+    const glm::vec2 &absolutePosition,
+    const std::shared_ptr<RoomInfo> &info,
+    const DoorConfig &doorConfig
+) {
+    switch (info->roomPurpose) {
+    case RoomPurpose::STARTER:
+        return std::make_shared<StarterRoom>(
+            absolutePosition,
+            doorConfig,
+            info->roomType,
+            MapColliderConfig::kDefaultWallThickness
+        );
+
+    case RoomPurpose::FIGHTING:
+        return std::make_shared<FightRoom>(
+            absolutePosition,
+            doorConfig,
+            info->roomType,
+            MapColliderConfig::kDefaultWallThickness
+        );
+
+    case RoomPurpose::REWARD:
+    case RoomPurpose::PORTAL:
+        return std::make_shared<BaseRoom>(
+            absolutePosition,
+            info->roomType,
+            info->roomPurpose,
+            doorConfig,
+            BaseRoom::BuildWallConfigFromDoorConfig(
+                doorConfig,
+                MapColliderConfig::kDefaultWallThickness
+            )
+        );
+    }
+
+    return nullptr;
+}
+
+std::string MakeCoordinateKey(const glm::ivec2 &coordinate) {
+    return std::to_string(coordinate.x) + ":" + std::to_string(coordinate.y);
+}
+
+std::shared_ptr<Gangway> BuildGangway(
+    const std::shared_ptr<BaseRoom> &firstRoom,
+    const std::shared_ptr<BaseRoom> &secondRoom
+) {
+    if (firstRoom == nullptr || secondRoom == nullptr) {
+        return nullptr;
+    }
+
+    Gangway::Config config;
+    const glm::vec2 delta =
+        secondRoom->GetAbsoluteCooridinate() - firstRoom->GetAbsoluteCooridinate();
+
+    if (std::abs(delta.x) >= std::abs(delta.y)) {
+        config.orientation = GangwayOrientation::Horizontal;
+        config.width = MapColliderConfig::kHorizontalDoorColliderSize.x;
+        config.positionOffset = GangwayLayoutConfig::kHorizontalPositionOffset;
+        const float gap = std::max(
+            0.0F,
+            std::abs(delta.x) -
+                firstRoom->GetRoomSize().x / 2.0F -
+                secondRoom->GetRoomSize().x / 2.0F
+        );
+        config.length = gap + MapColliderConfig::kDefaultWallThickness;
+    } else {
+        config.orientation = GangwayOrientation::Vertical;
+        config.width = MapColliderConfig::kVerticalDoorColliderSize.y;
+        config.positionOffset = GangwayLayoutConfig::kVerticalPositionOffset;
+        const float gap = std::max(
+            0.0F,
+            std::abs(delta.y) -
+                firstRoom->GetRoomSize().y / 2.0F -
+                secondRoom->GetRoomSize().y / 2.0F  
+        );
+        config.length = gap + MapColliderConfig::kDefaultWallThickness;
+    }
+    
+    config.wallThickness = MapColliderConfig::kDefaultWallThickness;
+    const glm::vec2 center =
+        (firstRoom->GetAbsoluteCooridinate() + secondRoom->GetAbsoluteCooridinate()) / 2.0F;
+    const std::shared_ptr<Gangway> gangway = std::make_shared<Gangway>(center, config);
+    gangway->ConnectRooms(firstRoom, secondRoom);
+    return gangway;
+}
+
+} // namespace
 
 MapGenerator::MapGenerator(std::string seed) {
     this->m_RandomChoose = std::make_shared<RandomChoose>(seed);
 
-    int mapSize = m_RandomChoose->GetInteger(5, 10);
+    const int mapSize = m_RandomChoose->GetInteger(5, 10);
 
     this->m_Blueprint = std::make_shared<MapBlueprint>(glm::vec2(mapSize, mapSize));
-    
     this->m_MapGridSize = m_Blueprint->GetSize();
     this->m_StartDirection = m_RandomChoose->GetEnum<Direction>();
-    this->m_StartCoordinateOffset = m_RandomChoose->GetInteger(1, mapSize-1);
-    
+    this->m_StartCoordinateOffset = m_RandomChoose->GetInteger(1, mapSize - 1);
+
     this->m_StartChamberCooridinate = this->GetStarterChamberCooridinate();
 }
 
 bool MapGenerator::FightChamberCooridinateValidator(glm::ivec2 cooridinate) {
-
     switch (m_StartDirection) {
-        case Direction::BOTTOM:
-            return (cooridinate.y < m_StartChamberCooridinate.y);
+    case Direction::BOTTOM:
+        return cooridinate.y < m_StartChamberCooridinate.y;
 
-        case Direction::LEFT:
-            return (cooridinate.x > m_StartChamberCooridinate.x);
+    case Direction::LEFT:
+        return cooridinate.x > m_StartChamberCooridinate.x;
 
-        case Direction::RIGHT:
-            return (cooridinate.x > m_StartChamberCooridinate.x);
+    case Direction::RIGHT:
+        return cooridinate.x > m_StartChamberCooridinate.x;
 
-        case Direction::TOP:
-            return (cooridinate.y > m_StartChamberCooridinate.y);
+    case Direction::TOP:
+        return cooridinate.y > m_StartChamberCooridinate.y;
     }
 
     return true;
@@ -52,55 +163,57 @@ bool MapGenerator::FightChamberCooridinateValidator(glm::ivec2 cooridinate) {
 
 bool MapGenerator::RewardChamberCooridinateValidator(glm::ivec2 cooridinate) {
     switch (m_StartDirection) {
-        case Direction::BOTTOM:
-            return (cooridinate.y < m_StartChamberCooridinate.y);
+    case Direction::BOTTOM:
+        return cooridinate.y < m_StartChamberCooridinate.y;
 
-        case Direction::LEFT:
-            return (cooridinate.x > m_StartChamberCooridinate.x);
+    case Direction::LEFT:
+        return cooridinate.x > m_StartChamberCooridinate.x;
 
-        case Direction::RIGHT:
-            return (cooridinate.x > m_StartChamberCooridinate.x);
+    case Direction::RIGHT:
+        return cooridinate.x > m_StartChamberCooridinate.x;
 
-        case Direction::TOP:
-            return (cooridinate.y > m_StartChamberCooridinate.y);
+    case Direction::TOP:
+        return cooridinate.y > m_StartChamberCooridinate.y;
     }
-    
+
     return true;
 }
 
 void MapGenerator::Generate() {
+    this->m_RuntimeMapBuilt = false;
+    this->m_RoomInstances.clear();
+    this->m_GangwayInstances.clear();
+
     m_GenChamber = std::make_shared<GenFightChamber>(
         this->GetFightingChamberStartCooridinate(),
-        [this](glm::vec2 p) {return this->FightChamberCooridinateValidator(p);},
+        [this](glm::vec2 p) { return this->FightChamberCooridinateValidator(p); },
         4,
         2,
         this->m_Blueprint,
         m_RandomChoose
     );
-
     m_GenChamber->Generate();
 
     m_GenChamber = std::make_shared<GenRewardChamber>(
-        [this](glm::vec2 p) {return this->RewardChamberCooridinateValidator(p);},
+        [this](glm::vec2 p) { return this->RewardChamberCooridinateValidator(p); },
         4,
         2,
         this->m_Blueprint,
         m_RandomChoose
     );
-    
     m_GenChamber->Generate();
 
     m_GenChamber = std::make_shared<GenPortalChamber>(
         this->GetPortalChamberGenPolicy(),
-        [](glm::vec2 _) {return true;},
+        [](glm::vec2) { return true; },
         this->m_Blueprint,
         m_RandomChoose
     );
-    
     m_GenChamber->Generate();
 
-    std::shared_ptr<RoomInfo> starterRoom = std::make_shared<RoomInfo>(
-        RoomType::ROOM_13_13, RoomPurpose::STARTER
+    const std::shared_ptr<RoomInfo> starterRoom = std::make_shared<RoomInfo>(
+        RoomType::ROOM_13_13,
+        RoomPurpose::STARTER
     );
 
     this->m_Blueprint->SetElementByCooridinate(
@@ -111,45 +224,37 @@ void MapGenerator::Generate() {
 
 glm::vec2 MapGenerator::GetStarterChamberCooridinate() {
     switch (m_StartDirection) {
-        case Direction::BOTTOM:
-            return glm::vec2(m_StartCoordinateOffset, m_MapGridSize.y-1);
-        
-        case Direction::LEFT:
-            return glm::vec2(m_StartCoordinateOffset, 0);
+    case Direction::BOTTOM:
+        return glm::vec2(m_StartCoordinateOffset, m_MapGridSize.y - 1);
 
-        case Direction::RIGHT:
-            return glm::vec2(m_MapGridSize.x-1, m_StartCoordinateOffset);
+    case Direction::LEFT:
+        return glm::vec2(m_StartCoordinateOffset, 0);
 
-        case Direction::TOP:
-            return glm::vec2(m_StartCoordinateOffset, 0);
+    case Direction::RIGHT:
+        return glm::vec2(m_MapGridSize.x - 1, m_StartCoordinateOffset);
+
+    case Direction::TOP:
+        return glm::vec2(m_StartCoordinateOffset, 0);
     }
 
-    std::vector<glm::vec2> locations = {
-        glm::vec2(0, 1),
-        glm::vec2(1, m_MapGridSize.y-1),
-        glm::vec2(m_MapGridSize.x-1, m_MapGridSize.y-2),
-        glm::vec2(m_MapGridSize.x-1, 1) 
-    };
-
-    int index = m_RandomChoose->GetInteger(0, 3);
-    return locations[index];
+    return glm::vec2(0, 0);
 }
 
 glm::vec2 MapGenerator::GetFightingChamberStartCooridinate() {
-    glm::vec2 startCoridinate = this->GetStarterChamberCooridinate();
+    const glm::vec2 startCoridinate = this->GetStarterChamberCooridinate();
 
     switch (m_StartDirection) {
-        case Direction::BOTTOM:
-            return startCoridinate + glm::vec2(0, -1);
-        
-        case Direction::LEFT:
-            return startCoridinate + glm::vec2(1, 0);
+    case Direction::BOTTOM:
+        return startCoridinate + glm::vec2(0, -1);
 
-        case Direction::RIGHT:
-            return startCoridinate + glm::vec2(-1, 0);
+    case Direction::LEFT:
+        return startCoridinate + glm::vec2(1, 0);
 
-        case Direction::TOP:
-            return startCoridinate + glm::vec2(0, 1);
+    case Direction::RIGHT:
+        return startCoridinate + glm::vec2(-1, 0);
+
+    case Direction::TOP:
+        return startCoridinate + glm::vec2(0, 1);
     }
 
     return glm::vec2(0, 0);
@@ -157,75 +262,109 @@ glm::vec2 MapGenerator::GetFightingChamberStartCooridinate() {
 
 GeneratePolicy MapGenerator::GetPortalChamberGenPolicy() {
     switch (m_StartDirection) {
-        case Direction::BOTTOM:
-            if (m_StartCoordinateOffset > m_MapGridSize.x / 2) {
-                return GeneratePolicy::TOP_LEFT;
-            } else {
-                return GeneratePolicy::TOP_RIGHT;
-            }
+    case Direction::BOTTOM:
+        return m_StartCoordinateOffset > m_MapGridSize.x / 2 ?
+            GeneratePolicy::TOP_LEFT :
+            GeneratePolicy::TOP_RIGHT;
 
-        case Direction::TOP:
-            if (m_StartCoordinateOffset > m_MapGridSize.x / 2) {
-                return GeneratePolicy::BOTTOM_LEFT;
-            } else {
-                return GeneratePolicy::BOTTOM_RIGHT;
-            }
+    case Direction::TOP:
+        return m_StartCoordinateOffset > m_MapGridSize.x / 2 ?
+            GeneratePolicy::BOTTOM_LEFT :
+            GeneratePolicy::BOTTOM_RIGHT;
 
-        case Direction::LEFT:
-            if (m_StartCoordinateOffset > m_MapGridSize.y / 2) {
-                return GeneratePolicy::TOP_RIGHT;
-            } else {
-                return GeneratePolicy::BOTTOM_RIGHT;
-            }
-        
-        case Direction::RIGHT:
-            if (m_StartCoordinateOffset > m_MapGridSize.y / 2) {
-                return GeneratePolicy::TOP_LEFT;
-            } else {
-                return GeneratePolicy::BOTTOM_LEFT;
-            }
+    case Direction::LEFT:
+        return m_StartCoordinateOffset > m_MapGridSize.y / 2 ?
+            GeneratePolicy::TOP_RIGHT :
+            GeneratePolicy::BOTTOM_RIGHT;
+
+    case Direction::RIGHT:
+        return m_StartCoordinateOffset > m_MapGridSize.y / 2 ?
+            GeneratePolicy::TOP_LEFT :
+            GeneratePolicy::BOTTOM_LEFT;
     }
-    // Random return a value
+
     return GeneratePolicy::TOP_LEFT;
 }
 
-std::vector<RoomAssembly> MapGenerator::GetRoomAssembly() {
-    std::vector<RoomAssembly> assembly;
+void MapGenerator::BuildRuntimeMap() {
+    if (this->m_RuntimeMapBuilt) {
+        return;
+    }
 
-    for (int x=0; x<this->m_MapGridSize.x; x++) {
-        for (int y=0; y<this->m_MapGridSize.y; y++) {
-            glm::ivec2 chamberCooridinate = glm::ivec2(x, y);
-            std::shared_ptr<RoomInfo> info = this->m_Blueprint->GetElementByCooridinate(chamberCooridinate);
+    this->m_RoomInstances.clear();
+    this->m_GangwayInstances.clear();
+
+    std::unordered_map<std::string, std::shared_ptr<BaseRoom>> roomsByCoordinate;
+
+    for (int x = 0; x < this->m_MapGridSize.x; x++) {
+        for (int y = 0; y < this->m_MapGridSize.y; y++) {
+            const glm::ivec2 chamberCooridinate = {x, y};
+            const std::shared_ptr<RoomInfo> info =
+                this->m_Blueprint->GetElementByCooridinate(chamberCooridinate);
 
             if (info == nullptr) {
                 continue;
             }
 
-            glm::ivec2 offset = chamberCooridinate - m_StartChamberCooridinate;
+            const glm::ivec2 offset = chamberCooridinate - m_StartChamberCooridinate;
+            const glm::vec2 absolutePosition =
+                offset * glm::ivec2(27 * MAP_PIXEL_PER_BLOCK, 27 * MAP_PIXEL_PER_BLOCK);
+            const DoorConfig doorConfig = BuildDoorConfig(this->m_Blueprint, chamberCooridinate);
 
-            glm::ivec2 rightChamberCooridinate = chamberCooridinate + glm::ivec2(1, 0);
-            // If right has room 
-            if (this->m_Blueprint->isCooridinateInBound(rightChamberCooridinate) &&
-                this->m_Blueprint->GetElementByCooridinate(rightChamberCooridinate)) {
-                // TODO: Generate left gangway
+            const std::shared_ptr<BaseRoom> room =
+                BuildRoom(absolutePosition, info, doorConfig);
+            if (room == nullptr) {
+                continue;
             }
 
-            // If bottom has room
-            glm::ivec2 bottomChamberCooridinate = chamberCooridinate + glm::ivec2(0, 1);
-            if (this->m_Blueprint->isCooridinateInBound(bottomChamberCooridinate) &&
-                this->m_Blueprint->GetElementByCooridinate(bottomChamberCooridinate)) {
-                // TODO: Generate bottom gangway
-            }
-
-            assembly.push_back(RoomAssembly(
-                RoomAssemblyConfig{
-                    info->roomType,
-                    offset * glm::ivec2(27 * MAP_PIXEL_PER_BLOCK, 27 * MAP_PIXEL_PER_BLOCK)
-                }
-            ));
+            this->m_RoomInstances.push_back(room);
+            roomsByCoordinate.emplace(MakeCoordinateKey(chamberCooridinate), room);
         }
-
     }
 
-    return assembly;
+    for (int x = 0; x < this->m_MapGridSize.x; x++) {
+        for (int y = 0; y < this->m_MapGridSize.y; y++) {
+            const glm::ivec2 chamberCoordinate = {x, y};
+            const auto sourceIt = roomsByCoordinate.find(MakeCoordinateKey(chamberCoordinate));
+            if (sourceIt == roomsByCoordinate.end()) {
+                continue;
+            }
+
+            const std::shared_ptr<BaseRoom> sourceRoom = sourceIt->second;
+
+            const glm::ivec2 rightCoordinate = chamberCoordinate + glm::ivec2(1, 0);
+            const auto rightIt = roomsByCoordinate.find(MakeCoordinateKey(rightCoordinate));
+            if (rightIt != roomsByCoordinate.end()) {
+                const std::shared_ptr<BaseRoom> targetRoom = rightIt->second;
+                const std::shared_ptr<Gangway> gangway =
+                    BuildGangway(sourceRoom, targetRoom);
+                if (gangway != nullptr) {
+                    this->m_GangwayInstances.push_back(gangway);
+                }
+            }
+
+            const glm::ivec2 topCoordinate = chamberCoordinate + glm::ivec2(0, 1);
+            const auto topIt = roomsByCoordinate.find(MakeCoordinateKey(topCoordinate));
+            if (topIt != roomsByCoordinate.end()) {
+                const std::shared_ptr<BaseRoom> targetRoom = topIt->second;
+                const std::shared_ptr<Gangway> gangway =
+                    BuildGangway(sourceRoom, targetRoom);
+                if (gangway != nullptr) {
+                    this->m_GangwayInstances.push_back(gangway);
+                }
+            }
+        }
+    }
+
+    this->m_RuntimeMapBuilt = true;
+}
+
+std::vector<std::shared_ptr<BaseRoom>> MapGenerator::GetRooms() {
+    this->BuildRuntimeMap();
+    return this->m_RoomInstances;
+}
+
+std::vector<std::shared_ptr<Gangway>> MapGenerator::GetGangways() {
+    this->BuildRuntimeMap();
+    return this->m_GangwayInstances;
 }

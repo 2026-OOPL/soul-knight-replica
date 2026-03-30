@@ -3,15 +3,27 @@
 #include "Component/Camera/Curve.hpp"
 #include "Component/Camera/TraceCamera.hpp"
 #include "Component/IStateful.hpp"
-#include "Scene/MapTest.hpp"
-#include "Generator/MapBlueprint.hpp"
 #include "Generator/MapGenerator.hpp"
-#include "Util/Time.hpp"
+#include "Scene/MapTest.hpp"
+#include "Util/Input.hpp"
+#include "Util/Keycode.hpp"
 
 namespace {
 
-constexpr float kPlayerSpawnBelowDoorDistance = 70.0F;
-constexpr float kDoorCloseDelayMs = 650.0F;
+void ApplyCameraRecursive(
+    const std::shared_ptr<Camera> &camera,
+    const std::shared_ptr<Util::GameObject> &object
+) {
+    if (camera == nullptr || object == nullptr) {
+        return;
+    }
+
+    camera->SetTransformByCamera(object);
+
+    for (const auto &child : object->GetChildren()) {
+        ApplyCameraRecursive(camera, child);
+    }
+}
 
 } // namespace
 
@@ -21,70 +33,73 @@ MapTest::MapTest() : MapSystem() {
     );
 
     generator->Generate();
+    this->m_RoomsInScene = generator->GetRooms();
+    this->m_GangwaysInScene = generator->GetGangways();
+    this->AddRooms(this->m_RoomsInScene);
+    this->AddGangways(this->m_GangwaysInScene);
 
-    std::vector<RoomAssembly> roomAssembly = generator->GetRoomAssembly();
+    for (const auto &room : this->m_RoomsInScene) {
+        if (room == nullptr) {
+            continue;
+        }
 
-    for (auto const &i : roomAssembly) {
-        this->AddMapPieces(i.GetPieces());
-        this->m_CollisionSystem.AddStaticBlockingBoxes(i.GetStaticWallBoxes());
+        this->AddChild(room);
+
+        if (this->m_MainRoom == nullptr &&
+            room->GetPurpose() == RoomPurpose::STARTER) {
+            this->m_MainRoom = room;
+        }
     }
-    
-    this->m_MainPlayer = std::make_shared<Player>();
 
-    this->m_MainPlayer->SetPosition({0, 0});
-    // this->m_MainPlayer->SetPosition(
-    //     this->m_MainRoomAssembly->GetSuggestedBottomSpawn(kPlayerSpawnBelowDoorDistance)
-    // );
+    for (const auto &gangway : this->m_GangwaysInScene) {
+        if (gangway != nullptr) {
+            this->AddChild(gangway);
+        }
+    }
+
+    this->m_MainPlayer = std::make_shared<Player>();
+    if (this->m_MainRoom != nullptr) {
+        this->m_MainPlayer->SetPosition(this->m_MainRoom->GetAbsoluteCooridinate());
+    }
+
     this->m_MainPlayer->SetCollisionResolver(
         [this](const Collision::AxisAlignedBox &currentBox, const glm::vec2 &intendedDelta) {
-            return this->m_CollisionSystem.ResolveMovement(currentBox, intendedDelta);
+            return this->ResolvePlayerMovement(currentBox, intendedDelta);
         }
     );
 
-    m_MainPlayer->m_AbsoluteTransform.scale = {.5, .5};
-
-    this->m_CollisionSystem.SetBlockingBoxProvider(
-        [this]() {
-            return Collision::BuildWallBoxes(this->m_Pieces);
-        }
-    );
+    this->m_MainPlayer->m_AbsoluteTransform.scale = {.5F, .5F};
     this->m_Players.push_back(this->m_MainPlayer);
+    this->UpdateCurrentRoom(this->m_MainPlayer->GetAbsolutePosition());
 
     this->m_AttachCamera = std::make_shared<TraceCamera>(
         this->m_MainPlayer,
         std::make_shared<EaseOutQubicCurve>()
     );
-
-    this->m_AttachCamera->SetScale({3, 3});
+    this->m_AttachCamera->SetScale({2.5F, 2.5F});
 
     if (this->m_MainPlayer != nullptr) {
         this->AddChild(this->m_MainPlayer);
     }
 
-    for (const auto &piece : this->m_Pieces) {
-        if (piece != nullptr) {
-            this->AddChild(piece);
-        }
-    }
+    // TODO: 我不知道可不可以山，反正不山是編譯不了
+    // for (const auto &piece : this->m_Pieces) {
+    //     if (piece != nullptr) {
+    //         this->AddChild(piece);
+    //     }
+    // }
 }
 
 MapTest::~MapTest() = default;
 
 void MapTest::Update() {
-    if (!this->m_HasPlayerEnteredMainRoom && this->IsPlayerInsideRoom()) {
-        this->m_HasPlayerEnteredMainRoom = true;
-        this->m_DoorCloseDelayRemainingMs = kDoorCloseDelayMs;
+    if (Util::Input::IsKeyDown(Util::Keycode::E) &&
+        this->m_CurrentRoom != nullptr) {
+        this->m_CurrentRoom->OpenAllDoors();
     }
 
-    if (this->m_DoorCloseDelayRemainingMs >= 0.0F) {
-        this->m_DoorCloseDelayRemainingMs -= Util::Time::GetDeltaTimeMs();
-
-        if (this->m_DoorCloseDelayRemainingMs <= 0.0F) {
-            if (this->m_MainRoomAssembly != nullptr) {
-                this->m_MainRoomAssembly->CloseAllDoors();
-            }
-            this->m_DoorCloseDelayRemainingMs = -1.0F;
-        }
+    if (this->m_MainPlayer != nullptr) {
+        this->UpdateCurrentRoom(this->m_MainPlayer->GetAbsolutePosition());
     }
 
     if (this->m_AttachCamera == nullptr) {
@@ -101,8 +116,15 @@ void MapTest::Update() {
         this->m_AttachCamera->SetTransformByCamera(this->m_MainPlayer);
     }
 
-    for (const auto &piece : this->m_Pieces) {
-        this->m_AttachCamera->SetTransformByCamera(piece);
+    for (const auto &room : this->m_RoomsInScene) {
+        ApplyCameraRecursive(this->m_AttachCamera, room);
     }
+
+    for (const auto &gangway : this->m_GangwaysInScene) {
+        if (gangway != nullptr) {
+            this->m_AttachCamera->SetTransformByCamera(gangway);
+        }
+    }
+
     this->Scene::Update();
 }

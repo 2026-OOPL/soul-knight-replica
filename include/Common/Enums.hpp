@@ -25,10 +25,30 @@ enum class RoomPurpose {
     PORTAL
 };
 
-struct RoomAssemblyConfig {
-    RoomType type = RoomType::ROOM_13_13;
-    glm::vec2 roomCenter = {0.0F, 0.0F};
-    float wallThickness = 20.0F;
+struct DoorSideConfig {
+    bool hasDoor = false;
+    bool startsOpen = true;
+};
+
+struct DoorConfig {
+    DoorSideConfig top;
+    DoorSideConfig right;
+    DoorSideConfig bottom;
+    DoorSideConfig left;
+};
+
+struct WallSideConfig {
+    bool hasOpening = false;
+    float thickness = 20.0F;
+    float openingOffset = 0.0F;
+    float openingSize = 0.0F;
+};
+
+struct WallConfig {
+    WallSideConfig top;
+    WallSideConfig right;
+    WallSideConfig bottom;
+    WallSideConfig left;
 };
 
 #endif

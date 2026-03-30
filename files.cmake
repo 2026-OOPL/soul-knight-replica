@@ -13,10 +13,13 @@ set(SRC_FILES
     Component/TextButton/TextButton.cpp
 
     Component/Map/BaseRoom.cpp
+    Component/Map/FightRoom.cpp
+    Component/Map/Gangway.cpp
     Component/Map/MapPiece.cpp
+    Component/Map/RectMapArea.cpp
     Component/Map/Door.cpp
     Component/Map/MapSystem.cpp
-    Component/Map/RoomAssembly.cpp
+    Component/Map/StarterRoom.cpp
     
     Component/Camera/Camera.cpp
     Component/Camera/TraceCamera.cpp
@@ -54,9 +57,14 @@ set(INCLUDE_FILES
 
     Component/Map/BaseRoom.hpp
     Component/Map/Door.hpp
+    Component/Map/FightRoom.hpp
+    Component/Map/Gangway.hpp
+    Component/Map/GangwayLayoutConfig.hpp
+    Component/Map/MapColliderConfig.hpp
     Component/Map/MapPiece.hpp
     Component/Map/MapSystem.hpp
-    Component/Map/RoomAssembly.hpp
+    Component/Map/RectMapArea.hpp
+    Component/Map/StarterRoom.hpp
 
     Component/Camera/Camera.hpp
     Component/Camera/TraceCamera.hpp

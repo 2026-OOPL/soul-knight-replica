@@ -1,5 +1,6 @@
 #include "Component/Player/Player.hpp"
 
+#include <algorithm>
 #include <utility>
 
 #include "Util/Input.hpp"
@@ -7,6 +8,12 @@
 #include "Util/Logger.hpp"
 #include "Util/Time.hpp"
 #include "Util/Transform.hpp"
+
+namespace {
+
+constexpr float kMaxPlayerMovementDeltaTimeMs = 50.0F; // 調整玩家移動使用的最大 dt，避免卡頓後瞬移。
+
+} // namespace
 
 Player::Player()
     : Character(
@@ -92,8 +99,10 @@ void Player::Update() {
         return;
     }
 
+    const float movementDeltaTimeMs =
+        std::min(Util::Time::GetDeltaTimeMs(), kMaxPlayerMovementDeltaTimeMs);
     const glm::vec2 frameDelta =
-        moveDirection * this->m_PlayerSpeed * Util::Time::GetDeltaTimeMs();
+        moveDirection * this->m_PlayerSpeed * movementDeltaTimeMs;
 
     this->m_PendingMoveDelta = frameDelta;
 

@@ -9,9 +9,10 @@
 #include <glm/vec2.hpp>
 
 #include "MapBlueprint.hpp"
-#include "Component/Map/RoomAssembly.hpp"
+#include "Component/Map/BaseRoom.hpp"
 
 class GenChamber;
+class Gangway;
 class RandomChoose;
 
 enum class RoomType;
@@ -38,7 +39,8 @@ public:
     
     void Generate();
 
-    std::vector<RoomAssembly> GetRoomAssembly();
+    std::vector<std::shared_ptr<BaseRoom>> GetRooms();
+    std::vector<std::shared_ptr<Gangway>> GetGangways();
 
     std::shared_ptr<MapBlueprint> m_Blueprint;
 
@@ -52,6 +54,7 @@ protected:
 
     bool FightChamberCooridinateValidator(glm::ivec2 cooridinate);
     bool RewardChamberCooridinateValidator(glm::ivec2 cooridinate);
+    void BuildRuntimeMap();
 
 private:
     glm::ivec2 m_MapGridSize;
@@ -61,6 +64,10 @@ private:
 
     Direction m_StartDirection;
     int m_StartCoordinateOffset;
+
+    bool m_RuntimeMapBuilt = false;
+    std::vector<std::shared_ptr<BaseRoom>> m_RoomInstances;
+    std::vector<std::shared_ptr<Gangway>> m_GangwayInstances;
 };
 
 #endif
