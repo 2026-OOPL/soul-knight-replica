@@ -2,8 +2,10 @@
 
 #include <algorithm>
 #include <cmath>
+#include <memory>
 #include <utility>
 
+#include "Component/ICollidiable.hpp"
 #include "Component/Map/MapPiece.hpp"
 
 namespace {
@@ -244,13 +246,15 @@ std::vector<AxisAlignedBox> BuildWallBoxes(
     std::vector<AxisAlignedBox> wallBoxes;
 
     for (const auto &piece : pieces) {
-        if (piece == nullptr || !piece->IsWall()) {
+        
+        std::shared_ptr<ICollidable> collidable = std::dynamic_pointer_cast<ICollidable>(piece);
+        if (collidable == nullptr) {
             continue;
         }
 
         wallBoxes.push_back(CollisionSystem::BuildBox(
-            piece->GetAbsoluteCooridinate(),
-            piece->GetColliderSize()
+            collidable->GetColliderCooridinate(),
+            collidable->GetColliderSize()
         ));
     }
 

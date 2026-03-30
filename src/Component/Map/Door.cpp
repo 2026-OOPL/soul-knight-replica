@@ -23,8 +23,7 @@ Door::Door(
 )
     : MapPiece(
           cooridinate,
-          isOpen ? visuals.openIdle : visuals.closedIdle,
-          !isOpen
+          isOpen ? visuals.openIdle : visuals.closedIdle
       ),
       m_Visuals(std::move(visuals)),
       m_Side(side) {
@@ -167,37 +166,27 @@ void Door::EnterState(State state) {
 
     switch (state) {
     case State::Closed:
-        this->m_OpenDelayRemainingMs = 0.0F;
-        this->SetIsWall(true);
-        this->ApplyDrawable(this->m_Visuals.closedIdle);
-        break;
-
-    case State::OpenDelay:
-        this->m_OpenDelayRemainingMs = kDoorOpenDelayMs;
-        this->SetIsWall(true);
         this->ApplyDrawable(this->m_Visuals.closedIdle);
         break;
 
     case State::Opening:
-        this->m_OpenDelayRemainingMs = 0.0F;
-        this->SetIsWall(true);
         this->m_Visuals.opening->SetCurrentFrame(0);
         this->m_Visuals.opening->Play();
         this->ApplyDrawable(this->m_Visuals.opening);
         break;
 
     case State::Open:
-        this->m_OpenDelayRemainingMs = 0.0F;
-        this->SetIsWall(false);
         this->ApplyDrawable(this->m_Visuals.openIdle);
         break;
 
     case State::Closing:
-        this->m_OpenDelayRemainingMs = 0.0F;
-        this->SetIsWall(false);
         this->m_Visuals.closing->SetCurrentFrame(0);
         this->m_Visuals.closing->Play();
         this->ApplyDrawable(this->m_Visuals.closing);
+        break;
+
+    case State::OpenDelay:
+        this->m_OpenDelayRemainingMs = kDoorOpenDelayMs;
         break;
     }
 }
