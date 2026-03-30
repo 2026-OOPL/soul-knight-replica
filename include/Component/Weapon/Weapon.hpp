@@ -10,6 +10,15 @@
 #include "Util/Image.hpp"
 #include "Util/Time.hpp"
 
+namespace {
+
+enum class WeaponType {
+    RANGED,
+    MELEE
+};
+
+};
+
 class Bullet;
 class Weapon : public Util::GameObject, public MapObject, public IStateful {
 public:
@@ -30,6 +39,8 @@ public:
     void ShotBullet();
 
     void SetOnBulletFired(std::function<void(std::shared_ptr<Bullet>)> callback);
+
+    virtual WeaponType GetWeaponType() = 0;
 
 protected:
     void SetWeaponPointingByMoveDirection();

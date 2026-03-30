@@ -3,7 +3,7 @@
 #include <memory>
 #include <cmath>
 
-#include "Component/Weapon/Weapon.hpp"
+#include "Component/Weapons/BadPistol.hpp"
 #include "Util/Animation.hpp"
 #include "Util/Logger.hpp"
 
@@ -19,9 +19,7 @@ Character::Character(
     this->m_DieAnimation = DieAnimation;
     this->m_StandAnimation = StandAnimation;
 
-    this->m_Weapon = std::make_shared<Weapon>(
-        RESOURCE_DIR"/Weapon/BadPistol.png"
-    );
+    this->m_Weapon = std::make_shared<BadPistol>();
 
     this->AddChild(m_Weapon);
     this->SetDrawable(this->m_StandAnimation);
@@ -45,9 +43,7 @@ Character::Character(
         StandSprite, true, 20, true, 0
     );
 
-    this->m_Weapon = std::make_shared<Weapon>(
-        RESOURCE_DIR"/Weapon/BadPistol.png"
-    );
+    this->m_Weapon = std::make_shared<BadPistol>();
 
     this->AddChild(m_Weapon);
     this->SetDrawable(this->m_StandAnimation);
