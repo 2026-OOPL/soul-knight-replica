@@ -1,9 +1,9 @@
+#include "Util/Image.hpp"
+
 #include "Component/Map/BaseRoom.hpp"
 
 #include "Common/Constants.hpp"
-#include "Component/Character/Character.hpp"
 #include "Component/Map/MapColliderConfig.hpp"
-#include "Util/Image.hpp"
 
 namespace {
 
@@ -35,47 +35,37 @@ BaseRoom::BaseRoom(
 }
 
 void BaseRoom::Update() {
-    for (const auto &child : this->GetChildren()) {
-        const std::shared_ptr<IStateful> statefulChild =
-            std::dynamic_pointer_cast<IStateful>(child);
-        if (statefulChild != nullptr) {
-            statefulChild->Update();
-        }
-    }
 }
 
 bool BaseRoom::IsPlayerInside(const glm::vec2 &playerPos) const {
     return this->IsPointInside(playerPos);
 }
 
-const std::vector<Collision::AxisAlignedBox> &BaseRoom::GetStaticColliders() const {
-    return RectMapArea::GetStaticColliders();
-}
-
-std::vector<Collision::AxisAlignedBox> BaseRoom::GetDynamicColliders(
+std::vector<Collision::CollisionPrimitive> BaseRoom::CollectBlockingPrimitives(
     const Collision::AxisAlignedBox *ignoreOverlapBox
 ) const {
-    std::vector<Collision::AxisAlignedBox> dynamicColliders;
-    Collision::CollisionSystem collisionSystem;
+    std::vector<Collision::CollisionPrimitive> primitives =
+        RectMapArea::CollectBlockingPrimitives(ignoreOverlapBox);
 
     for (const auto &door : this->m_Doors) {
-        if (door == nullptr || door->IsOpen()) {
+        if (door == nullptr) {
             continue;
         }
 
-        const Collision::AxisAlignedBox doorBox = Collision::CollisionSystem::BuildBox(
-            door->GetColliderCenter(),
-            door->GetColliderSize()
+        std::vector<Collision::CollisionPrimitive> doorPrimitives =
+            door->CollectBlockingPrimitives(ignoreOverlapBox);
+        primitives.insert(
+            primitives.end(),
+            doorPrimitives.begin(),
+            doorPrimitives.end()
         );
-        if (ignoreOverlapBox != nullptr &&
-            collisionSystem.IsOverlapping(doorBox, *ignoreOverlapBox)) {
-            continue;
-        }
-
-        dynamicColliders.push_back(doorBox);
     }
 
-    return dynamicColliders;
+    return primitives;
+}
+
+const std::vector<Collision::AxisAlignedBox> &BaseRoom::GetStaticColliders() const {
+    return RectMapArea::GetStaticColliders();
 }
 
 const std::vector<std::shared_ptr<Door>> &BaseRoom::GetDoors() const {
@@ -92,7 +82,6 @@ void BaseRoom::AddMob(const std::shared_ptr<Character> &mob) {
     }
 
     this->m_Mobs.push_back(mob);
-    this->AddChild(mob);
 }
 
 void BaseRoom::OpenAllDoors() {

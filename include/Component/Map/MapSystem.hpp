@@ -1,9 +1,7 @@
 #ifndef MAP_SYSTEM_HPP
 #define MAP_SYSTEM_HPP
 
-#include <algorithm>
 #include <memory>
-#include <stdexcept>
 #include <vector>
 
 #include <glm/fwd.hpp>
@@ -14,19 +12,17 @@
 #include "Component/Bullet.hpp"
 #include "Component/Camera/Camera.hpp"
 #include "Component/Character/Character.hpp"
+#include "Component/Collision/CollisionQueryService.hpp"
 #include "Component/Collision/CollisionSystem.hpp"
 #include "Component/Map/BaseRoom.hpp"
 #include "Component/Map/Gangway.hpp"
+#include "Component/Map/RoomTransitionSystem.hpp"
 #include "Component/Player/Player.hpp"
+#include "Component/World/WorldRegistry.hpp"
 #include "Scene.hpp"
 
 class MapSystem : public Scene {
 public:
-    enum class DoorPassageState {
-        Idle,
-        Traversing
-    };
-
     MapSystem();
 
     ~MapSystem() override = default;
@@ -35,11 +31,15 @@ public:
 
     bool IsPlayerInsideRoom() const;
     glm::vec2 GetCameraCoor() const;
+    std::shared_ptr<BaseRoom> GetCurrentRoom() const;
 
     void AddRoom(const std::shared_ptr<BaseRoom> &room);
     void AddRooms(const std::vector<std::shared_ptr<BaseRoom>> &rooms);
     void AddGangway(const std::shared_ptr<Gangway> &gangway);
     void AddGangways(const std::vector<std::shared_ptr<Gangway>> &gangways);
+    void AddPlayer(const std::shared_ptr<Player> &player);
+    void RemovePlayer(const std::shared_ptr<Player> &player);
+    const std::vector<std::shared_ptr<Player>> &GetPlayers() const;
 
     Collision::MovementResult ResolvePlayerMovement(
         const ICollidable &body,
@@ -66,18 +66,11 @@ public:
     void RemoveBullet(std::shared_ptr<Bullet> bullet);
     const std::vector<std::shared_ptr<Bullet>>& GetBullets() const;
 
-    void AddMob(std::shared_ptr<Character> bullet);
-    void RemoveMob(std::shared_ptr<Character> bullet);
+    void AddMob(std::shared_ptr<Character> mob);
+    void RemoveMob(std::shared_ptr<Character> mob);
     const std::vector<std::shared_ptr<Character>>& GetMob() const;
 
 protected:
-    struct DoorPassageContext {
-        DoorPassageState state = DoorPassageState::Idle;
-        std::shared_ptr<BaseRoom> sourceRoom = nullptr;
-        std::shared_ptr<BaseRoom> targetRoom = nullptr;
-        DoorSide targetEntrySide = DoorSide::Bottom;
-    };
-
     std::vector<Collision::CollisionPrimitive> CollectCurrentRoomCollisionPrimitives(
         const ICollidable *ignoreBody = nullptr
     ) const;
@@ -86,66 +79,20 @@ protected:
         const ICollidable *ignoreBody
     ) const;
     std::vector<ICollidable *> CollectDynamicCollisionBodies() const;
-    bool HasRoomPassageBetween(
-        const std::shared_ptr<BaseRoom> &sourceRoom,
-        const std::shared_ptr<BaseRoom> &targetRoom,
-        DoorSide &targetEntrySide
-    ) const;
-    bool TryStartDoorPassage(const std::shared_ptr<BaseRoom> &targetRoom);
-    bool HasCommittedDoorPassage(const glm::vec2 &playerPos) const;
-    void CommitDoorPassage();
-    void CancelDoorPassage();
-    void PrepareDoorPassage(const glm::vec2 &playerPos);
-    std::shared_ptr<BaseRoom> FindRoomByPlayerPosition(const glm::vec2 &playerPos) const;
     void UpdateCurrentRoom(const glm::vec2 &playerPos);
 
     Collision::CollisionSystem m_CollisionSystem;
+    CollisionQueryService m_CollisionQueries;
+    WorldRegistry m_World;
+    RoomTransitionSystem m_RoomTransitions;
 
-    std::vector<std::shared_ptr<Player>> m_Players;
     std::vector<std::shared_ptr<Camera>> m_Cameras;
-    std::vector<std::shared_ptr<BaseRoom>> m_Rooms;
-    std::vector<std::shared_ptr<Gangway>> m_Gangways;
 
-    std::shared_ptr<BaseRoom> m_CurrentRoom;
     std::shared_ptr<Camera> m_AttachCamera;
 
-    DoorPassageContext m_DoorPassage;
-
 private:
-    template <typename T>
-    void AddEntity(
-        std::shared_ptr<T> entity,
-        std::vector<std::shared_ptr<T>>& container,
-        const std::string& entityName = "entity"
-    ) {
-        if (entity == nullptr) {
-            throw std::runtime_error("You are trying to add a null " + entityName);
-        }
-        this->AddChild(entity);
-        container.push_back(entity);
-    }
-
-    template <typename T>
-    void RemoveEntity(
-        std::shared_ptr<T> entity,
-        std::vector<std::shared_ptr<T>>& container,
-        const std::string& entityName = "entity"
-    ) {
-        if (entity == nullptr) {
-            throw std::runtime_error("You are trying to erase a null " + entityName);
-        }
-        this->RemoveChild(entity);
-        container.erase(
-            std::remove(container.begin(), container.end(), entity),
-            container.end()
-        );
-    }
-
     void ApplyCameraRecursive(const std::shared_ptr<Util::GameObject> &object);
     void PruneDestroyedBullets();
-
-    std::vector<std::shared_ptr<Bullet>> m_Bullets;
-    std::vector<std::shared_ptr<Character>> m_Mobs;
 };
 
 #endif

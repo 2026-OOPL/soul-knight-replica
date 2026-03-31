@@ -11,6 +11,27 @@ namespace {
 
 constexpr float kDoorOpenDelayMs = 200.0F; // Tune this value to change the door-open delay in ms.
 
+Collision::CollisionFilter BuildDefaultDoorFilter() {
+    Collision::CollisionFilter filter;
+    filter.layer = Collision::CollisionLayer::Prop;
+    filter.mask =
+        Collision::ToMask(Collision::CollisionLayer::Player) |
+        Collision::ToMask(Collision::CollisionLayer::Enemy) |
+        Collision::ToMask(Collision::CollisionLayer::PlayerProjectile) |
+        Collision::ToMask(Collision::CollisionLayer::EnemyProjectile);
+    filter.blocking = true;
+    return filter;
+}
+
+Collision::CollisionBox BuildDefaultDoorBodyBox(const glm::vec2 &size) {
+    Collision::CollisionBox bodyBox;
+    bodyBox.id = 0;
+    bodyBox.type = Collision::CollisionBoxType::Body;
+    bodyBox.size = size;
+    bodyBox.filter = BuildDefaultDoorFilter();
+    return bodyBox;
+}
+
 } // namespace
 
 Door::Door(
@@ -36,6 +57,7 @@ Door::Door(
 
     this->SetColliderSize(colliderSize);
     this->SetZIndex(4.0F);
+    this->m_CollisionBoxes.push_back(BuildDefaultDoorBodyBox(colliderSize));
 
     this->m_RenderSize = renderSize;
     this->m_BaseRotation = 0.0F;
@@ -75,6 +97,43 @@ void Door::Update() {
         this->m_Visuals.closing->GetState() == Util::Animation::State::ENDED) {
         this->EnterState(State::Closed);
     }
+}
+
+std::vector<Collision::CollisionPrimitive> Door::CollectBlockingPrimitives(
+    const Collision::AxisAlignedBox *ignoreOverlapBox
+) const {
+    if (this->IsOpen()) {
+        return {};
+    }
+
+    const std::vector<Collision::CollisionPrimitive> primitives =
+        Collision::CollisionSystem::BuildCollisionPrimitives(*this);
+    if (primitives.empty()) {
+        return {};
+    }
+
+    if (ignoreOverlapBox != nullptr) {
+        Collision::CollisionSystem collisionSystem;
+        for (const auto &primitive : primitives) {
+            if (collisionSystem.IsOverlapping(primitive.box, *ignoreOverlapBox)) {
+                return {};
+            }
+        }
+    }
+
+    return primitives;
+}
+
+glm::vec2 Door::GetCollisionOrigin() const {
+    return this->GetAbsoluteTranslation();
+}
+
+const std::vector<Collision::CollisionBox> &Door::GetCollisionBoxes() const {
+    return this->m_CollisionBoxes;
+}
+
+void Door::OnCollision(const Collision::CollisionSituation &situation) {
+    (void)situation;
 }
 
 glm::vec2 Door::GetAbsoluteScale() const {
@@ -138,11 +197,19 @@ DoorSide Door::GetSide() const {
 }
 
 void Door::SetColliderOffset(const glm::vec2 &colliderOffset) {
-    this->m_ColliderOffset = colliderOffset;
+    if (this->m_CollisionBoxes.empty()) {
+        this->m_CollisionBoxes.push_back(BuildDefaultDoorBodyBox(this->GetColliderSize()));
+    }
+
+    this->m_CollisionBoxes.front().offset = colliderOffset;
 }
 
 glm::vec2 Door::GetColliderCenter() const {
-    return this->GetAbsoluteTranslation() + this->m_ColliderOffset;
+    if (this->m_CollisionBoxes.empty()) {
+        return this->GetAbsoluteTranslation();
+    }
+
+    return this->GetAbsoluteTranslation() + this->m_CollisionBoxes.front().offset;
 }
 
 void Door::ApplyDrawable(const std::shared_ptr<Core::Drawable> &drawable) {
@@ -163,6 +230,9 @@ void Door::ApplyDrawable(const std::shared_ptr<Core::Drawable> &drawable) {
 
 void Door::EnterState(State state) {
     this->m_State = state;
+    if (!this->m_CollisionBoxes.empty()) {
+        this->m_CollisionBoxes.front().enabled = !this->IsOpen();
+    }
 
     switch (state) {
     case State::Closed:

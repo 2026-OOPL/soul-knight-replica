@@ -29,11 +29,11 @@ public:
     void Update() override;
 
     bool IsPlayerInside(const glm::vec2 &playerPos) const;
+    std::vector<Collision::CollisionPrimitive> CollectBlockingPrimitives(
+        const Collision::AxisAlignedBox *ignoreOverlapBox = nullptr
+    ) const override;
 
     const std::vector<Collision::AxisAlignedBox> &GetStaticColliders() const;
-    std::vector<Collision::AxisAlignedBox> GetDynamicColliders(
-        const Collision::AxisAlignedBox *ignoreOverlapBox = nullptr
-    ) const;
 
     const std::vector<std::shared_ptr<Door>> &GetDoors() const;
     const std::vector<std::shared_ptr<Character>> &GetMobs() const;

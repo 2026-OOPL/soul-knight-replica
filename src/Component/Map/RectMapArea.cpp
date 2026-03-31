@@ -1,6 +1,7 @@
-#include "Component/Map/RectMapArea.hpp"
-
 #include <algorithm>
+#include <cmath>
+
+#include "Component/Map/RectMapArea.hpp"
 
 namespace {
 
@@ -141,8 +142,9 @@ RectMapArea::RectMapArea(
 )
     : MapPiece(absolutePosition, drawable),
       m_AreaSize(areaSize),
+      m_RenderSize(areaSize),
       m_WallConfig(wallConfig) {
-    this->m_AbsoluteTransform.scale = SafeScaleForSize(this->m_Drawable, this->m_AreaSize);
+    this->UpdateRenderScale();
     this->SetColliderSize(this->m_AreaSize);
     this->RebuildStaticColliders();
 }
@@ -169,6 +171,13 @@ bool RectMapArea::IsPointInside(const glm::vec2 &point) const {
            std::abs(offset.y) <= halfSize.y;
 }
 
+std::vector<Collision::CollisionPrimitive> RectMapArea::CollectBlockingPrimitives(
+    const Collision::AxisAlignedBox *ignoreOverlapBox
+) const {
+    (void)ignoreOverlapBox;
+    return Collision::BuildStaticWorldPrimitives(this->m_StaticColliders);
+}
+
 const std::vector<Collision::AxisAlignedBox> &RectMapArea::GetStaticColliders() const {
     return this->m_StaticColliders;
 }
@@ -177,16 +186,41 @@ glm::vec2 RectMapArea::GetAreaSize() const {
     return this->m_AreaSize;
 }
 
+glm::vec2 RectMapArea::GetRenderSize() const {
+    return this->m_RenderSize;
+}
+
 void RectMapArea::SetAreaSize(const glm::vec2 &areaSize) {
     this->m_AreaSize = areaSize;
     this->SetColliderSize(areaSize);
-    this->m_AbsoluteTransform.scale = SafeScaleForSize(this->m_Drawable, this->m_AreaSize);
+
+    if (this->m_ShouldSyncRenderSizeWithAreaSize) {
+        this->m_RenderSize = areaSize;
+    }
+
+    this->UpdateRenderScale();
     this->RebuildStaticColliders();
+}
+
+void RectMapArea::SetRenderSize(const glm::vec2 &renderSize) {
+    this->m_RenderSize = renderSize;
+    this->m_ShouldSyncRenderSizeWithAreaSize = false;
+    this->UpdateRenderScale();
 }
 
 void RectMapArea::SetWallConfig(const WallConfig &wallConfig) {
     this->m_WallConfig = wallConfig;
     this->RebuildStaticColliders();
+}
+
+void RectMapArea::SyncRenderSizeWithAreaSize() {
+    this->m_ShouldSyncRenderSizeWithAreaSize = true;
+    this->m_RenderSize = this->m_AreaSize;
+    this->UpdateRenderScale();
+}
+
+void RectMapArea::UpdateRenderScale() {
+    this->m_AbsoluteTransform.scale = SafeScaleForSize(this->m_Drawable, this->m_RenderSize);
 }
 
 void RectMapArea::RebuildStaticColliders() {

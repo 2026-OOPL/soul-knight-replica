@@ -1,13 +1,32 @@
-#include "Component/Map/Gangway.hpp"
-
 #include <algorithm>
 
+#include "Component/Map/Gangway.hpp"
 #include "Component/Map/BaseRoom.hpp"
 
 namespace {
 
 constexpr char kHorizontalGangwaySprite[] = RESOURCE_DIR "/Map/Gangway/Gangway_15x5.png";
 constexpr char kVerticalGangwaySprite[] = RESOURCE_DIR "/Map/Gangway/Gangway_5x15.png";
+
+glm::vec2 ResolveRenderSize(
+    const Gangway::Config &config,
+    const std::shared_ptr<Core::Drawable> &drawable
+) {
+    if (config.renderSize.x > 0.0F && config.renderSize.y > 0.0F) {
+        return config.renderSize;
+    }
+
+    if (drawable != nullptr) {
+        return drawable->GetSize();
+    }
+
+    const float corridorLength = std::max(config.length, config.width);
+    if (config.orientation == GangwayOrientation::Horizontal) {
+        return {corridorLength, config.width};
+    }
+
+    return {config.width, corridorLength};
+}
 
 } // namespace
 
@@ -19,7 +38,7 @@ Gangway::Gangway(const glm::vec2 &absolutePosition, Config config)
           Gangway::BuildWallConfig(config)
       ),
       m_Orientation(config.orientation) {
-    this->m_AbsoluteTransform.scale = {1.0F, 1.0F};
+    this->SetRenderSize(ResolveRenderSize(config, this->m_Drawable));
     this->SetZIndex(-1.0F);
 }
 
