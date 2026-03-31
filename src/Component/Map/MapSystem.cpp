@@ -1,7 +1,7 @@
-#include "Component/Map/MapSystem.hpp"
-
-#include <stdexcept>
+#include <cmath>
 #include <unordered_set>
+
+#include "Component/Map/MapSystem.hpp"
 #include "Component/IStateful.hpp"
 
 namespace {
@@ -9,19 +9,59 @@ namespace {
 constexpr float kDoorPassageCommitDepth = 32.0F;
 constexpr float kRoomAlignmentTolerance = 1.0F;
 
+Collision::CollisionFilter BuildWorldBlockingFilter() {
+    Collision::CollisionFilter filter;
+    filter.layer = Collision::CollisionLayer::World;
+    filter.mask = Collision::kAllCollisionLayers;
+    filter.blocking = true;
+    return filter;
+}
+
+Collision::AxisAlignedBox BuildPrimaryBodyBox(const ICollidable &body) {
+    const std::vector<Collision::CollisionPrimitive> primitives =
+        Collision::CollisionSystem::BuildCollisionPrimitives(body);
+    if (primitives.empty()) {
+        return {};
+    }
+
+    return primitives.front().box;
+}
+
+std::vector<Collision::CollisionPrimitive> ToWorldPrimitives(
+    const std::vector<Collision::AxisAlignedBox> &boxes
+) {
+    std::vector<Collision::CollisionPrimitive> primitives;
+    const Collision::CollisionFilter worldFilter = BuildWorldBlockingFilter();
+
+    primitives.reserve(boxes.size());
+    for (const auto &box : boxes) {
+        primitives.push_back(Collision::CollisionSystem::BuildStaticPrimitive(box, worldFilter));
+    }
+
+    return primitives;
+}
+
 } // namespace
 
 MapSystem::MapSystem()
     : Scene() {
-    this->m_CollisionSystem.SetBlockingBoxProvider(
+    this->m_CollisionSystem.SetBlockingPrimitiveProvider(
         [this]() {
-            return this->CollectCurrentRoomColliders();
+            return this->CollectCurrentRoomCollisionPrimitives();
+        }
+    );
+    this->m_CollisionSystem.SetDynamicBodyProvider(
+        [this]() {
+            return this->CollectDynamicCollisionBodies();
         }
     );
 }
 
 void MapSystem::Update() {
     Scene::Update();
+
+    this->m_CollisionSystem.DispatchCollisions();
+    this->PruneDestroyedBullets();
 
     if (this->m_AttachCamera != nullptr) {
         const std::shared_ptr<IStateful> statefulCamera =
@@ -111,38 +151,126 @@ void MapSystem::AddGangways(const std::vector<std::shared_ptr<Gangway>> &gangway
 }
 
 Collision::MovementResult MapSystem::ResolvePlayerMovement(
-    const Collision::AxisAlignedBox &currentBox,
+    const ICollidable &body,
     const glm::vec2 &intendedDelta
 ) {
-    this->UpdateCurrentRoom(currentBox.center);
-    this->PrepareDoorPassage(currentBox.center + intendedDelta);
+    this->UpdateCurrentRoom(body.GetCollisionOrigin());
+    this->PrepareDoorPassage(body.GetCollisionOrigin() + intendedDelta);
 
     if (this->m_CurrentRoom == nullptr &&
         this->m_DoorPassage.state == DoorPassageState::Idle) {
         return {
             intendedDelta,
             false,
-            false
+            false,
+            nullptr,
+            nullptr
         };
     }
 
-    const Collision::MovementResult result =
-        this->m_CollisionSystem.ResolveMovement(currentBox, intendedDelta);
-    this->UpdateCurrentRoom(currentBox.center + result.resolvedDelta);
+    const Collision::MovementResult result = this->ResolveMapMovement(body, intendedDelta);
+    this->UpdateCurrentRoom(body.GetCollisionOrigin() + result.resolvedDelta);
     return result;
 }
 
-std::vector<Collision::AxisAlignedBox> MapSystem::CollectRoomColliders(
+Collision::MovementResult MapSystem::ResolveMapMovement(
+    const ICollidable &body,
+    const glm::vec2 &intendedDelta
+) const {
+    Collision::CollisionQueryOptions options;
+    options.ignoreOwner = &body;
+    options.blockerMask =
+        Collision::ToMask(Collision::CollisionLayer::World) |
+        Collision::ToMask(Collision::CollisionLayer::Prop);
+
+    const std::vector<Collision::CollisionPrimitive> blockingPrimitives =
+        this->CollectCurrentRoomCollisionPrimitives(&body);
+    return this->m_CollisionSystem.ResolveMovement(
+        body,
+        intendedDelta,
+        blockingPrimitives,
+        options
+    );
+}
+
+Collision::MovementResult MapSystem::ResolveProjectileMovement(
+    const ICollidable &body,
+    const glm::vec2 &intendedDelta
+) const {
+    Collision::CollisionQueryOptions options;
+    options.ignoreOwner = &body;
+    options.blockerMask =
+        Collision::ToMask(Collision::CollisionLayer::World) |
+        Collision::ToMask(Collision::CollisionLayer::Prop);
+
+    const std::vector<Collision::CollisionPrimitive> blockingPrimitives =
+        this->CollectCurrentRoomCollisionPrimitives(&body);
+    return this->m_CollisionSystem.ResolveMovement(
+        body,
+        intendedDelta,
+        blockingPrimitives,
+        options
+    );
+}
+
+Collision::MovementResult MapSystem::PredictMovement(
+    const ICollidable &body,
+    const glm::vec2 &intendedDelta
+) const {
+    Collision::CollisionQueryOptions options;
+    options.ignoreOwner = &body;
+    options.blockerMask =
+        Collision::ToMask(Collision::CollisionLayer::World) |
+        Collision::ToMask(Collision::CollisionLayer::Prop);
+
+    const std::vector<Collision::CollisionPrimitive> blockingPrimitives =
+        this->CollectCurrentRoomCollisionPrimitives(&body);
+    return this->m_CollisionSystem.PredictMovement(
+        body,
+        intendedDelta,
+        blockingPrimitives,
+        options
+    );
+}
+
+bool MapSystem::CanOccupy(
+    const ICollidable &body,
+    const glm::vec2 &targetOrigin
+) const {
+    Collision::CollisionQueryOptions options;
+    options.ignoreOwner = &body;
+    options.blockerMask =
+        Collision::ToMask(Collision::CollisionLayer::World) |
+        Collision::ToMask(Collision::CollisionLayer::Prop);
+
+    const std::vector<Collision::CollisionPrimitive> blockingPrimitives =
+        this->CollectCurrentRoomCollisionPrimitives(&body);
+    return this->m_CollisionSystem.CanOccupy(
+        body,
+        targetOrigin,
+        blockingPrimitives,
+        options
+    );
+}
+
+std::vector<Collision::CollisionPrimitive> MapSystem::CollectRoomCollisionPrimitives(
     const std::shared_ptr<BaseRoom> &room,
-    const Collision::AxisAlignedBox *playerBox
+    const ICollidable *ignoreBody
 ) const {
     if (room == nullptr) {
         return {};
     }
 
-    std::vector<Collision::AxisAlignedBox> colliders = room->GetStaticColliders();
-    const std::vector<Collision::AxisAlignedBox> dynamicColliders =
-        room->GetDynamicColliders(playerBox);
+    const Collision::AxisAlignedBox ignoreBox = ignoreBody == nullptr ?
+        Collision::AxisAlignedBox{} :
+        BuildPrimaryBodyBox(*ignoreBody);
+    const Collision::AxisAlignedBox *ignoreOverlapBox =
+        ignoreBody == nullptr ? nullptr : &ignoreBox;
+
+    std::vector<Collision::CollisionPrimitive> colliders =
+        ToWorldPrimitives(room->GetStaticColliders());
+    const std::vector<Collision::CollisionPrimitive> dynamicColliders =
+        ToWorldPrimitives(room->GetDynamicColliders(ignoreOverlapBox));
 
     colliders.insert(
         colliders.end(),
@@ -153,25 +281,19 @@ std::vector<Collision::AxisAlignedBox> MapSystem::CollectRoomColliders(
     return colliders;
 }
 
-std::vector<Collision::AxisAlignedBox> MapSystem::CollectCurrentRoomColliders() const {
+std::vector<Collision::CollisionPrimitive> MapSystem::CollectCurrentRoomCollisionPrimitives(
+    const ICollidable *ignoreBody
+) const {
     if (this->m_CurrentRoom == nullptr &&
         this->m_DoorPassage.state == DoorPassageState::Idle) {
         return {};
     }
 
-    const Collision::AxisAlignedBox *playerBox = nullptr;
-    Collision::AxisAlignedBox currentPlayerBox;
-    std::vector<Collision::AxisAlignedBox> colliders;
-
-    if (!this->m_Players.empty() && this->m_Players.front() != nullptr) {
-        currentPlayerBox = this->m_Players.front()->GetCollisionBox();
-        playerBox = &currentPlayerBox;
-    }
-
+    std::vector<Collision::CollisionPrimitive> colliders;
     std::unordered_set<const Gangway *> collectedGangways;
 
-    const std::vector<Collision::AxisAlignedBox> currentRoomColliders =
-        this->CollectRoomColliders(this->m_CurrentRoom, playerBox);
+    const std::vector<Collision::CollisionPrimitive> currentRoomColliders =
+        this->CollectRoomCollisionPrimitives(this->m_CurrentRoom, ignoreBody);
     colliders.insert(
         colliders.end(),
         currentRoomColliders.begin(),
@@ -187,10 +309,12 @@ std::vector<Collision::AxisAlignedBox> MapSystem::CollectCurrentRoomColliders() 
             }
 
             const auto &gangwayColliders = gangway->GetStaticColliders();
+            const std::vector<Collision::CollisionPrimitive> gangwayPrimitives =
+                ToWorldPrimitives(gangwayColliders);
             colliders.insert(
                 colliders.end(),
-                gangwayColliders.begin(),
-                gangwayColliders.end()
+                gangwayPrimitives.begin(),
+                gangwayPrimitives.end()
             );
         }
     }
@@ -198,8 +322,8 @@ std::vector<Collision::AxisAlignedBox> MapSystem::CollectCurrentRoomColliders() 
     if (this->m_DoorPassage.state == DoorPassageState::Traversing &&
         this->m_DoorPassage.targetRoom != nullptr &&
         this->m_DoorPassage.targetRoom != this->m_CurrentRoom) {
-        const std::vector<Collision::AxisAlignedBox> targetRoomColliders =
-            this->CollectRoomColliders(this->m_DoorPassage.targetRoom, playerBox);
+        const std::vector<Collision::CollisionPrimitive> targetRoomColliders =
+            this->CollectRoomCollisionPrimitives(this->m_DoorPassage.targetRoom, ignoreBody);
         colliders.insert(
             colliders.end(),
             targetRoomColliders.begin(),
@@ -214,15 +338,43 @@ std::vector<Collision::AxisAlignedBox> MapSystem::CollectCurrentRoomColliders() 
             }
 
             const auto &gangwayColliders = gangway->GetStaticColliders();
+            const std::vector<Collision::CollisionPrimitive> gangwayPrimitives =
+                ToWorldPrimitives(gangwayColliders);
             colliders.insert(
                 colliders.end(),
-                gangwayColliders.begin(),
-                gangwayColliders.end()
+                gangwayPrimitives.begin(),
+                gangwayPrimitives.end()
             );
         }
     }
 
     return colliders;
+}
+
+std::vector<ICollidable *> MapSystem::CollectDynamicCollisionBodies() const {
+    std::vector<ICollidable *> bodies;
+
+    bodies.reserve(this->m_Players.size() + this->m_Mobs.size() + this->m_Bullets.size());
+
+    for (const auto &player : this->m_Players) {
+        if (player != nullptr) {
+            bodies.push_back(static_cast<ICollidable *>(player.get()));
+        }
+    }
+
+    for (const auto &mob : this->m_Mobs) {
+        if (mob != nullptr) {
+            bodies.push_back(static_cast<ICollidable *>(mob.get()));
+        }
+    }
+
+    for (const auto &bullet : this->m_Bullets) {
+        if (bullet != nullptr) {
+            bodies.push_back(static_cast<ICollidable *>(bullet.get()));
+        }
+    }
+
+    return bodies;
 }
 
 bool MapSystem::HasRoomPassageBetween(
@@ -405,12 +557,19 @@ void MapSystem::UpdateCurrentRoom(const glm::vec2 &playerPos) {
     }
 }
 
-// Getter and settter for children
 const std::vector<std::shared_ptr<Bullet>>& MapSystem::GetBullets() const {
     return this->m_Bullets;
 }
 
 void MapSystem::AddBullet(std::shared_ptr<Bullet> bullet) {
+    if (bullet != nullptr) {
+        bullet->SetCollisionResolver(
+            [this](const ICollidable &body, const glm::vec2 &intendedDelta) {
+                return this->ResolveProjectileMovement(body, intendedDelta);
+            }
+        );
+    }
+
     this->AddEntity(bullet, this->m_Bullets, "bullet");
 }
 
@@ -419,6 +578,14 @@ void MapSystem::RemoveBullet(std::shared_ptr<Bullet> bullet) {
 }
 
 void MapSystem::AddMob(std::shared_ptr<Character> mob) {
+    if (mob != nullptr) {
+        mob->SetCollisionResolver(
+            [this](const ICollidable &body, const glm::vec2 &intendedDelta) {
+                return this->ResolveMapMovement(body, intendedDelta);
+            }
+        );
+    }
+
     this->AddEntity(mob, this->m_Mobs, "mob");
 }
 
@@ -428,4 +595,18 @@ void MapSystem::RemoveMob(std::shared_ptr<Character> mob) {
 
 const std::vector<std::shared_ptr<Character>>& MapSystem::GetMob() const {
     return this->m_Mobs;
+}
+
+void MapSystem::PruneDestroyedBullets() {
+    std::vector<std::shared_ptr<Bullet>> destroyedBullets;
+
+    for (const auto &bullet : this->m_Bullets) {
+        if (bullet != nullptr && bullet->IsDestroyRequested()) {
+            destroyedBullets.push_back(bullet);
+        }
+    }
+
+    for (const auto &bullet : destroyedBullets) {
+        this->RemoveBullet(bullet);
+    }
 }

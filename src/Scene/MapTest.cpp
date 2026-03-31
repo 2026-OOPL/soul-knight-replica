@@ -1,14 +1,15 @@
 #include <glm/fwd.hpp>
 #include <memory>
 
+#include "Util/Input.hpp"
+#include "Util/Keycode.hpp"
+
 #include "Component/Camera/Curve.hpp"
 #include "Component/Camera/TraceCamera.hpp"
 #include "Component/Player/Knight.hpp"
 #include "Component/Weapon.hpp"
 #include "Generator/MapGenerator.hpp"
 #include "Scene/MapTest.hpp"
-#include "Util/Input.hpp"
-#include "Util/Keycode.hpp"
 
 MapTest::MapTest() : MapSystem() {
     std::shared_ptr<MapGenerator> generator = std::make_shared<MapGenerator>(
@@ -46,8 +47,8 @@ MapTest::MapTest() : MapSystem() {
     }
 
     this->m_MainPlayer->SetCollisionResolver(
-        [this](const Collision::AxisAlignedBox &currentBox, const glm::vec2 &intendedDelta) {
-            return this->ResolvePlayerMovement(currentBox, intendedDelta);
+        [this](const ICollidable &body, const glm::vec2 &intendedDelta) {
+            return this->ResolvePlayerMovement(body, intendedDelta);
         }
     );
 

@@ -1,49 +1,41 @@
 #ifndef MAP_PIECE_HPP
 #define MAP_PIECE_HPP
 
-#include <glm/vec2.hpp>
 #include <memory>
 #include <string>
-#include <sys/types.h>
 
-#include "Common/MapObject.hpp"
+#include <glm/vec2.hpp>
+
 #include "Core/Drawable.hpp"
 #include "Util/GameObject.hpp"
 #include "Util/Image.hpp"
 #include "Util/Transform.hpp"
 
+#include "Common/MapObject.hpp"
+
 class MapPiece : public Util::GameObject, public MapObject {
 public:
     MapPiece(
         glm::vec2 cooridinate,
-        const std::shared_ptr<Core::Drawable> &drawable,
-        bool isWall = false
+        const std::shared_ptr<Core::Drawable> &drawable
     );
 
     MapPiece(
         glm::vec2 cooridinate,
-        std::string resource,
-        bool isWall = false
+        std::string resource
     );
 
-    bool IsWall() const { return this->m_IsWall; }
-    void SetIsWall(bool isWall) { this->m_IsWall = isWall; }
-
     glm::vec2 GetColliderSize() const { return this->m_ColliderSize; }
-    
+
     void SetColliderSize(const glm::vec2 &colliderSize) {
         this->m_ColliderSize = colliderSize;
     }
 
-    // Override for the MapObject
     Util::Transform GetObjectTransform() const override;
-    
+
 private:
-
-    std::shared_ptr<Util::Image> m_Image;//圖片路徑
-    bool m_IsWall = false;//設定這塊地圖是否為牆
-    glm::vec2 m_ColliderSize = {48.0F, 48.0F};//碰撞盒大小
-
+    std::shared_ptr<Util::Image> m_Image;
+    glm::vec2 m_ColliderSize = {48.0F, 48.0F};
 };
 
 #endif

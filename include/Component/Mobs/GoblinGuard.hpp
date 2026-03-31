@@ -1,10 +1,9 @@
 #ifndef MOB_HPP
 #define MOB_HPP
 
-#include "Common/MapObject.hpp"
-#include "Component/Character/Character.hpp"
-#include "Component/Player/Player.hpp"
 #include <vector>
+
+#include "Component/Character/Character.hpp"
 
 namespace {
     const std::vector<std::string> WALK_SPRITE = {
@@ -26,12 +25,13 @@ namespace {
     };
 }
 
-class GoblinGuard : public Player {
+class GoblinGuard : public Character {
 public:
-    GoblinGuard() : Player(
+    GoblinGuard() : Character(
         STAND_SPRITE,
         WALK_SPRITE,
-        DIE_SPRITE
+        DIE_SPRITE,
+        4
     ) {};
 
     glm::vec2 GetMoveIntent() const override;
