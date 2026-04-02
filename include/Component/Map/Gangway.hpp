@@ -21,6 +21,10 @@ public:
         float length = 0.0F;
         float width = 80.0F;
         float wallThickness = 10.0F;
+        float topWallOffset = 0.0F;
+        float rightWallOffset = 0.0F;
+        float bottomWallOffset = 0.0F;
+        float leftWallOffset = 0.0F;
         glm::vec2 positionOffset = {0.0F, 0.0F};
         glm::vec2 renderSize = {0.0F, 0.0F};
     };

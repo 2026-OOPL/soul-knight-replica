@@ -52,7 +52,9 @@ public:
 
     static WallConfig BuildWallConfigFromDoorConfig(
         const DoorConfig &doorConfig,
-        float wallThickness
+        float wallThickness,
+        RoomType roomType,
+        RoomPurpose purpose
     );
 
 protected:

@@ -11,7 +11,12 @@ FightRoom::FightRoom(
           roomType,
           RoomPurpose::FIGHTING,
           doorConfig,
-          BaseRoom::BuildWallConfigFromDoorConfig(doorConfig, wallThickness)
+          BaseRoom::BuildWallConfigFromDoorConfig(
+              doorConfig,
+              wallThickness,
+              roomType,
+              RoomPurpose::FIGHTING
+          )
       ) {
     this->OpenAllDoors();
 }

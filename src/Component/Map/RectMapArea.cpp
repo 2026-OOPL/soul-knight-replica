@@ -231,7 +231,8 @@ void RectMapArea::RebuildStaticColliders() {
 
     const std::vector<Collision::AxisAlignedBox> topWalls = BuildHorizontalWallSegments(
         areaCenter,
-        areaCenter.y + areaHalfSize.y - this->m_WallConfig.top.thickness / 2.0F,
+        areaCenter.y + areaHalfSize.y - this->m_WallConfig.top.thickness / 2.0F +
+            this->m_WallConfig.top.centerOffset,
         this->m_AreaSize.x,
         this->m_WallConfig.top.thickness,
         BuildOpening(this->m_WallConfig.top)
@@ -244,7 +245,8 @@ void RectMapArea::RebuildStaticColliders() {
 
     const std::vector<Collision::AxisAlignedBox> rightWalls = BuildVerticalWallSegments(
         areaCenter,
-        areaCenter.x + areaHalfSize.x - this->m_WallConfig.right.thickness / 2.0F,
+        areaCenter.x + areaHalfSize.x - this->m_WallConfig.right.thickness / 2.0F +
+            this->m_WallConfig.right.centerOffset,
         this->m_AreaSize.y,
         this->m_WallConfig.right.thickness,
         BuildOpening(this->m_WallConfig.right)
@@ -257,7 +259,8 @@ void RectMapArea::RebuildStaticColliders() {
 
     const std::vector<Collision::AxisAlignedBox> bottomWalls = BuildHorizontalWallSegments(
         areaCenter,
-        areaCenter.y - areaHalfSize.y + this->m_WallConfig.bottom.thickness / 2.0F,
+        areaCenter.y - areaHalfSize.y + this->m_WallConfig.bottom.thickness / 2.0F +
+            this->m_WallConfig.bottom.centerOffset,
         this->m_AreaSize.x,
         this->m_WallConfig.bottom.thickness,
         BuildOpening(this->m_WallConfig.bottom)
@@ -270,7 +273,8 @@ void RectMapArea::RebuildStaticColliders() {
 
     const std::vector<Collision::AxisAlignedBox> leftWalls = BuildVerticalWallSegments(
         areaCenter,
-        areaCenter.x - areaHalfSize.x + this->m_WallConfig.left.thickness / 2.0F,
+        areaCenter.x - areaHalfSize.x + this->m_WallConfig.left.thickness / 2.0F +
+            this->m_WallConfig.left.centerOffset,
         this->m_AreaSize.y,
         this->m_WallConfig.left.thickness,
         BuildOpening(this->m_WallConfig.left)

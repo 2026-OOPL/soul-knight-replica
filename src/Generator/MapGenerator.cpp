@@ -72,7 +72,9 @@ std::shared_ptr<BaseRoom> BuildRoom(
             doorConfig,
             BaseRoom::BuildWallConfigFromDoorConfig(
                 doorConfig,
-                MapColliderConfig::kDefaultWallThickness
+                MapColliderConfig::kDefaultWallThickness,
+                info->roomType,
+                info->roomPurpose
             )
         );
     }
@@ -100,6 +102,10 @@ std::shared_ptr<Gangway> BuildGangway(
         config.orientation = GangwayOrientation::Horizontal;
         config.width = MapColliderConfig::kHorizontalDoorColliderSize.x;
         config.positionOffset = GangwayLayoutConfig::kHorizontalPositionOffset;
+        config.topWallOffset = GangwayLayoutConfig::kHorizontalTopWallOffset;
+        config.rightWallOffset = GangwayLayoutConfig::kHorizontalRightWallOffset;
+        config.bottomWallOffset = GangwayLayoutConfig::kHorizontalBottomWallOffset;
+        config.leftWallOffset = GangwayLayoutConfig::kHorizontalLeftWallOffset;
         const float gap = std::max(
             0.0F,
             std::abs(delta.x) -
@@ -111,6 +117,10 @@ std::shared_ptr<Gangway> BuildGangway(
         config.orientation = GangwayOrientation::Vertical;
         config.width = MapColliderConfig::kVerticalDoorColliderSize.y;
         config.positionOffset = GangwayLayoutConfig::kVerticalPositionOffset;
+        config.topWallOffset = GangwayLayoutConfig::kVerticalTopWallOffset;
+        config.rightWallOffset = GangwayLayoutConfig::kVerticalRightWallOffset;
+        config.bottomWallOffset = GangwayLayoutConfig::kVerticalBottomWallOffset;
+        config.leftWallOffset = GangwayLayoutConfig::kVerticalLeftWallOffset;
         const float gap = std::max(
             0.0F,
             std::abs(delta.y) -

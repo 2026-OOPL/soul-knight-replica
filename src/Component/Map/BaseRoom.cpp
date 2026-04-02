@@ -4,6 +4,7 @@
 
 #include "Common/Constants.hpp"
 #include "Component/Map/MapColliderConfig.hpp"
+#include "Component/Map/BaseRoomWallLayoutConfig.hpp"
 
 namespace {
 
@@ -125,12 +126,14 @@ bool BaseRoom::HasPassageOnSide(DoorSide side) const {
 
 WallConfig BaseRoom::BuildWallConfigFromDoorConfig(
     const DoorConfig &doorConfig,
-    float wallThickness
+    float wallThickness,
+    RoomType roomType,
+    RoomPurpose purpose
 ) {
     WallConfig wallConfig;
     wallConfig.top.thickness = wallThickness;
     wallConfig.right.thickness = wallThickness;
-    wallConfig.bottom.thickness = wallThickness + kStarterBottomWallThicknessOffset;
+    wallConfig.bottom.thickness = wallThickness;
     wallConfig.left.thickness = wallThickness;
 
     wallConfig.top.hasOpening = doorConfig.top.hasDoor;
@@ -150,7 +153,7 @@ WallConfig BaseRoom::BuildWallConfigFromDoorConfig(
         MapColliderConfig::kVerticalDoorColliderSize.y :
         0.0F;
 
-    return wallConfig;
+    return BaseRoomWallLayoutConfig::ResolveWallConfig(wallConfig, purpose, roomType);
 }
 
 glm::vec2 BaseRoom::ResolveRoomSize(RoomType roomType) {
@@ -211,29 +214,42 @@ Door::Visuals BaseRoom::BuildVerticalDoorVisuals() {
 glm::vec2 BaseRoom::BuildDoorPosition(const DoorBuildInfo &doorInfo) const {
     const glm::vec2 roomCenter = this->GetAbsoluteTranslation();
     const glm::vec2 roomSize = this->GetAreaSize();
+    const WallSideConfig &wallSideConfig = this->GetWallSideConfig(doorInfo.side);
 
     switch (doorInfo.side) {
     case DoorSide::Top:
         return {
             roomCenter.x + doorInfo.openingOffset,
-            roomCenter.y + roomSize.y / 2.0F - doorInfo.renderSize.y / 2.0F
+            roomCenter.y +
+                roomSize.y / 2.0F -
+                doorInfo.renderSize.y / 2.0F +
+                wallSideConfig.centerOffset
         };
 
     case DoorSide::Right:
         return {
-            roomCenter.x + roomSize.x / 2.0F - doorInfo.renderSize.x / 2.0F,
+            roomCenter.x +
+                roomSize.x / 2.0F -
+                doorInfo.renderSize.x / 2.0F +
+                wallSideConfig.centerOffset,
             roomCenter.y + doorInfo.openingOffset
         };
 
     case DoorSide::Bottom:
         return {
             roomCenter.x + doorInfo.openingOffset,
-            roomCenter.y - roomSize.y / 2.0F + doorInfo.renderSize.y / 2.0F
+            roomCenter.y -
+                roomSize.y / 2.0F +
+                doorInfo.renderSize.y / 2.0F +
+                wallSideConfig.centerOffset
         };
 
     case DoorSide::Left:
         return {
-            roomCenter.x - roomSize.x / 2.0F + doorInfo.renderSize.x / 2.0F,
+            roomCenter.x -
+                roomSize.x / 2.0F +
+                doorInfo.renderSize.x / 2.0F +
+                wallSideConfig.centerOffset,
             roomCenter.y + doorInfo.openingOffset
         };
     }
