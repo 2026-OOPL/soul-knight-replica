@@ -64,15 +64,15 @@ Character::Character(
     int zIndex
 ) : GameObject(nullptr, zIndex) {
     this->m_WalkAnimation = std::make_shared<Util::Animation>(
-        WalkSprite, true, 20, true, 0
+        WalkSprite, true, 20, true, 0, false
     );
     
     this->m_DieAnimation = std::make_shared<Util::Animation>(
-        DieSprite, true, 20, true, 0
+        DieSprite, true, 20, true, 0, false
     );
 
     this->m_StandAnimation = std::make_shared<Util::Animation>(
-        StandSprite, true, 20, true, 0
+        StandSprite, true, 20, true, 0, false
     );
 
     this->m_Weapon = std::make_shared<BadPistol>();
