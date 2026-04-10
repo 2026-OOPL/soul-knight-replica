@@ -82,13 +82,13 @@ Character::Character(
     this->SetDrawable(this->m_StandAnimation);
 };
 
-void Character::SetLookDirectionByMoveIntent(glm::vec2 moveIntent) {
-    if (moveIntent.x > 0 && this->m_AbsoluteTransform.scale.x < 0) {
+void Character::UpdateFaceDirection() {
+    if (m_FacingDirection.x > 0 && this->m_AbsoluteTransform.scale.x < 0) {
         this->m_AbsoluteTransform.scale.x *= -1;
         return;
     }
 
-    if (moveIntent.x < 0 && this->m_AbsoluteTransform.scale.x > 0) {
+    if (m_FacingDirection.x < 0 && this->m_AbsoluteTransform.scale.x > 0) {
         this->m_AbsoluteTransform.scale.x *= -1;
     }
 }
@@ -124,15 +124,12 @@ void Character::Update() {
     // Set weapon position
     if (this->m_Weapon != nullptr && moveIntent != glm::vec2(0, 0)) {
         m_Weapon->SetAnchorPoint(this->GetAbsoluteTranslation());
-        m_Weapon->SetFacingDirection(moveIntent);
     }
+    
+    m_Weapon->SetFacingDirection(m_FacingDirection);
 
     this->SetSpriteTypeByMoveIntent(moveIntent);
-
-    if (moveIntent != glm::vec2(0, 0)) {
-        this->SetLookDirectionByMoveIntent(moveIntent);
-        m_LastMomentum = moveIntent;
-    }
+    this->UpdateFaceDirection();
 
     if (moveIntent == glm::vec2(0.0F, 0.0F)) {
         return;

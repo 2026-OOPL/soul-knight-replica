@@ -44,12 +44,12 @@ const std::vector<std::string> STAND_SPRITES = {
 const std::vector<std::string> DIE_SPRITES = {
     std::string(RESOURCE_DIR) + "/Character/Knight/knight_die.png",
 };
-
 }
 
 class Knight : public Player {
 public:
     Knight();
+
 };
 
 #endif

@@ -41,15 +41,14 @@ public:
 
         this->m_AI = std::make_shared<AI>(this, m_TracePlayerTemp, m_CollisionSystemTemp);
 
-        this->m_PlayerSpeed = 0.01;
+        this->m_PlayerSpeed = 0.05F;
     };
 
     glm::vec2 GetMoveIntent() const override;
 
-    std::shared_ptr<AI> m_AI = nullptr;
-
     void Update() override;
-
+    
+    std::shared_ptr<AI> m_AI = nullptr;
 private:
     // 暫存建構子傳入的參數，供後續 InitAI 使用
     std::weak_ptr<Character> m_TracePlayerTemp;

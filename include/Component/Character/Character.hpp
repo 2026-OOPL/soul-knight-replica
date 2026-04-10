@@ -2,6 +2,7 @@
 #define CHARACTER_HPP
 
 #include <functional>
+#include <glm/ext/vector_float2.hpp>
 #include <memory>
 #include <string>
 #include <vector>
@@ -78,8 +79,10 @@ protected:
     std::vector<Collision::CollisionBox> m_CollisionBoxes;
     CollisionResolver m_CollisionResolver = nullptr;
 
+    glm::vec2 m_FacingDirection = glm::vec2(1, 0);
+
 private:
-    void SetLookDirectionByMoveIntent(glm::vec2 moveIntent);
+    void UpdateFaceDirection();
     void SetSpriteTypeByMoveIntent(glm::vec2 moveIntent);
 };
 

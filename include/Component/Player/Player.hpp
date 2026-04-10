@@ -16,6 +16,8 @@ public:
     );
 
     virtual glm::vec2 GetMoveIntent() const override;
+
+    
 };
 
 #endif
