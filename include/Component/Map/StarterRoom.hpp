@@ -16,6 +16,7 @@ private:
     static DoorConfig BuildStarterDoorConfig(const DoorConfig &doorConfig);
     static WallConfig BuildStarterWallConfig(
         const DoorConfig &doorConfig,
+        RoomType roomType,
         float wallThickness
     );
 };

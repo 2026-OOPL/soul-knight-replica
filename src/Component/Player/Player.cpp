@@ -1,22 +1,7 @@
-#include <algorithm>
-#include <memory>
-#include <utility>
-
-#include "Component/Bullet.hpp"
-#include "Component/Bullets/TestBullet.hpp"
-#include "Component/Character/Character.hpp"
 #include "Util/Input.hpp"
 #include "Util/Keycode.hpp"
-#include "Util/Time.hpp"
-#include "Util/Transform.hpp"
 
 #include "Component/Player/Player.hpp"
-
-namespace {
-
-constexpr float kMaxPlayerMovementDeltaTimeMs = 50.0F; // 調整玩家移動使用的最大 dt，避免卡頓後瞬移。
-
-} // namespace
 
 Player::Player(
     const std::vector<std::string>& StandSprite,
@@ -29,26 +14,17 @@ Player::Player(
     4
 ) {
     this->m_AbsoluteTransform.translation = {0.0F, 0.0F};
-}
 
-glm::vec2 Player::GetColliderSize() {
-    return this->m_ColliderSize;
-}
-
-void Player::SetColliderSize(const glm::vec2 &colliderSize) {
-    this->m_ColliderSize = colliderSize;
-}
-
-Collision::AxisAlignedBox Player::GetCollisionBox() const {
-    return this->GetCollisionBoxAt(this->m_AbsoluteTransform.translation);
-}
-
-Collision::AxisAlignedBox Player::GetCollisionBoxAt(const glm::vec2 &coordinate) const {
-    return Collision::CollisionSystem::BuildBox(coordinate, this->m_ColliderSize);
-}
-
-void Player::SetCollisionResolver(CollisionResolver collisionResolver) {
-    this->m_CollisionResolver = std::move(collisionResolver);
+    Collision::CollisionFilter filter = this->GetCollisionFilter();
+    filter.layer = Collision::CollisionLayer::Player;
+    filter.mask =
+        Collision::ToMask(Collision::CollisionLayer::World) |
+        Collision::ToMask(Collision::CollisionLayer::Prop) |
+        Collision::ToMask(Collision::CollisionLayer::Enemy) |
+        Collision::ToMask(Collision::CollisionLayer::EnemyProjectile) |
+        Collision::ToMask(Collision::CollisionLayer::Trigger);
+    filter.blocking = true;
+    this->SetCollisionFilter(filter);
 }
 
 glm::vec2 Player::GetMoveIntent() const {
@@ -72,32 +48,4 @@ glm::vec2 Player::GetMoveIntent() const {
     }
 
     return glm::normalize(moveIntent);
-}
-
-void Player::Update() {
-    Character::Update();
-
-    const glm::vec2 moveDirection = this->GetMoveIntent();
-
-    if (moveDirection == glm::vec2(0.0F, 0.0F)) {
-        this->m_PendingMoveDelta = {0.0F, 0.0F};
-    } else {
-        const float movementDeltaTimeMs =
-            std::min(Util::Time::GetDeltaTimeMs(), kMaxPlayerMovementDeltaTimeMs);
-        const glm::vec2 frameDelta =
-            moveDirection * this->m_PlayerSpeed * movementDeltaTimeMs;
-
-        this->m_PendingMoveDelta = frameDelta;
-
-        if (this->m_CollisionResolver) {
-            const Collision::MovementResult movementResult = this->m_CollisionResolver(
-                this->GetCollisionBox(),
-                frameDelta
-            );
-
-            this->m_AbsoluteTransform.translation += movementResult.resolvedDelta;
-        } else {
-            this->m_AbsoluteTransform.translation += frameDelta;
-        }
-    }
 }

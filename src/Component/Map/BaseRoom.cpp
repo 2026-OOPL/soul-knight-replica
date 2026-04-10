@@ -1,9 +1,10 @@
+#include "Util/Image.hpp"
+
 #include "Component/Map/BaseRoom.hpp"
 
 #include "Common/Constants.hpp"
-#include "Component/Character/Character.hpp"
 #include "Component/Map/MapColliderConfig.hpp"
-#include "Util/Image.hpp"
+#include "Component/Map/BaseRoomWallLayoutConfig.hpp"
 
 namespace {
 
@@ -35,47 +36,37 @@ BaseRoom::BaseRoom(
 }
 
 void BaseRoom::Update() {
-    for (const auto &child : this->GetChildren()) {
-        const std::shared_ptr<IStateful> statefulChild =
-            std::dynamic_pointer_cast<IStateful>(child);
-        if (statefulChild != nullptr) {
-            statefulChild->Update();
-        }
-    }
 }
 
 bool BaseRoom::IsPlayerInside(const glm::vec2 &playerPos) const {
     return this->IsPointInside(playerPos);
 }
 
-const std::vector<Collision::AxisAlignedBox> &BaseRoom::GetStaticColliders() const {
-    return RectMapArea::GetStaticColliders();
-}
-
-std::vector<Collision::AxisAlignedBox> BaseRoom::GetDynamicColliders(
+std::vector<Collision::CollisionPrimitive> BaseRoom::CollectBlockingPrimitives(
     const Collision::AxisAlignedBox *ignoreOverlapBox
 ) const {
-    std::vector<Collision::AxisAlignedBox> dynamicColliders;
-    Collision::CollisionSystem collisionSystem;
+    std::vector<Collision::CollisionPrimitive> primitives =
+        RectMapArea::CollectBlockingPrimitives(ignoreOverlapBox);
 
     for (const auto &door : this->m_Doors) {
-        if (door == nullptr || door->IsOpen()) {
+        if (door == nullptr) {
             continue;
         }
 
-        const Collision::AxisAlignedBox doorBox = Collision::CollisionSystem::BuildBox(
-            door->GetColliderCenter(),
-            door->GetColliderSize()
+        std::vector<Collision::CollisionPrimitive> doorPrimitives =
+            door->CollectBlockingPrimitives(ignoreOverlapBox);
+        primitives.insert(
+            primitives.end(),
+            doorPrimitives.begin(),
+            doorPrimitives.end()
         );
-        if (ignoreOverlapBox != nullptr &&
-            collisionSystem.IsOverlapping(doorBox, *ignoreOverlapBox)) {
-            continue;
-        }
-
-        dynamicColliders.push_back(doorBox);
     }
 
-    return dynamicColliders;
+    return primitives;
+}
+
+const std::vector<Collision::AxisAlignedBox> &BaseRoom::GetStaticColliders() const {
+    return RectMapArea::GetStaticColliders();
 }
 
 const std::vector<std::shared_ptr<Door>> &BaseRoom::GetDoors() const {
@@ -92,7 +83,6 @@ void BaseRoom::AddMob(const std::shared_ptr<Character> &mob) {
     }
 
     this->m_Mobs.push_back(mob);
-    this->AddChild(mob);
 }
 
 void BaseRoom::OpenAllDoors() {
@@ -136,12 +126,14 @@ bool BaseRoom::HasPassageOnSide(DoorSide side) const {
 
 WallConfig BaseRoom::BuildWallConfigFromDoorConfig(
     const DoorConfig &doorConfig,
-    float wallThickness
+    float wallThickness,
+    RoomType roomType,
+    RoomPurpose purpose
 ) {
     WallConfig wallConfig;
     wallConfig.top.thickness = wallThickness;
     wallConfig.right.thickness = wallThickness;
-    wallConfig.bottom.thickness = wallThickness + kStarterBottomWallThicknessOffset;
+    wallConfig.bottom.thickness = wallThickness;
     wallConfig.left.thickness = wallThickness;
 
     wallConfig.top.hasOpening = doorConfig.top.hasDoor;
@@ -161,7 +153,7 @@ WallConfig BaseRoom::BuildWallConfigFromDoorConfig(
         MapColliderConfig::kVerticalDoorColliderSize.y :
         0.0F;
 
-    return wallConfig;
+    return BaseRoomWallLayoutConfig::ResolveWallConfig(wallConfig, purpose, roomType);
 }
 
 glm::vec2 BaseRoom::ResolveRoomSize(RoomType roomType) {
@@ -222,29 +214,42 @@ Door::Visuals BaseRoom::BuildVerticalDoorVisuals() {
 glm::vec2 BaseRoom::BuildDoorPosition(const DoorBuildInfo &doorInfo) const {
     const glm::vec2 roomCenter = this->GetAbsoluteTranslation();
     const glm::vec2 roomSize = this->GetAreaSize();
+    const WallSideConfig &wallSideConfig = this->GetWallSideConfig(doorInfo.side);
 
     switch (doorInfo.side) {
     case DoorSide::Top:
         return {
             roomCenter.x + doorInfo.openingOffset,
-            roomCenter.y + roomSize.y / 2.0F - doorInfo.renderSize.y / 2.0F
+            roomCenter.y +
+                roomSize.y / 2.0F -
+                doorInfo.renderSize.y / 2.0F +
+                wallSideConfig.centerOffset
         };
 
     case DoorSide::Right:
         return {
-            roomCenter.x + roomSize.x / 2.0F - doorInfo.renderSize.x / 2.0F,
+            roomCenter.x +
+                roomSize.x / 2.0F -
+                doorInfo.renderSize.x / 2.0F +
+                wallSideConfig.centerOffset,
             roomCenter.y + doorInfo.openingOffset
         };
 
     case DoorSide::Bottom:
         return {
             roomCenter.x + doorInfo.openingOffset,
-            roomCenter.y - roomSize.y / 2.0F + doorInfo.renderSize.y / 2.0F
+            roomCenter.y -
+                roomSize.y / 2.0F +
+                doorInfo.renderSize.y / 2.0F +
+                wallSideConfig.centerOffset
         };
 
     case DoorSide::Left:
         return {
-            roomCenter.x - roomSize.x / 2.0F + doorInfo.renderSize.x / 2.0F,
+            roomCenter.x -
+                roomSize.x / 2.0F +
+                doorInfo.renderSize.x / 2.0F +
+                wallSideConfig.centerOffset,
             roomCenter.y + doorInfo.openingOffset
         };
     }

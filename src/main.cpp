@@ -6,15 +6,7 @@
 
 int main(int, char**) {
     auto context = Core::Context::GetInstance();
-    App app;    
-
-    std::shared_ptr<MapGenerator> generator = std::make_shared<MapGenerator>(
-        "testaaa"
-    );
-
-    generator->Generate();
-
-    generator->m_Blueprint->OutputMapGridType();
+    App app;
     
     context->SetWindowIcon(RESOURCE_DIR"/icon.png");
 

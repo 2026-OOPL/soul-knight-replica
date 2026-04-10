@@ -18,6 +18,7 @@ public:
     RandomChoose(std::string seed) {
         std::hash<std::string> hasher;
         this->m_Seed = hasher(seed);
+        
         m_Engine = std::mt19937_64(m_Seed);
         m_Dist = std::uniform_real_distribution<float>(0.0, 1.0);
     }

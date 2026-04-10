@@ -11,7 +11,7 @@ StarterRoom::StarterRoom(
           roomType,
           RoomPurpose::STARTER,
           BuildStarterDoorConfig(doorConfig),
-          BuildStarterWallConfig(doorConfig, wallThickness)
+          BuildStarterWallConfig(doorConfig, roomType, wallThickness)
       ) {
 }
 
@@ -26,9 +26,15 @@ DoorConfig StarterRoom::BuildStarterDoorConfig(const DoorConfig &doorConfig) {
 
 WallConfig StarterRoom::BuildStarterWallConfig(
     const DoorConfig &doorConfig,
+    RoomType roomType,
     float wallThickness
 ) {
-    WallConfig wallConfig = BaseRoom::BuildWallConfigFromDoorConfig(doorConfig, wallThickness);
+    WallConfig wallConfig = BaseRoom::BuildWallConfigFromDoorConfig(
+        doorConfig,
+        wallThickness,
+        roomType,
+        RoomPurpose::STARTER
+    );
     wallConfig.top.hasOpening = doorConfig.top.hasDoor;
     wallConfig.right.hasOpening = doorConfig.right.hasDoor;
     wallConfig.bottom.hasOpening = doorConfig.bottom.hasDoor;

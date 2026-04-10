@@ -1,13 +1,77 @@
-#include "Component/Map/Gangway.hpp"
-
 #include <algorithm>
 
+#include "Component/Map/Gangway.hpp"
 #include "Component/Map/BaseRoom.hpp"
+#include "Component/Map/GangwayLayoutConfig.hpp"
 
 namespace {
 
 constexpr char kHorizontalGangwaySprite[] = RESOURCE_DIR "/Map/Gangway/Gangway_15x5.png";
 constexpr char kVerticalGangwaySprite[] = RESOURCE_DIR "/Map/Gangway/Gangway_5x15.png";
+
+float ClampThickness(float thickness) {
+    return std::max(0.0F, thickness);
+}
+
+WallConfig BuildGangwayWallConfig(const Gangway::Config &config) {
+    WallConfig wallConfig;
+    wallConfig.top.thickness = ClampThickness(config.wallThickness);
+    wallConfig.right.thickness = ClampThickness(config.wallThickness);
+    wallConfig.bottom.thickness = ClampThickness(config.wallThickness);
+    wallConfig.left.thickness = ClampThickness(config.wallThickness);
+    wallConfig.top.centerOffset = config.topWallOffset;
+    wallConfig.right.centerOffset = config.rightWallOffset;
+    wallConfig.bottom.centerOffset = config.bottomWallOffset;
+    wallConfig.left.centerOffset = config.leftWallOffset;
+
+    if (config.orientation == GangwayOrientation::Horizontal) {
+        wallConfig.left.hasOpening = true;
+        wallConfig.left.openingSize = config.width;
+        wallConfig.right.hasOpening = true;
+        wallConfig.right.openingSize = config.width;
+        return wallConfig;
+    }
+
+    wallConfig.top.hasOpening = true;
+    wallConfig.top.openingSize = config.width;
+    wallConfig.bottom.hasOpening = true;
+    wallConfig.bottom.openingSize = config.width;
+    return wallConfig;
+}
+
+glm::vec2 BuildGangwayAreaSize(const Gangway::Config &config) {
+    const WallConfig wallConfig = BuildGangwayWallConfig(config);
+    const float corridorLength = std::max(config.length, config.width);
+
+    // `width` models the clear passage opening. The blocking wall thickness
+    // should live outside that opening instead of shrinking it.
+    if (config.orientation == GangwayOrientation::Horizontal) {
+        return {
+            corridorLength,
+            config.width + wallConfig.top.thickness + wallConfig.bottom.thickness
+        };
+    }
+
+    return {
+        config.width + wallConfig.left.thickness + wallConfig.right.thickness,
+        corridorLength
+    };
+}
+
+glm::vec2 ResolveRenderSize(
+    const Gangway::Config &config,
+    const std::shared_ptr<Core::Drawable> &drawable
+) {
+    if (config.renderSize.x > 0.0F && config.renderSize.y > 0.0F) {
+        return config.renderSize;
+    }
+
+    if (drawable != nullptr) {
+        return drawable->GetSize();
+    }
+
+    return BuildGangwayAreaSize(config);
+}
 
 } // namespace
 
@@ -19,7 +83,7 @@ Gangway::Gangway(const glm::vec2 &absolutePosition, Config config)
           Gangway::BuildWallConfig(config)
       ),
       m_Orientation(config.orientation) {
-    this->m_AbsoluteTransform.scale = {1.0F, 1.0F};
+    this->SetRenderSize(ResolveRenderSize(config, this->m_Drawable));
     this->SetZIndex(-1.0F);
 }
 
@@ -65,13 +129,7 @@ GangwayOrientation Gangway::GetOrientation() const {
 }
 
 glm::vec2 Gangway::BuildAreaSize(const Config &config) {
-    const float corridorLength = std::max(config.length, config.width);
-
-    if (config.orientation == GangwayOrientation::Horizontal) {
-        return {corridorLength, config.width};
-    }
-
-    return {config.width, corridorLength};
+    return BuildGangwayAreaSize(config);
 }
 
 std::string Gangway::ResolveGangwaySprite(GangwayOrientation orientation) {
@@ -83,23 +141,5 @@ std::string Gangway::ResolveGangwaySprite(GangwayOrientation orientation) {
 }
 
 WallConfig Gangway::BuildWallConfig(const Config &config) {
-    WallConfig wallConfig;
-    wallConfig.top.thickness = config.wallThickness;
-    wallConfig.right.thickness = config.wallThickness;
-    wallConfig.bottom.thickness = config.wallThickness;
-    wallConfig.left.thickness = config.wallThickness;
-
-    if (config.orientation == GangwayOrientation::Horizontal) {
-        wallConfig.left.hasOpening = true;
-        wallConfig.left.openingSize = config.width;
-        wallConfig.right.hasOpening = true;
-        wallConfig.right.openingSize = config.width;
-        return wallConfig;
-    }
-
-    wallConfig.top.hasOpening = true;
-    wallConfig.top.openingSize = config.width;
-    wallConfig.bottom.hasOpening = true;
-    wallConfig.bottom.openingSize = config.width;
-    return wallConfig;
+    return BuildGangwayWallConfig(config);
 }

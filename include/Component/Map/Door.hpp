@@ -1,9 +1,13 @@
 #ifndef MAP_DOOR_HPP
 #define MAP_DOOR_HPP
 
-#include <glm/vec2.hpp>
 #include <memory>
+#include <vector>
 
+#include <glm/vec2.hpp>
+
+#include "Component/Collision/ICollidable.hpp"
+#include "Component/Collision/IBlockingPrimitiveSource.hpp"
 #include "Component/IStateful.hpp"
 #include "Component/Map/MapPiece.hpp"
 
@@ -22,7 +26,10 @@ enum class DoorSide {
     Left
 };
 
-class Door : public MapPiece, public IStateful {
+class Door : public MapPiece,
+             public IStateful,
+             public IBlockingPrimitiveSource,
+             public ICollidable {
 public:
     enum class State {
         Closed,
@@ -49,6 +56,12 @@ public:
     );
 
     void Update() override;
+    std::vector<Collision::CollisionPrimitive> CollectBlockingPrimitives(
+        const Collision::AxisAlignedBox *ignoreOverlapBox = nullptr
+    ) const override;
+    glm::vec2 GetCollisionOrigin() const override;
+    const std::vector<Collision::CollisionBox> &GetCollisionBoxes() const override;
+    void OnCollision(const Collision::CollisionSituation &situation) override;
 
     glm::vec2 GetAbsoluteScale() const override;
 
@@ -70,9 +83,9 @@ private:
     DoorSide m_Side;
     State m_State = State::Closed;
     glm::vec2 m_RenderSize = {1.0F, 1.0F};
-    glm::vec2 m_ColliderOffset = {0.0F, 0.0F};
     float m_OpenDelayRemainingMs = 0.0F;
     float m_BaseRotation = 0.0F;
+    std::vector<Collision::CollisionBox> m_CollisionBoxes;
 };
 
 #endif
