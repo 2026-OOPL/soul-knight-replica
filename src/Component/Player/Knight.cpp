@@ -14,5 +14,8 @@
 Knight::Knight() : Player(
     KnightPlayer::STAND_SPRITES,
     KnightPlayer::WALK_SPRITES,
-    KnightPlayer::DIE_SPRITES
+    KnightPlayer::DIE_SPRITES,
+    KnightPlayer::MAX_HEALTH,
+    KnightPlayer::MAX_SHIELD,
+    KnightPlayer::MAX_AMMO
 ) {}
