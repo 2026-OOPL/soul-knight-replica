@@ -2,6 +2,7 @@
 #define MOB_HPP
 
 #include <cstddef>
+#include <functional>
 #include <memory>
 #include <vector>
 
@@ -30,7 +31,10 @@ namespace {
 
 class GoblinGuard : public Character {
 public:
-    GoblinGuard(std::weak_ptr<Character> tracePlayer, Collision::CollisionSystem* collisionSystem) : Character(
+    GoblinGuard(
+        std::weak_ptr<Character> tracePlayer,
+        Collision::CollisionSystem* collisionSystem
+    ) : Character(
         STAND_SPRITE,
         WALK_SPRITE,
         DIE_SPRITE,
@@ -45,6 +49,7 @@ public:
     };
 
     glm::vec2 GetMoveIntent() const override;
+    glm::vec2 GetFaceDirection() const override;
 
     void Update() override;
     
@@ -53,6 +58,8 @@ private:
     // 暫存建構子傳入的參數，供後續 InitAI 使用
     std::weak_ptr<Character> m_TracePlayerTemp;
     Collision::CollisionSystem* m_CollisionSystemTemp;
+
+    glm::vec2 m_FacingDirection;
 };
 
 #endif

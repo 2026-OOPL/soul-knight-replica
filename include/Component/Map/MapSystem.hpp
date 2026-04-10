@@ -90,6 +90,8 @@ protected:
 
     std::shared_ptr<Camera> m_AttachCamera;
 
+    std::shared_ptr<Character> GetNearestMonster();
+
 private:
     void ApplyCameraRecursive(const std::shared_ptr<Util::GameObject> &object);
     void PruneDestroyedBullets();

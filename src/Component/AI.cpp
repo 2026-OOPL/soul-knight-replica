@@ -218,4 +218,6 @@ glm::vec2 AI::GetFaceDirection() {
         case Status::PURSUIT:
             return m_TracePlayer.lock()->GetAbsoluteTranslation() - m_Owner->GetAbsoluteTranslation();
     }
+
+    return glm::vec2(0.0f);
 }

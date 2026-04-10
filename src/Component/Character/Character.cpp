@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <cmath>
+#include <glm/ext/vector_float2.hpp>
 #include <utility>
 
 #include <glm/fwd.hpp>
@@ -83,12 +84,12 @@ Character::Character(
 };
 
 void Character::UpdateFaceDirection() {
-    if (m_FacingDirection.x > 0 && this->m_AbsoluteTransform.scale.x < 0) {
+    if (this->GetFaceDirection().x > 0 && this->m_AbsoluteTransform.scale.x < 0) {
         this->m_AbsoluteTransform.scale.x *= -1;
         return;
     }
 
-    if (m_FacingDirection.x < 0 && this->m_AbsoluteTransform.scale.x > 0) {
+    if (this->GetFaceDirection().x < 0 && this->m_AbsoluteTransform.scale.x > 0) {
         this->m_AbsoluteTransform.scale.x *= -1;
     }
 }
@@ -114,10 +115,6 @@ void Character::SetWeapon(std::shared_ptr<Weapon> weapon) {
     this->m_Weapon = weapon;
 }
 
-glm::vec2 Character::GetMoveIntent() const {
-    return glm::vec2(0, 0);
-}
-
 void Character::Update() {
     const glm::vec2 moveIntent = this->GetMoveIntent();
 
@@ -126,10 +123,14 @@ void Character::Update() {
         m_Weapon->SetAnchorPoint(this->GetAbsoluteTranslation());
     }
     
-    m_Weapon->SetFacingDirection(m_FacingDirection);
+    m_Weapon->SetFacingDirection(this->GetFaceDirection());
 
     this->SetSpriteTypeByMoveIntent(moveIntent);
     this->UpdateFaceDirection();
+
+    if (moveIntent != glm::vec2(0, 0)) {
+        m_LastMomentum = moveIntent;
+    }
 
     if (moveIntent == glm::vec2(0.0F, 0.0F)) {
         return;
