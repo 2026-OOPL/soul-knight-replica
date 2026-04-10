@@ -1,6 +1,7 @@
 #ifndef PLAYER_PLAYER_HPP
 #define PLAYER_PLAYER_HPP
 
+#include <nlohmann/detail/iterators/primitive_iterator.hpp>
 #include <vector>
 
 #include <glm/vec2.hpp>

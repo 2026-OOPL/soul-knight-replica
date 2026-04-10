@@ -17,7 +17,7 @@ constexpr float kBackgroundZIndex = 100.0F;
 constexpr float kTextZIndex = 101.0F;
 constexpr int kFontSize = 8;
 
-const std::string kPlayUiTexture = RESOURCE_DIR "/UI/MainMenu/playUI.png";
+const std::string kPlayUiTexture = RESOURCE_DIR "/UI/Gameplay/panel.png";
 const std::string kFontPath = RESOURCE_DIR "/Font/Cubic-Font/Cubic_11.ttf";
 
 const Util::Color kHealthTextColor = Util::Color(255, 248, 231);

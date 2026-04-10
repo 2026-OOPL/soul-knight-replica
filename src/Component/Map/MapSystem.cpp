@@ -1,8 +1,13 @@
 #include <cmath>
+#include <glm/geometric.hpp>
+#include <iterator>
+#include <memory>
 #include <string>
 #include <unordered_set>
+#include <vector>
 
 #include "Component/Map/MapSystem.hpp"
+#include "Component/Character/Character.hpp"
 #include "Component/IStateful.hpp"
 #include "Component/Map/Door.hpp"
 #include "Util/Input.hpp"
@@ -728,4 +733,31 @@ void MapSystem::PruneDefeatedMobs() {
     for (const auto &mob : defeatedMobs) {
         this->RemoveMob(mob);
     }
+}
+
+std::shared_ptr<Character> MapSystem::GetNearestMonster() {
+    if (this->m_World.GetPlayers().empty()) {
+        return nullptr;
+    }
+
+    std::shared_ptr<Character> player = this->m_World.GetPlayers().front();
+
+    float minDistance = std::numeric_limits<float>::max();
+    std::shared_ptr<Character> nearestMonster = nullptr;
+
+    for (const auto &i : this->m_World.GetMobs()) {
+        if (i == nullptr) {
+            continue;
+        }
+
+        const float dist =
+            glm::distance(i->GetAbsoluteTranslation(), player->GetAbsoluteTranslation());
+
+        if (dist < minDistance) {
+            minDistance = dist;
+            nearestMonster = i;
+        }
+    }
+
+    return nearestMonster;
 }

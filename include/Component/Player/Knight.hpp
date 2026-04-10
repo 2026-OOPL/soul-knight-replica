@@ -52,8 +52,13 @@ const std::vector<std::string> DIE_SPRITES = {
 
 class Knight : public Player {
 public:
-    Knight();
+    Knight(std::function<std::weak_ptr<Character>()> GetNearestMob);
 
+    glm::vec2 GetFaceDirection() const override;
+    
+private:
+    
+    std::function<std::weak_ptr<Character>()> m_GetNearestMob;
 };
 
 #endif

@@ -35,7 +35,10 @@ MapTest::MapTest()
         }
     }
 
-    this->m_MainPlayer = std::make_shared<Knight>();
+    this->m_MainPlayer = std::make_shared<Knight>(
+        [this] () {return this->GetNearestMonster();}
+    );
+    
     if (this->m_MainRoom != nullptr) {
         this->m_MainPlayer->SetAbsoluteTranslation(glm::vec2(0.0F, 0.0F));
     }

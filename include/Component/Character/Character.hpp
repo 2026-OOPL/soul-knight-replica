@@ -81,8 +81,11 @@ public:
     Collision::AxisAlignedBox GetCollisionBoxAt(const glm::vec2 &coordinate) const;
     void SetCollisionResolver(CollisionResolver collisionResolver);
 
-    virtual glm::vec2 GetMoveIntent() const;
+    virtual glm::vec2 GetMoveIntent() const = 0;
+    virtual glm::vec2 GetFaceDirection() const = 0;
 
+    glm::vec2 m_LastMomentum;
+    
 protected:
     virtual bool CanBeDamagedBy(const Bullet &bullet) const;
 
@@ -92,8 +95,6 @@ protected:
     
     float m_PlayerSpeed = 0.15F;
 
-    glm::vec2 m_LastMomentum;
-
     std::shared_ptr<Weapon> m_Weapon;
  
     std::shared_ptr<Util::Animation> m_DieAnimation;
@@ -102,9 +103,8 @@ protected:
     std::vector<Collision::CollisionBox> m_CollisionBoxes;
     CollisionResolver m_CollisionResolver = nullptr;
 
-    glm::vec2 m_FacingDirection = glm::vec2(1, 0);
-
 private:
+
     void UpdateFaceDirection();
     void SetSpriteTypeByMoveIntent(glm::vec2 moveIntent);
 };
