@@ -9,6 +9,7 @@
 #include "Component/Camera/Curve.hpp"
 #include "Component/Camera/TraceCamera.hpp"
 #include "Component/Player/Knight.hpp"
+#include "Component/UI/PlayUI.hpp"
 #include "Component/Weapon.hpp"
 #include "Generator/MapGenerator.hpp"
 #include "Scene/MapTest.hpp"
@@ -34,7 +35,10 @@ MapTest::MapTest()
         }
     }
 
-    this->m_MainPlayer = std::make_shared<Knight>();
+    this->m_MainPlayer = std::make_shared<Knight>(
+        [this] () {return this->GetNearestMonster();}
+    );
+    
     if (this->m_MainRoom != nullptr) {
         this->m_MainPlayer->SetAbsoluteTranslation(glm::vec2(0.0F, 0.0F));
     }
@@ -49,20 +53,23 @@ MapTest::MapTest()
 
     this->m_MainPlayer->SetAbsoluteScale({0.75F, 0.75F});
     this->AddPlayer(this->m_MainPlayer);
+    this->m_PlayUI = std::make_shared<PlayUI>(
+        [weakPlayer = std::weak_ptr<Player>(this->m_MainPlayer)]() {
+            const std::shared_ptr<Player> player = weakPlayer.lock();
+            if (player == nullptr) {
+                return PlayerHudState{};
+            }
+
+            return player->GetHudState();
+        }
+    );
+    this->AddChild(this->m_PlayUI);
 
     this->m_AttachCamera = std::make_shared<TraceCamera>(
         this->m_MainPlayer,
         std::make_shared<EaseOutQubicCurve>()
     );
     this->m_AttachCamera->SetScale({2.5F, 2.5F});
-
-    std::shared_ptr<GoblinGuard> testMob = std::make_shared<GoblinGuard>(
-        std::weak_ptr<Character>(this->m_MainPlayer),
-        &this->m_CollisionSystem
-    );
-
-    this->AddMob(testMob);
-
 }
 
 MapTest::~MapTest() = default;

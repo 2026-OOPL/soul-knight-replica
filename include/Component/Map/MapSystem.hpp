@@ -14,6 +14,7 @@
 #include "Component/Character/Character.hpp"
 #include "Component/Collision/CollisionQueryService.hpp"
 #include "Component/Collision/CollisionSystem.hpp"
+#include "Component/Debug/CollisionDebugOverlay.hpp"
 #include "Component/Map/BaseRoom.hpp"
 #include "Component/Map/Gangway.hpp"
 #include "Component/Map/RoomTransitionSystem.hpp"
@@ -70,6 +71,8 @@ public:
     void RemoveMob(std::shared_ptr<Character> mob);
     const std::vector<std::shared_ptr<Character>>& GetMob() const;
 
+    Collision::CollisionSystem* GetCollisionSystem() { return &this->m_CollisionSystem; }
+
 protected:
     std::vector<Collision::CollisionPrimitive> CollectCurrentRoomCollisionPrimitives(
         const ICollidable *ignoreBody = nullptr
@@ -90,9 +93,18 @@ protected:
 
     std::shared_ptr<Camera> m_AttachCamera;
 
+    std::shared_ptr<Character> GetNearestMonster();
+
 private:
     void ApplyCameraRecursive(const std::shared_ptr<Util::GameObject> &object);
+    CollisionDebugCameraState CaptureCollisionDebugCameraState() const;
+    std::vector<CollisionDebugVisualEntry> BuildCollisionDebugVisualEntries() const;
+    std::vector<CollisionDebugEntry> BuildCollisionDebugEntries() const;
     void PruneDestroyedBullets();
+    void PruneDefeatedMobs();
+
+    std::shared_ptr<CollisionDebugOverlay> m_CollisionDebugOverlay;
+    bool m_ShowCollisionDebug = false;
 };
 
 #endif

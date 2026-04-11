@@ -19,6 +19,10 @@
 
 namespace KnightPlayer {
 
+constexpr int MAX_HEALTH = 10;
+constexpr int MAX_SHIELD = 5;
+constexpr int MAX_AMMO = 100;
+
 const std::vector<std::string> WALK_SPRITES = {
     std::string(RESOURCE_DIR) + "/Character/Knight/knight_walk_0.png",
     std::string(RESOURCE_DIR) + "/Character/Knight/knight_walk_1.png",
@@ -48,8 +52,13 @@ const std::vector<std::string> DIE_SPRITES = {
 
 class Knight : public Player {
 public:
-    Knight();
+    Knight(std::function<std::weak_ptr<Character>()> GetNearestMob);
 
+    glm::vec2 GetFaceDirection() const override;
+    
+private:
+    
+    std::function<std::weak_ptr<Character>()> m_GetNearestMob;
 };
 
 #endif

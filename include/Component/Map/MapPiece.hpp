@@ -32,6 +32,12 @@ public:
     }
 
     Util::Transform GetObjectTransform() const override;
+    const std::shared_ptr<Core::Drawable> &GetDebugDrawable() const {
+        return this->m_Drawable;
+    }
+    bool IsDebugVisible() const {
+        return this->m_Visible;
+    }
 
 private:
     std::shared_ptr<Util::Image> m_Image;

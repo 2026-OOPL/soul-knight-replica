@@ -104,6 +104,10 @@ mono_crash.*
 
 # Build results
 [Dd]ebug/
+!include/Component/Debug/
+!include/Component/Debug/**
+!src/Component/Debug/
+!src/Component/Debug/**
 [Dd]ebugPublic/
 [Rr]elease/
 [Rr]eleases/

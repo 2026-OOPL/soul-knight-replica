@@ -11,19 +11,19 @@
 #include "Component/Player/Player.hpp"
 #include "Util/Time.hpp"
 
-namespace {
-
 enum class Status {
     WANDER, 
     PURSUIT,
     STOPANDATTACK
 };
 
-}
-
 class AI : public IStateful {
 public:
-    AI(Character* owner, std::weak_ptr<Character> target, Collision::CollisionSystem* collision) {
+    AI(
+        Character* owner,
+        std::weak_ptr<Character> target,
+        Collision::CollisionSystem* collision
+    ) {
       this->m_Owner = owner;
       this->m_TracePlayer = target;
       this->m_CollisionSystem = collision;
