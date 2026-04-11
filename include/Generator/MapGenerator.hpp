@@ -20,6 +20,28 @@ enum class RoomPurpose;
 enum class Direction;
 enum class GeneratePolicy;
 
+enum class MonsterType {
+    GOBLIN_GUARD
+};
+
+enum class ObstacleType {
+    WOODEN_BOX
+};
+
+struct SpawnInfo {
+    int type; // 可以強制轉型為 MonsterType 或 ObstacleType
+
+    glm::vec2 localPosition; // 相對於房間中心的座標
+};
+
+struct MonsterWave {
+    MonsterWave(std::vector<SpawnInfo> monsters) {
+        this->monsters = monsters;
+    }
+    
+    std::vector<SpawnInfo> monsters;
+};
+
 struct RoomInfo {
 public:
     RoomInfo (RoomType type, RoomPurpose roomPurpose) {
@@ -29,8 +51,10 @@ public:
     
     // Which of the size is used for this room
     RoomType roomType;
-
     RoomPurpose roomPurpose;
+
+    std::vector<SpawnInfo> obstacles;
+    std::vector<MonsterWave> monsterWaves;
 };
 
 class MapGenerator {
@@ -55,6 +79,7 @@ protected:
     bool FightChamberCooridinateValidator(glm::ivec2 cooridinate);
     bool RewardChamberCooridinateValidator(glm::ivec2 cooridinate);
     void BuildRuntimeMap();
+    void PopulateRoomContents(); // 新增：用來填充房間內容的方法
 
 private:
     glm::ivec2 m_MapGridSize;

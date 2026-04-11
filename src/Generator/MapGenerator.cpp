@@ -5,6 +5,7 @@
 
 #include <glm/fwd.hpp>
 #include <glm/vec2.hpp>
+#include <glm/geometric.hpp>
 
 #include "Common/Constants.hpp"
 #include "Common/Enums.hpp"
@@ -59,7 +60,7 @@ std::shared_ptr<BaseRoom> BuildRoom(
         return std::make_shared<FightRoom>(
             absolutePosition,
             doorConfig,
-            info->roomType,
+            info,
             MapColliderConfig::kDefaultWallThickness
         );
 
@@ -230,6 +231,8 @@ void MapGenerator::Generate() {
         this->GetStarterChamberCooridinate(),
         starterRoom
     );
+
+    this->PopulateRoomContents();
 }
 
 glm::vec2 MapGenerator::GetStarterChamberCooridinate() {
@@ -296,6 +299,61 @@ GeneratePolicy MapGenerator::GetPortalChamberGenPolicy() {
     return GeneratePolicy::TOP_LEFT;
 }
 
+void MapGenerator::PopulateRoomContents() {
+    // 遍歷所有已生成的房間
+    for (glm::ivec2 coord : this->m_Blueprint->GetAllChamberCooirdinate()) {
+        auto info = this->m_Blueprint->GetElementByCooridinate(coord);
+        if (info == nullptr) continue;
+
+        // 只針對戰鬥房生成波數
+        if (info->roomPurpose == RoomPurpose::FIGHTING) {
+            // 先隨機生成 0 到 4 個箱子障礙物，才能知道怪物該避開哪裡
+            int boxCount = this->m_RandomChoose->GetInteger(0, 4);
+            for (int i = 0; i < boxCount; ++i) {
+                float posX = this->m_RandomChoose->GetFloat(-200.0F, 200.0F);
+                float posY = this->m_RandomChoose->GetFloat(-200.0F, 200.0F);
+                info->obstacles.push_back({static_cast<int>(ObstacleType::WOODEN_BOX), glm::vec2(posX, posY)});
+            }
+
+            int waveCount = this->m_RandomChoose->GetInteger(1, 3); // 隨機 1 到 3 波
+            const float safeDistance = 60.0F; // 怪物與箱子之間的最短安全距離 (可依照你的素材大小調整)
+            
+            for (int i = 0; i < waveCount; ++i) {
+                std::vector<SpawnInfo> wave;
+                int monsterCount = this->m_RandomChoose->GetInteger(2, 5); // 每波 2 到 5 隻
+
+                for (int j = 0; j < monsterCount; ++j) {
+                    glm::vec2 spawnPos;
+                    bool isValid = false;
+
+                    // 嘗試產生相對於房間中心的隨機位置，並檢查是否與箱子重疊 (最多嘗試 10 次避免無窮迴圈)
+                    for (int attempt = 0; attempt < 10; ++attempt) {
+                        float posX = this->m_RandomChoose->GetFloat(-150.0F, 150.0F);
+                        float posY = this->m_RandomChoose->GetFloat(-150.0F, 150.0F);
+                        spawnPos = glm::vec2(posX, posY);
+                        
+                        isValid = true;
+                        for (const auto& obs : info->obstacles) {
+                            if (glm::distance(spawnPos, obs.localPosition) < safeDistance) {
+                                isValid = false;
+                                break;
+                            }
+                        }
+                        
+                        if (isValid) {
+                            break; // 找到沒和箱子重疊的位置
+                        }
+                    }
+                    
+                    wave.push_back({static_cast<int>(MonsterType::GOBLIN_GUARD), spawnPos});
+                }
+                
+                info->monsterWaves.push_back(MonsterWave(wave));
+            }
+        }
+    }
+}
+
 void MapGenerator::BuildRuntimeMap() {
     if (this->m_RuntimeMapBuilt) {
         return;
@@ -323,6 +381,7 @@ void MapGenerator::BuildRuntimeMap() {
 
             const std::shared_ptr<BaseRoom> room =
                 BuildRoom(absolutePosition, info, doorConfig);
+            
             if (room == nullptr) {
                 continue;
             }

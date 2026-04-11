@@ -101,11 +101,9 @@ void BaseRoom::CloseAllDoors() {
     }
 }
 
-void BaseRoom::OnPlayerEnter() {
-}
+void BaseRoom::OnPlayerEnter() {}
 
-void BaseRoom::OnPlayerLeave() {
-}
+void BaseRoom::OnPlayerLeave() {}
 
 glm::vec2 BaseRoom::GetRoomSize() const {
     return this->GetAreaSize();

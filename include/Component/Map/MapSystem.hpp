@@ -70,6 +70,8 @@ public:
     void RemoveMob(std::shared_ptr<Character> mob);
     const std::vector<std::shared_ptr<Character>>& GetMob() const;
 
+    Collision::CollisionSystem* GetCollisionSystem() { return &this->m_CollisionSystem; }
+
 protected:
     std::vector<Collision::CollisionPrimitive> CollectCurrentRoomCollisionPrimitives(
         const ICollidable *ignoreBody = nullptr
