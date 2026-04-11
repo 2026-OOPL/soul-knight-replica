@@ -72,8 +72,6 @@ public:
     bool IsOpen() const; 
     State GetState() const; 
     DoorSide GetSide() const; 
-    void SetColliderOffset(const glm::vec2 &colliderOffset);
-    glm::vec2 GetColliderCenter() const;
 
 private:
     void ApplyDrawable(const std::shared_ptr<Core::Drawable> &drawable);
