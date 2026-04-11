@@ -72,6 +72,7 @@ protected:
     glm::vec2 GetStarterChamberCooridinate();
     glm::vec2 GetFightingChamberStartCooridinate();
     GeneratePolicy GetPortalChamberGenPolicy();
+    glm::vec2 GetRandomPositionInChamber(RoomType type);
 
     std::shared_ptr<GenChamber> m_GenChamber;
     std::shared_ptr<RandomChoose> m_RandomChoose;

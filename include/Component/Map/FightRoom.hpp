@@ -11,7 +11,8 @@
 enum class WaveStatus {
     IDLE,
     FIGHTING,
-    CLEAR
+    WAVE_CLEAR,
+    FULL_CLEAR
 };
 
 class FightRoom : public BaseRoom {

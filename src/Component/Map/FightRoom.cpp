@@ -52,22 +52,36 @@ void FightRoom::SetMapSystem(MapSystem* system) {
 }
 
 void FightRoom::Update() {
-    if (!this->IsRoomCleared()) {
-        switch (m_WaveStatus) {
-            case WaveStatus::IDLE:
-                if (m_PlayerInside) {
-                    this->StartNextMonsterWave();
-                }
-                break;
+    if (! m_PlayerInside) {
+        return;
+    }
 
-            case WaveStatus::FIGHTING:
+    switch (m_WaveStatus) {
+        case WaveStatus::IDLE:
+            this->CloseAllDoors();
+            this->StartNextMonsterWave();
+            m_WaveStatus = WaveStatus::FIGHTING;
+            break;
 
-                break;
-            
-            case WaveStatus::CLEAR:
-                break;
+        case WaveStatus::FIGHTING:
+            if (this->IsWaveCleared()) {
+                m_WaveStatus = WaveStatus::WAVE_CLEAR;
+                this->StartNextMonsterWave();
+            }
+            break;
+        
+        case WaveStatus::WAVE_CLEAR:
+            if (this->m_CompletedWave <= m_MaxMobWave) {
+                this->StartNextMonsterWave();
+                m_WaveStatus = WaveStatus::FIGHTING;
+            } else {
+                m_WaveStatus = WaveStatus::FULL_CLEAR;
+            }
+            break;
 
-        }
+        case WaveStatus::FULL_CLEAR:
+            this->OpenAllDoors();
+            break;
     }
     
     BaseRoom::Update();
@@ -94,7 +108,7 @@ void FightRoom::StartNextMonsterWave() {
 
     std::weak_ptr<Character> target;
 
-    if (!m_MapSystem->GetPlayers().empty()) {
+    if (m_MapSystem->GetPlayers().empty()) {
         LOG_WARN("Failed to start next wave, target player not found.");
         return;
     }

@@ -58,14 +58,6 @@ MapTest::MapTest()
         std::make_shared<EaseOutQubicCurve>()
     );
     this->m_AttachCamera->SetScale({2.5F, 2.5F});
-
-    std::shared_ptr<GoblinGuard> testMob = std::make_shared<GoblinGuard>(
-        std::weak_ptr<Character>(this->m_MainPlayer),
-        &this->m_CollisionSystem
-    );
-
-    this->AddMob(testMob);
-
 }
 
 MapTest::~MapTest() = default;

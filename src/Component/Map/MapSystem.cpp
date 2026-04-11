@@ -8,6 +8,7 @@
 #include "Component/Map/MapSystem.hpp"
 #include "Component/Character/Character.hpp"
 #include "Component/IStateful.hpp"
+#include "Component/Map/FightRoom.hpp"
 
 namespace {
 
@@ -119,6 +120,12 @@ std::shared_ptr<BaseRoom> MapSystem::GetCurrentRoom() const {
 void MapSystem::AddRoom(const std::shared_ptr<BaseRoom> &room) {
     if (room == nullptr) {
         return;
+    }
+
+    std::shared_ptr<FightRoom> fightRoom = std::dynamic_pointer_cast<FightRoom>(room);
+    if (fightRoom != nullptr) {
+        // FightRoom requires pointer of map system to spawn waves
+        fightRoom->SetMapSystem(this);
     }
 
     this->m_World.AddRoom(room);

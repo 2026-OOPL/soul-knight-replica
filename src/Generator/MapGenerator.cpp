@@ -1,5 +1,8 @@
 #include <cmath>
+#include <exception>
+#include <glm/ext/vector_float2.hpp>
 #include <memory>
+#include <stdexcept>
 #include <unordered_map>
 #include <vector>
 
@@ -299,6 +302,49 @@ GeneratePolicy MapGenerator::GetPortalChamberGenPolicy() {
     return GeneratePolicy::TOP_LEFT;
 }
 
+glm::vec2 MapGenerator::GetRandomPositionInChamber(RoomType type) {
+    int widthRadius, heightRadius;
+
+    switch (type) {
+        case RoomType::ROOM_13_13:
+            widthRadius = 6;
+            heightRadius = 6;
+            break;
+
+        case RoomType::ROOM_15_15:
+            widthRadius = 7;
+            heightRadius = 7;
+            break;
+
+        case RoomType::ROOM_17_17:
+            widthRadius = 8;
+            heightRadius = 8;
+            break;
+
+        case RoomType::ROOM_17_23:
+            widthRadius = 8;
+            heightRadius = 11;
+            break;
+
+        case RoomType::ROOM_23_17:
+            widthRadius = 11;
+            heightRadius = 8;
+            break;
+        
+        default:
+            throw std::runtime_error("Invalid room type");
+    }
+
+    // Safe margin to prevent entity from stucking in the wall
+    widthRadius -= 1;
+    heightRadius -= 1;
+
+    return glm::vec2(
+        this->m_RandomChoose->GetFloat(-widthRadius*MAP_PIXEL_PER_BLOCK, widthRadius*MAP_PIXEL_PER_BLOCK),
+        this->m_RandomChoose->GetFloat(-heightRadius*MAP_PIXEL_PER_BLOCK, heightRadius*MAP_PIXEL_PER_BLOCK)
+    );
+} 
+
 void MapGenerator::PopulateRoomContents() {
     // 遍歷所有已生成的房間
     for (glm::ivec2 coord : this->m_Blueprint->GetAllChamberCooirdinate()) {
@@ -309,10 +355,10 @@ void MapGenerator::PopulateRoomContents() {
         if (info->roomPurpose == RoomPurpose::FIGHTING) {
             // 先隨機生成 0 到 4 個箱子障礙物，才能知道怪物該避開哪裡
             int boxCount = this->m_RandomChoose->GetInteger(0, 4);
+            
             for (int i = 0; i < boxCount; ++i) {
-                float posX = this->m_RandomChoose->GetFloat(-200.0F, 200.0F);
-                float posY = this->m_RandomChoose->GetFloat(-200.0F, 200.0F);
-                info->obstacles.push_back({static_cast<int>(ObstacleType::WOODEN_BOX), glm::vec2(posX, posY)});
+                glm::vec2 pos = this->GetRandomPositionInChamber(info->roomType);
+                info->obstacles.push_back({static_cast<int>(ObstacleType::WOODEN_BOX), pos});
             }
 
             int waveCount = this->m_RandomChoose->GetInteger(1, 3); // 隨機 1 到 3 波
@@ -328,9 +374,7 @@ void MapGenerator::PopulateRoomContents() {
 
                     // 嘗試產生相對於房間中心的隨機位置，並檢查是否與箱子重疊 (最多嘗試 10 次避免無窮迴圈)
                     for (int attempt = 0; attempt < 10; ++attempt) {
-                        float posX = this->m_RandomChoose->GetFloat(-150.0F, 150.0F);
-                        float posY = this->m_RandomChoose->GetFloat(-150.0F, 150.0F);
-                        spawnPos = glm::vec2(posX, posY);
+                        spawnPos = this->GetRandomPositionInChamber(info->roomType);
                         
                         isValid = true;
                         for (const auto& obs : info->obstacles) {

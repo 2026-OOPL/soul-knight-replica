@@ -26,10 +26,14 @@ Knight::Knight(
 glm::vec2 Knight::GetFaceDirection() const {
     std::shared_ptr<Character> mob = m_GetNearestMob().lock();
 
+    if (mob == nullptr) {
+        return m_LastMomentum;
+    }
+
     glm::vec2 mobPosition = mob->GetAbsoluteTranslation();
     glm::vec2 playerPosition = this->GetAbsoluteTranslation();
 
-    if (glm::distance(mobPosition, playerPosition) > 120) {
+    if (glm::distance(mobPosition, playerPosition) > 180) {
         return m_LastMomentum;
     }
     
