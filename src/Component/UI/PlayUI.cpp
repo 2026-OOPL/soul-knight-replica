@@ -36,6 +36,10 @@ std::string FormatValueText(int current, int maximum) {
     return std::to_string(current) + "/" + std::to_string(maximum);
 }
 
+std::string FormatLabeledValueText(const std::string &label, int current, int maximum) {
+    return label + " " + FormatValueText(current, maximum);
+}
+
 } // namespace
 
 PlayUI::PlayUI(HudStateProvider hudStateProvider)
@@ -48,21 +52,21 @@ PlayUI::PlayUI(HudStateProvider hudStateProvider)
     this->m_HealthText = std::make_shared<Util::Text>(
         kFontPath,
         kFontSize,
-        "0/0",
+        "生命 0/0",
         kHealthTextColor,
         false
     );
     this->m_ShieldText = std::make_shared<Util::Text>(
         kFontPath,
         kFontSize,
-        "0/0",
+        "護盾 0/0",
         kShieldTextColor,
         false
     );
     this->m_AmmoText = std::make_shared<Util::Text>(
         kFontPath,
         kFontSize,
-        "Ammo 0/0",
+        "能量 0/0",
         kAmmoTextColor,
         false
     );
@@ -134,10 +138,14 @@ void PlayUI::SyncHudState() {
         return;
     }
 
-    this->m_HealthText->SetText(FormatValueText(state.hp, state.maxHp));
-    this->m_ShieldText->SetText(FormatValueText(state.shield, state.maxShield));
+    this->m_HealthText->SetText(
+        FormatLabeledValueText("生命", state.hp, state.maxHp)
+    );
+    this->m_ShieldText->SetText(
+        FormatLabeledValueText("護盾", state.shield, state.maxShield)
+    );
     this->m_AmmoText->SetText(
-        "Ammo " + FormatValueText(state.ammo, state.maxAmmo)
+        FormatLabeledValueText("能量", state.ammo, state.maxAmmo)
     );
 
     this->m_LastHudState = state;

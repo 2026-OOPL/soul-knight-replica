@@ -160,7 +160,7 @@ PlayerHudState Player::GetHudState() const {
 
 void Player::BindWeaponAmmoConsumer() {
     if (this->m_Weapon == nullptr) {
-        return;
+        return;\
     }
 
     this->m_Weapon->SetAmmoConsumer(
