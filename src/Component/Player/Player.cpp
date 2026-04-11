@@ -49,3 +49,108 @@ glm::vec2 Player::GetMoveIntent() const {
 
     return glm::normalize(moveIntent);
 }
+
+void Player::SetWeapon(std::shared_ptr<Weapon> weapon) {
+    if (this->m_Weapon != nullptr) {
+        this->m_Weapon->SetAmmoConsumer(nullptr);
+    }
+
+    Character::SetWeapon(std::move(weapon));
+    this->BindWeaponAmmoConsumer();
+}
+
+void Player::ApplyDamage(int damage) {
+    if (damage <= 0) {
+        return;
+    }
+
+    const int shieldDamage = std::min(this->m_CurrentShield, damage);
+    this->SetCurrentShield(this->m_CurrentShield - shieldDamage);
+    Character::ApplyDamage(damage - shieldDamage);
+}
+
+int Player::GetCurrentShield() const {
+    return this->m_CurrentShield;
+}
+
+int Player::GetMaxShield() const {
+    return this->m_MaxShield;
+}
+
+void Player::SetCurrentShield(int shield) {
+    this->m_CurrentShield = std::clamp(shield, 0, this->m_MaxShield);
+}
+
+void Player::SetMaxShield(int maxShield) {
+    this->m_MaxShield = std::max(0, maxShield);
+    this->m_CurrentShield = std::clamp(this->m_CurrentShield, 0, this->m_MaxShield);
+}
+
+void Player::RestoreShield(int amount) {
+    if (amount <= 0) {
+        return;
+    }
+
+    this->SetCurrentShield(this->m_CurrentShield + amount);
+}
+
+int Player::GetCurrentAmmo() const {
+    return this->m_CurrentAmmo;
+}
+
+int Player::GetMaxAmmo() const {
+    return this->m_MaxAmmo;
+}
+
+void Player::SetCurrentAmmo(int ammo) {
+    this->m_CurrentAmmo = std::clamp(ammo, 0, this->m_MaxAmmo);
+}
+
+void Player::SetMaxAmmo(int maxAmmo) {
+    this->m_MaxAmmo = std::max(0, maxAmmo);
+    this->m_CurrentAmmo = std::clamp(this->m_CurrentAmmo, 0, this->m_MaxAmmo);
+}
+
+bool Player::TryConsumeAmmo(int amount) {
+    if (amount <= 0) {
+        return true;
+    }
+
+    if (this->m_CurrentAmmo < amount) {
+        return false;
+    }
+
+    this->m_CurrentAmmo -= amount;
+    return true;
+}
+
+void Player::RecoverAmmo(int amount) {
+    if (amount <= 0) {
+        return;
+    }
+
+    this->SetCurrentAmmo(this->m_CurrentAmmo + amount);
+}
+
+PlayerHudState Player::GetHudState() const {
+    return {
+        this->GetCurrentHealth(),
+        this->GetMaxHealth(),
+        this->GetCurrentShield(),
+        this->GetMaxShield(),
+        this->GetCurrentAmmo(),
+        this->GetMaxAmmo()
+    };
+}
+
+void Player::BindWeaponAmmoConsumer() {
+    if (this->m_Weapon == nullptr) {
+        return;\
+    }
+
+    this->m_Weapon->SetAmmoConsumer(
+        [this](int amount) {
+            return this->TryConsumeAmmo(amount);
+        }
+    );
+}
