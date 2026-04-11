@@ -9,7 +9,6 @@
 #include "Util/Animation.hpp"
 #include "Util/Time.hpp"
 
-#include "Component/Bullet.hpp"
 #include "Component/Character/Character.hpp"
 #include "Component/Collision/CollisionSystem.hpp"
 #include "Component/Weapons/BadPistol.hpp"
@@ -52,8 +51,10 @@ Character::Character(
     this->m_DieAnimation = DieAnimation;
     this->m_StandAnimation = StandAnimation;
 
+    this->m_Weapon = std::make_shared<BadPistol>();
     this->m_CollisionBoxes.push_back(BuildDefaultCharacterBodyBox());
-    this->SetWeapon(std::make_shared<BadPistol>());
+
+    this->AddChild(m_Weapon);
     this->SetDrawable(this->m_StandAnimation);
 };
 
@@ -75,8 +76,10 @@ Character::Character(
         StandSprite, true, 20, true, 0, false
     );
 
+    this->m_Weapon = std::make_shared<BadPistol>();
     this->m_CollisionBoxes.push_back(BuildDefaultCharacterBodyBox());
-    this->SetWeapon(std::make_shared<BadPistol>());
+
+    this->AddChild(m_Weapon);
     this->SetDrawable(this->m_StandAnimation);
 };
 
@@ -109,77 +112,7 @@ std::shared_ptr<Weapon> Character::GetWeapon() {
 }
 
 void Character::SetWeapon(std::shared_ptr<Weapon> weapon) {
-    if (this->m_Weapon == weapon) {
-        return;
-    }
-
-    if (this->m_Weapon != nullptr) {
-        this->RemoveChild(this->m_Weapon);
-    }
-
-    this->m_Weapon = std::move(weapon);
-
-    if (this->m_Weapon != nullptr) {
-        this->m_Weapon->SetProjectileFaction(this->m_Faction);
-        this->AddChild(this->m_Weapon);
-    }
-}
-
-int Character::GetCurrentHealth() const {
-    return this->m_CurrentHealth;
-}
-
-int Character::GetMaxHealth() const {
-    return this->m_MaxHealth;
-}
-
-void Character::SetCurrentHealth(int health) {
-    this->m_CurrentHealth = std::clamp(health, 0, this->m_MaxHealth);
-}
-
-void Character::SetMaxHealth(int maxHealth) {
-    this->m_MaxHealth = std::max(0, maxHealth);
-    this->m_CurrentHealth = std::clamp(this->m_CurrentHealth, 0, this->m_MaxHealth);
-}
-
-CombatFaction Character::GetFaction() const {
-    return this->m_Faction;
-}
-
-void Character::SetFaction(CombatFaction faction) {
-    this->m_Faction = faction;
-
-    if (this->m_Weapon != nullptr) {
-        this->m_Weapon->SetProjectileFaction(this->m_Faction);
-    }
-}
-
-void Character::ApplyDamage(int damage) {
-    if (damage <= 0) {
-        return;
-    }
-
-    this->SetCurrentHealth(this->m_CurrentHealth - damage);
-}
-
-void Character::Heal(int amount) {
-    if (amount <= 0) {
-        return;
-    }
-
-    this->SetCurrentHealth(this->m_CurrentHealth + amount);
-}
-
-bool Character::IsDead() const {
-    return this->m_CurrentHealth <= 0;
-}
-
-bool Character::CanBeDamagedBy(const Bullet &bullet) const {
-    if (bullet.GetFaction() == CombatFaction::Neutral) {
-        return false;
-    }
-
-    return bullet.GetFaction() != this->m_Faction;
+    this->m_Weapon = weapon;
 }
 
 void Character::Update() {
@@ -227,20 +160,7 @@ const std::vector<Collision::CollisionBox> &Character::GetCollisionBoxes() const
 }
 
 void Character::OnCollision(const Collision::CollisionSituation &situation) {
-    if (this->IsDead() || situation.kind == Collision::CollisionSituationKind::Trigger) {
-        return;
-    }
-
-    Bullet *bullet = dynamic_cast<Bullet *>(situation.other);
-    if (bullet == nullptr || !this->CanBeDamagedBy(*bullet)) {
-        return;
-    }
-
-    if (!bullet->TryRegisterImpact()) {
-        return;
-    }
-
-    this->ApplyDamage(bullet->GetDamage());
+    (void)situation;
 }
 
 glm::vec2 Character::GetColliderSize() const {

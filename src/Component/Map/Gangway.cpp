@@ -15,23 +15,27 @@ float ClampThickness(float thickness) {
 
 WallConfig BuildGangwayWallConfig(const Gangway::Config &config) {
     WallConfig wallConfig;
-    wallConfig.top.thickness = 0.0F;
-    wallConfig.right.thickness = 0.0F;
-    wallConfig.bottom.thickness = 0.0F;
-    wallConfig.left.thickness = 0.0F;
+    wallConfig.top.thickness = ClampThickness(config.wallThickness);
+    wallConfig.right.thickness = ClampThickness(config.wallThickness);
+    wallConfig.bottom.thickness = ClampThickness(config.wallThickness);
+    wallConfig.left.thickness = ClampThickness(config.wallThickness);
+    wallConfig.top.centerOffset = config.topWallOffset;
+    wallConfig.right.centerOffset = config.rightWallOffset;
+    wallConfig.bottom.centerOffset = config.bottomWallOffset;
+    wallConfig.left.centerOffset = config.leftWallOffset;
 
     if (config.orientation == GangwayOrientation::Horizontal) {
-        wallConfig.top.thickness = ClampThickness(config.wallThickness);
-        wallConfig.bottom.thickness = ClampThickness(config.wallThickness);
-        wallConfig.top.centerOffset = config.topWallOffset;
-        wallConfig.bottom.centerOffset = config.bottomWallOffset;
+        wallConfig.left.hasOpening = true;
+        wallConfig.left.openingSize = config.width;
+        wallConfig.right.hasOpening = true;
+        wallConfig.right.openingSize = config.width;
         return wallConfig;
     }
 
-    wallConfig.right.thickness = ClampThickness(config.wallThickness);
-    wallConfig.left.thickness = ClampThickness(config.wallThickness);
-    wallConfig.right.centerOffset = config.rightWallOffset;
-    wallConfig.left.centerOffset = config.leftWallOffset;
+    wallConfig.top.hasOpening = true;
+    wallConfig.top.openingSize = config.width;
+    wallConfig.bottom.hasOpening = true;
+    wallConfig.bottom.openingSize = config.width;
     return wallConfig;
 }
 
@@ -39,8 +43,8 @@ glm::vec2 BuildGangwayAreaSize(const Gangway::Config &config) {
     const WallConfig wallConfig = BuildGangwayWallConfig(config);
     const float corridorLength = std::max(config.length, config.width);
 
-    // `width` models the clear walkable corridor width. Wall thickness is
-    // added outside that corridor so the playable passage stays unchanged.
+    // `width` models the clear passage opening. The blocking wall thickness
+    // should live outside that opening instead of shrinking it.
     if (config.orientation == GangwayOrientation::Horizontal) {
         return {
             corridorLength,
