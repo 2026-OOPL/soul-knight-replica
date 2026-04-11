@@ -11,15 +11,11 @@
 #include "Component/Player/Player.hpp"
 #include "Util/Time.hpp"
 
-namespace {
-
 enum class Status {
     WANDER, 
     PURSUIT,
     STOPANDATTACK
 };
-
-}
 
 class AI : public IStateful {
 public:

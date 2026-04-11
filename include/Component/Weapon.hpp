@@ -10,13 +10,9 @@
 #include "Util/Image.hpp"
 #include "Util/Time.hpp"
 
-namespace {
-
 enum class WeaponType {
     RANGED,
     MELEE
-};
-
 };
 
 class Bullet;
