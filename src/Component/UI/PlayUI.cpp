@@ -10,19 +10,19 @@
 
 namespace {
 
-constexpr float kUiScale = 1.0F;
+constexpr float kUiScale = 2.0F;
 constexpr float kMarginX = 24.0F;
 constexpr float kMarginY = 24.0F;
-constexpr float kBackgroundZIndex = 100.0F;
-constexpr float kTextZIndex = 101.0F;
+constexpr float kBackgroundZIndex = 99.0F;
+constexpr float kTextZIndex = 100.0F;
 constexpr int kFontSize = 8;
 
 const std::string kPlayUiTexture = RESOURCE_DIR "/UI/Gameplay/panel.png";
 const std::string kFontPath = RESOURCE_DIR "/Font/Cubic-Font/Cubic_11.ttf";
 
-const Util::Color kHealthTextColor = Util::Color(255, 248, 231);
-const Util::Color kShieldTextColor = Util::Color(235, 249, 255);
-const Util::Color kAmmoTextColor = Util::Color(255, 232, 153);
+const Util::Color kHealthTextColor = Util::Color(255, 255, 255);
+const Util::Color kShieldTextColor = Util::Color(255, 255, 255);
+const Util::Color kAmmoTextColor = Util::Color(255, 255, 255);
 
 constexpr glm::vec2 kHealthTextOffset = {39.0F, -8.0F};
 constexpr glm::vec2 kShieldTextOffset = {39.0F, -19.0F};
