@@ -77,12 +77,12 @@ void FightRoom::Update() {
                 this->StartNextMonsterWave();
                 m_WaveStatus = WaveStatus::FIGHTING;
             } else {
+                LOG_INFO("Room is fully cleared.");
                 m_WaveStatus = WaveStatus::FULL_CLEAR;
             }
             break;
 
         case WaveStatus::FULL_CLEAR:
-            LOG_INFO("Room is fully cleared.");
             this->OpenAllDoors();
             break;
     }
