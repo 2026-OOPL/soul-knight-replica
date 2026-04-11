@@ -10,9 +10,12 @@ set(SRC_FILES
     Component/Camera/Curve.cpp
     Component/Character/Character.cpp
     Component/Collision/CollisionSystem.cpp
+    Component/Debug/CollisionDebugOverlay.cpp
+    Component/Debug/SolidColorRectDrawable.cpp
     Component/Player/Player.cpp
     Component/Player/Knight.cpp
     Component/TextButton/TextButton.cpp
+    Component/UI/PlayUI.cpp
 
     Component/Map/BaseRoom.cpp
     Component/Map/FightRoom.cpp
@@ -42,6 +45,7 @@ set(INCLUDE_FILES
     Scene.hpp
 
     Component/Collision/CollisionSystem.hpp
+    Common/CombatFaction.hpp
     Common/Random.hpp
     Common/Enums.hpp
     Common/EnumMask.hpp
@@ -51,6 +55,8 @@ set(INCLUDE_FILES
     Component/TextButton/TextButton.hpp
     Component/TextButton/TextButtonProperty.hpp
     Component/Character/Character.hpp
+    Component/Debug/CollisionDebugOverlay.hpp
+    Component/Debug/SolidColorRectDrawable.hpp
 
     Component/IMapObject.hpp
     Component/IStateful.hpp
@@ -78,6 +84,7 @@ set(INCLUDE_FILES
     Component/Camera/Curve.hpp
     Component/Player/Knight.hpp
     Component/Player/Player.hpp
+    Component/UI/PlayUI.hpp
 
 
     Generator/GenChamber.hpp

@@ -12,15 +12,17 @@
 #include "Util/Time.hpp"
 #include "Util/Transform.hpp"
 
-
 Knight::Knight(
     std::function<std::weak_ptr<Character>()> GetNearestMob
 ) : Player(
     KnightPlayer::STAND_SPRITES,
     KnightPlayer::WALK_SPRITES,
-    KnightPlayer::DIE_SPRITES
+    KnightPlayer::DIE_SPRITES,
+    KnightPlayer::MAX_HEALTH,
+    KnightPlayer::MAX_SHIELD,
+    KnightPlayer::MAX_AMMO
 ) {
-    this->m_GetNearestMob = GetNearestMob;
+    this->m_GetNearestMob = std::move(GetNearestMob);
 }
 
 glm::vec2 Knight::GetFaceDirection() const {
@@ -36,6 +38,6 @@ glm::vec2 Knight::GetFaceDirection() const {
     if (glm::distance(mobPosition, playerPosition) > 180) {
         return m_LastMomentum;
     }
-    
-    return mob->GetAbsoluteTranslation() - this->GetAbsoluteTranslation();
+
+    return mobPosition - playerPosition;
 }

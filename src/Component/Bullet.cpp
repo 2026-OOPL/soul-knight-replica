@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <cmath>
 #include <utility>
 
@@ -37,10 +38,14 @@ Bullet::Bullet(
     std::shared_ptr<Util::Animation> animation,
     glm::vec2 cooridinate,
     glm::vec2 momentum,
-    int zIndex
+    int zIndex,
+    int damage,
+    CombatFaction faction
 ) : Util::GameObject(nullptr, zIndex) {
     this->m_Animation = animation;
     this->m_Momentum = momentum;
+    this->m_Damage = std::max(0, damage);
+    this->m_Faction = faction;
 
     this->m_AbsoluteTransform.translation = cooridinate;
     this->m_CollisionBoxes.push_back(BuildDefaultBulletBodyBox());
@@ -63,12 +68,16 @@ Bullet::Bullet(
     const std::vector<std::string>& sprite,
     glm::vec2 cooridinate,
     glm::vec2 momentum,
-    int zIndex
+    int zIndex,
+    int damage,
+    CombatFaction faction
 ) : Bullet(
     std::make_shared<Util::Animation>(sprite, 20, true),
     cooridinate,
     momentum,
-    zIndex
+    zIndex,
+    damage,
+    faction
 ) {}
 
 Util::Transform Bullet::GetObjectTransform() const {
@@ -110,7 +119,7 @@ void Bullet::OnCollision(const Collision::CollisionSituation &situation) {
         return;
     }
 
-    this->RequestDestroy();
+    this->TryRegisterImpact();
 }
 
 glm::vec2 Bullet::GetColliderSize() const {
@@ -139,6 +148,36 @@ void Bullet::SetCollisionFilter(const Collision::CollisionFilter &filter) {
 
 void Bullet::SetCollisionResolver(CollisionResolver collisionResolver) {
     this->m_CollisionResolver = std::move(collisionResolver);
+}
+
+int Bullet::GetDamage() const {
+    return this->m_Damage;
+}
+
+void Bullet::SetDamage(int damage) {
+    this->m_Damage = std::max(0, damage);
+}
+
+CombatFaction Bullet::GetFaction() const {
+    return this->m_Faction;
+}
+
+void Bullet::SetFaction(CombatFaction faction) {
+    this->m_Faction = faction;
+}
+
+bool Bullet::HasRegisteredImpact() const {
+    return this->m_ImpactRegistered;
+}
+
+bool Bullet::TryRegisterImpact() {
+    if (this->m_ImpactRegistered) {
+        return false;
+    }
+
+    this->m_ImpactRegistered = true;
+    this->RequestDestroy();
+    return true;
 }
 
 bool Bullet::IsDestroyRequested() const {

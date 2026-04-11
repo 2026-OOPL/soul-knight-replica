@@ -1,4 +1,6 @@
+#include <algorithm>
 #include <memory>
+#include <utility>
 #include <cstdlib>
 #include <glm/vec2.hpp>
 
@@ -37,6 +39,11 @@ void Weapon::Update() {
     if (Util::Input::IsKeyPressed(Util::Keycode::SPACE) &&
         Util::Time::GetElapsedTimeMs() - m_LastShotTime > m_FireDelay
     ) {
+        if (this->m_AmmoCostPerShot > 0 && this->m_AmmoConsumer != nullptr &&
+            !this->m_AmmoConsumer(this->m_AmmoCostPerShot)) {
+            return;
+        }
+
         this->ShotBullet();
     }
 }
@@ -73,6 +80,34 @@ void Weapon::SetAnchorPoint(glm::vec2 anchor) {
     this->m_AnchorPoint = anchor;
 }
 
+int Weapon::GetAmmoCostPerShot() const {
+    return this->m_AmmoCostPerShot;
+}
+
+void Weapon::SetAmmoCostPerShot(int ammoCostPerShot) {
+    this->m_AmmoCostPerShot = std::max(0, ammoCostPerShot);
+}
+
+int Weapon::GetBulletDamage() const {
+    return this->m_BulletDamage;
+}
+
+void Weapon::SetBulletDamage(int bulletDamage) {
+    this->m_BulletDamage = std::max(0, bulletDamage);
+}
+
+CombatFaction Weapon::GetProjectileFaction() const {
+    return this->m_ProjectileFaction;
+}
+
+void Weapon::SetProjectileFaction(CombatFaction projectileFaction) {
+    this->m_ProjectileFaction = projectileFaction;
+}
+
+void Weapon::SetAmmoConsumer(std::function<bool(int)> ammoConsumer) {
+    this->m_AmmoConsumer = std::move(ammoConsumer);
+}
+
 void Weapon::SetOnBulletFired(std::function<void(std::shared_ptr<Bullet>)> callback) {
     this->m_OnBulletFired = callback;
 }
@@ -82,7 +117,9 @@ void Weapon::ShotBullet() {
 
     std::shared_ptr<Bullet> bullet = std::make_shared<TestBullet>(
         this->GetAbsoluteTranslation(),
-        this->m_FacingDirection
+        this->m_FacingDirection,
+        this->m_BulletDamage,
+        this->m_ProjectileFaction
     );
 
     // Pass this bullet to map system to manage

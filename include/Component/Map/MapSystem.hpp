@@ -14,6 +14,7 @@
 #include "Component/Character/Character.hpp"
 #include "Component/Collision/CollisionQueryService.hpp"
 #include "Component/Collision/CollisionSystem.hpp"
+#include "Component/Debug/CollisionDebugOverlay.hpp"
 #include "Component/Map/BaseRoom.hpp"
 #include "Component/Map/Gangway.hpp"
 #include "Component/Map/RoomTransitionSystem.hpp"
@@ -96,7 +97,14 @@ protected:
 
 private:
     void ApplyCameraRecursive(const std::shared_ptr<Util::GameObject> &object);
+    CollisionDebugCameraState CaptureCollisionDebugCameraState() const;
+    std::vector<CollisionDebugVisualEntry> BuildCollisionDebugVisualEntries() const;
+    std::vector<CollisionDebugEntry> BuildCollisionDebugEntries() const;
     void PruneDestroyedBullets();
+    void PruneDefeatedMobs();
+
+    std::shared_ptr<CollisionDebugOverlay> m_CollisionDebugOverlay;
+    bool m_ShowCollisionDebug = false;
 };
 
 #endif

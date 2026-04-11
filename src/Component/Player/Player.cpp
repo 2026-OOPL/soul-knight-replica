@@ -1,3 +1,6 @@
+#include <algorithm>
+#include <utility>
+
 #include "Util/Input.hpp"
 #include "Util/Keycode.hpp"
 
@@ -6,13 +9,25 @@
 Player::Player(
     const std::vector<std::string>& StandSprite,
     const std::vector<std::string>& WalkSprite,
-    const std::vector<std::string>& DieSprite
+    const std::vector<std::string>& DieSprite,
+    int maxHealth,
+    int maxShield,
+    int maxAmmo
 ) : Character(
     StandSprite,
     WalkSprite,
     DieSprite,
     4
 ) {
+    this->SetMaxHealth(maxHealth);
+    this->SetCurrentHealth(this->GetMaxHealth());
+    this->SetMaxShield(maxShield);
+    this->SetCurrentShield(this->GetMaxShield());
+    this->SetMaxAmmo(maxAmmo);
+    this->SetCurrentAmmo(this->GetMaxAmmo());
+    this->SetFaction(CombatFaction::Player);
+    this->BindWeaponAmmoConsumer();
+
     this->m_AbsoluteTransform.translation = {0.0F, 0.0F};
 
     Collision::CollisionFilter filter = this->GetCollisionFilter();
@@ -145,7 +160,7 @@ PlayerHudState Player::GetHudState() const {
 
 void Player::BindWeaponAmmoConsumer() {
     if (this->m_Weapon == nullptr) {
-        return;\
+        return;
     }
 
     this->m_Weapon->SetAmmoConsumer(

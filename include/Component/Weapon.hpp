@@ -1,9 +1,11 @@
 #ifndef WEAPON_HPP
 #define WEAPON_HPP
 
+#include <functional>
 #include <memory>
 #include <string>
 
+#include "Common/CombatFaction.hpp"
 #include "Common/MapObject.hpp"
 #include "Component/IStateful.hpp"
 #include "Util/GameObject.hpp"
@@ -34,7 +36,14 @@ public:
     Util::Transform GetObjectTransform() const override;
 
     void ShotBullet();
+    int GetAmmoCostPerShot() const;
+    void SetAmmoCostPerShot(int ammoCostPerShot);
+    int GetBulletDamage() const;
+    void SetBulletDamage(int bulletDamage);
+    CombatFaction GetProjectileFaction() const;
+    void SetProjectileFaction(CombatFaction projectileFaction);
 
+    void SetAmmoConsumer(std::function<bool(int)> ammoConsumer);
     void SetOnBulletFired(std::function<void(std::shared_ptr<Bullet>)> callback);
 
     virtual WeaponType GetWeaponType() = 0;
@@ -53,6 +62,10 @@ protected:
 
 private:
     int m_FireDelay;
+    int m_AmmoCostPerShot = 1;
+    int m_BulletDamage = 1;
+    CombatFaction m_ProjectileFaction = CombatFaction::Neutral;
+    std::function<bool(int)> m_AmmoConsumer;
 };
 
 #endif

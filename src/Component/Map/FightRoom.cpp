@@ -60,18 +60,20 @@ void FightRoom::Update() {
         case WaveStatus::IDLE:
             this->CloseAllDoors();
             this->StartNextMonsterWave();
+            LOG_INFO("Player entered a room, start spawning mobs.");
             m_WaveStatus = WaveStatus::FIGHTING;
             break;
 
         case WaveStatus::FIGHTING:
             if (this->IsWaveCleared()) {
                 m_WaveStatus = WaveStatus::WAVE_CLEAR;
-                this->StartNextMonsterWave();
             }
             break;
         
         case WaveStatus::WAVE_CLEAR:
-            if (this->m_CompletedWave <= m_MaxMobWave) {
+            m_CompletedWave++;
+            LOG_INFO("Wave " +  std::to_string(m_CompletedWave) +" cleared.");
+            if (this->m_CompletedWave < m_MaxMobWave) {    
                 this->StartNextMonsterWave();
                 m_WaveStatus = WaveStatus::FIGHTING;
             } else {
@@ -80,6 +82,7 @@ void FightRoom::Update() {
             break;
 
         case WaveStatus::FULL_CLEAR:
+            LOG_INFO("Room is fully cleared.");
             this->OpenAllDoors();
             break;
     }
@@ -112,7 +115,7 @@ void FightRoom::StartNextMonsterWave() {
         LOG_WARN("Failed to start next wave, target player not found.");
         return;
     }
-
+    
     target = m_MapSystem->GetPlayers().front();
     
     MonsterWave wave = m_MonsterWaves[m_CompletedWave];
