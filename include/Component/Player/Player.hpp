@@ -47,9 +47,9 @@ public:
 
     PlayerHudState GetHudState() const;
 
-private:
-    void BindWeaponAmmoConsumer();
+    void Update() override;
 
+private:
     int m_CurrentShield = 0;
     int m_MaxShield = 0;
     int m_CurrentAmmo = 0;

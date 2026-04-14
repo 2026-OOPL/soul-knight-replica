@@ -7,6 +7,7 @@
 #include "Component/AI.hpp"
 #include "Component/Character/Character.hpp"
 
+class MapSystem;
 
 class Mob : public Character {
 public:
@@ -36,13 +37,16 @@ public:
     void Update() override;
     
     std::shared_ptr<AI> m_AI = nullptr;
+
+    void Initialize(MapSystem* mapSystem);
     
 protected:
-    
     std::weak_ptr<Character> m_TracePlayerTemp;
     Collision::CollisionSystem* m_CollisionSystemTemp;
 
     glm::vec2 m_FacingDirection;
+
+    MapSystem* m_MapSystem;
 };
 
 #endif

@@ -35,7 +35,7 @@ public:
     
     Util::Transform GetObjectTransform() const override;
 
-    void ShotBullet();
+    bool ShotBullet();
     int GetAmmoCostPerShot() const;
     void SetAmmoCostPerShot(int ammoCostPerShot);
     int GetBulletDamage() const;
@@ -43,11 +43,10 @@ public:
     CombatFaction GetProjectileFaction() const;
     void SetProjectileFaction(CombatFaction projectileFaction);
 
-    void SetAmmoConsumer(std::function<bool(int)> ammoConsumer);
     void SetOnBulletFired(std::function<void(std::shared_ptr<Bullet>)> callback);
 
     virtual WeaponType GetWeaponType() = 0;
-
+    
 protected:
     void SetWeaponPointingByMoveDirection();
     float m_LastShotTime = 0;
@@ -59,13 +58,12 @@ protected:
     std::function<void(std::shared_ptr<Bullet>)> m_OnBulletFired;
     
     std::shared_ptr<Util::Image> m_Resource;
-
+    
 private:
     int m_FireDelay;
     int m_AmmoCostPerShot = 1;
-    int m_BulletDamage = 1;
+    int m_BulletDamage = 100;
     CombatFaction m_ProjectileFaction = CombatFaction::Neutral;
-    std::function<bool(int)> m_AmmoConsumer;
 };
 
 #endif

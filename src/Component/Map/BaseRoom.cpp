@@ -96,6 +96,8 @@ void BaseRoom::AddMob(const std::shared_ptr<Mob> &mob) {
         return;
     }
 
+    
+
     this->m_Mobs.push_back(mob);
 }
 

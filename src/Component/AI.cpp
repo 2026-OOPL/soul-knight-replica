@@ -122,8 +122,6 @@ glm::vec2 AI::GetMoveDirection() {
 
     m_LastMoveDirection = finalDir;
 
-    
-
     return finalDir;
 }
 
@@ -236,4 +234,26 @@ void AI::Freeze() {
 
 void AI::UnFreeze() {
     m_Freezed = false;
+}
+
+bool AI::GetAttackTrigger() {
+    if (m_Freezed) {
+        return false;
+    }
+
+    if (Util::Time::GetElapsedTimeMs() - m_LastShotTime < 500) {
+        return false;
+    }
+    
+    m_LastShotTime = Util::Time::GetElapsedTimeMs();
+
+
+    switch (m_Status) {
+        case Status::WANDER:
+        case Status::PURSUIT:
+            return false;
+
+        case Status::STOPANDATTACK:
+            return true;
+    }
 }

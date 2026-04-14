@@ -38,6 +38,7 @@ public:
     
     bool IsArriveDestinaton();
 
+    bool GetAttackTrigger();
     glm::vec2 GetMoveDirection();
     glm::vec2 GetFaceDirection();
 
@@ -53,6 +54,8 @@ protected:
     glm::vec2 m_LastMoveDirection;
 
     Status m_Status = Status::WANDER;
+
+    Util::ms_t m_LastShotTime;
 
 private:
     // 觸鬚避障相關方法

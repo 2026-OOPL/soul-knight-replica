@@ -1,6 +1,8 @@
 #include <algorithm>
+#include <memory>
 #include <utility>
 
+#include "Component/Weapon.hpp"
 #include "Util/Input.hpp"
 #include "Util/Keycode.hpp"
 
@@ -26,7 +28,6 @@ Player::Player(
     this->SetMaxAmmo(maxAmmo);
     this->SetCurrentAmmo(this->GetMaxAmmo());
     this->SetFaction(CombatFaction::Player);
-    this->BindWeaponAmmoConsumer();
 
     this->m_AbsoluteTransform.translation = {0.0F, 0.0F};
 
@@ -66,12 +67,7 @@ glm::vec2 Player::GetMoveIntent() const {
 }
 
 void Player::SetWeapon(std::shared_ptr<Weapon> weapon) {
-    if (this->m_Weapon != nullptr) {
-        this->m_Weapon->SetAmmoConsumer(nullptr);
-    }
-
     Character::SetWeapon(std::move(weapon));
-    this->BindWeaponAmmoConsumer();
 }
 
 void Player::ApplyDamage(int damage) {
@@ -158,14 +154,19 @@ PlayerHudState Player::GetHudState() const {
     };
 }
 
-void Player::BindWeaponAmmoConsumer() {
-    if (this->m_Weapon == nullptr) {
-        return;
-    }
-
-    this->m_Weapon->SetAmmoConsumer(
-        [this](int amount) {
-            return this->TryConsumeAmmo(amount);
+void Player::Update() {
+    if (Util::Input::IsKeyPressed(Util::Keycode::SPACE)) {
+        if (this->m_Weapon != nullptr) {
+            int cost = this->m_Weapon->GetAmmoCostPerShot();
+            
+            // Check if player has enough ammo before attempting to fire
+            if (this->GetCurrentAmmo() >= cost || cost <= 0) {
+                if (this->m_Weapon->ShotBullet()) {
+                    this->TryConsumeAmmo(cost);
+                }
+            }
         }
-    );
+    }
+    
+    Character::Update();
 }

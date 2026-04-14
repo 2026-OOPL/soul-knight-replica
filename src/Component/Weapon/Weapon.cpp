@@ -33,19 +33,8 @@ glm::vec2 Weapon::GetFacingDirection() {
 }
 
 void Weapon::Update() {
-    this->SetWeaponPointingByMoveDirection();
     // Apply the rotation for the weapon
-
-    if (Util::Input::IsKeyPressed(Util::Keycode::SPACE) &&
-        Util::Time::GetElapsedTimeMs() - m_LastShotTime > m_FireDelay
-    ) {
-        if (this->m_AmmoCostPerShot > 0 && this->m_AmmoConsumer != nullptr &&
-            !this->m_AmmoConsumer(this->m_AmmoCostPerShot)) {
-            return;
-        }
-
-        this->ShotBullet();
-    }
+    this->SetWeaponPointingByMoveDirection();
 }
 
 Util::Transform Weapon::GetObjectTransform() const {
@@ -104,15 +93,15 @@ void Weapon::SetProjectileFaction(CombatFaction projectileFaction) {
     this->m_ProjectileFaction = projectileFaction;
 }
 
-void Weapon::SetAmmoConsumer(std::function<bool(int)> ammoConsumer) {
-    this->m_AmmoConsumer = std::move(ammoConsumer);
-}
-
 void Weapon::SetOnBulletFired(std::function<void(std::shared_ptr<Bullet>)> callback) {
     this->m_OnBulletFired = callback;
 }
 
-void Weapon::ShotBullet() {
+bool Weapon::ShotBullet() {
+    if (Util::Time::GetElapsedTimeMs() - m_LastShotTime < m_FireDelay) {
+        return false;
+    }
+
     m_LastShotTime = Util::Time::GetElapsedTimeMs();
 
     std::shared_ptr<Bullet> bullet = std::make_shared<TestBullet>(
@@ -126,4 +115,6 @@ void Weapon::ShotBullet() {
     if (this->m_OnBulletFired != nullptr) {
         this->m_OnBulletFired(bullet);
     }
+    
+    return true;
 }

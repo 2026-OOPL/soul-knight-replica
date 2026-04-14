@@ -53,7 +53,7 @@ CollisionDebugSnapshot BuildCollisionDebugSnapshot(
     const RoomTransitionSystem::DoorPassageContext &doorPassage,
     const std::vector<std::shared_ptr<Gangway>> &gangways,
     const std::vector<std::shared_ptr<Player>> &players,
-    const std::vector<std::shared_ptr<Character>> &mobs,
+    const std::vector<std::shared_ptr<Mob>> &mobs,
     const std::vector<std::shared_ptr<Bullet>> &bullets,
     Camera *attachCamera
 );

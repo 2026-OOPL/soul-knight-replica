@@ -9,6 +9,8 @@ Portal::Portal(glm::vec2 cooridinate) {
 
     this->SetDrawable(this->m_PortalImage);
     this->SetAbsoluteTranslation(cooridinate);
+
+    this->SetAbsoluteScale({.25, .25});
 }
 
 void Portal::Update() {

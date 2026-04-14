@@ -5,8 +5,8 @@
 #include "Generator/MapGenerator.hpp"
 
 int main(int, char**) {
-    auto context = Core::Context::GetInstance();
     App app;
+    auto context = Core::Context::GetInstance();
     
     context->SetWindowIcon(RESOURCE_DIR"/icon.png");
 
@@ -28,8 +28,6 @@ int main(int, char**) {
         
         context->Update();
     }
-
-    
     
     return 0;
 }

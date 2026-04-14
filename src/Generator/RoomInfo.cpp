@@ -39,6 +39,10 @@ RoomType RoomInfo::GetRoomType() {
 
 glm::vec2 RoomInfo::GetRandomPositionInChamber() {
     glm::ivec2 sizeInBlocks = this->GetRoomBlockSize();
+    
+    // Substract the to side wall
+    sizeInBlocks -= 2;
+
     int widthRadius = (sizeInBlocks.x - 1) / 2;
     int heightRadius = (sizeInBlocks.y - 1) / 2;
 
