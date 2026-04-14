@@ -241,13 +241,6 @@ bool AI::GetAttackTrigger() {
         return false;
     }
 
-    if (Util::Time::GetElapsedTimeMs() - m_LastShotTime < 500) {
-        return false;
-    }
-    
-    m_LastShotTime = Util::Time::GetElapsedTimeMs();
-
-
     switch (m_Status) {
         case Status::WANDER:
         case Status::PURSUIT:
@@ -256,4 +249,6 @@ bool AI::GetAttackTrigger() {
         case Status::STOPANDATTACK:
             return true;
     }
+
+    return false;
 }

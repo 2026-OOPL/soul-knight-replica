@@ -39,7 +39,14 @@ public:
         tracePlayer,
         collisionSystem
     ) {
-
+        this->SetAttackAnimation(std::make_shared<Util::Animation>(
+            STAND_SPRITE,
+            false,
+            30,
+            false,
+            0,
+            false
+        ));
     };
 
 };

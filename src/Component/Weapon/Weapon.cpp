@@ -25,7 +25,12 @@ Weapon::Weapon(
 }
 
 void Weapon::SetFacingDirection(glm::vec2 direction) {
+    if (glm::length(direction) <= 0.0001F) {
+        return;
+    }
+
     this->m_FacingDirection = glm::normalize(direction);
+    this->SetWeaponPointingByMoveDirection();
 }
 
 glm::vec2 Weapon::GetFacingDirection() {
@@ -43,6 +48,10 @@ Util::Transform Weapon::GetObjectTransform() const {
 
 void Weapon::SetWeaponPointingByMoveDirection() {
     float rotation = atan2(m_FacingDirection.y, m_FacingDirection.x);
+    const float recoilOffset =
+        Util::Time::GetElapsedTimeMs() < this->m_RecoilEndTime ?
+        -this->m_RecoilDistance :
+        0.0F;
 
     // Set scale
     glm::vec2 currentScale = this->GetAbsoluteScale();
@@ -58,7 +67,9 @@ void Weapon::SetWeaponPointingByMoveDirection() {
     this->SetAbsoluteRotation(rotation);
 
     // Set translation
-    this->SetAbsoluteTranslation(m_AnchorPoint + m_FacingDirection * m_WeaponRadius);
+    this->SetAbsoluteTranslation(
+        m_AnchorPoint + m_FacingDirection * (m_WeaponRadius + recoilOffset)
+    );
 }
 
 glm::vec2 Weapon::GetAnchorPoint() {
@@ -67,6 +78,7 @@ glm::vec2 Weapon::GetAnchorPoint() {
 
 void Weapon::SetAnchorPoint(glm::vec2 anchor) {
     this->m_AnchorPoint = anchor;
+    this->SetWeaponPointingByMoveDirection();
 }
 
 int Weapon::GetAmmoCostPerShot() const {
@@ -97,12 +109,20 @@ void Weapon::SetOnBulletFired(std::function<void(std::shared_ptr<Bullet>)> callb
     this->m_OnBulletFired = callback;
 }
 
+void Weapon::TriggerRecoil(float durationMs) {
+    this->m_RecoilEndTime = Util::Time::GetElapsedTimeMs() + durationMs;
+    this->SetWeaponPointingByMoveDirection();
+}
+
 bool Weapon::ShotBullet() {
+    this->SetWeaponPointingByMoveDirection();
+
     if (Util::Time::GetElapsedTimeMs() - m_LastShotTime < m_FireDelay) {
         return false;
     }
 
     m_LastShotTime = Util::Time::GetElapsedTimeMs();
+    this->TriggerRecoil();
 
     std::shared_ptr<Bullet> bullet = std::make_shared<TestBullet>(
         this->GetAbsoluteTranslation(),

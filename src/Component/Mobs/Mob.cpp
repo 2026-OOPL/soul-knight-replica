@@ -7,13 +7,15 @@
 
 void Mob::Update() {
     m_AI->Update();
+    Character::Update();
 
     if (m_AI->GetAttackTrigger()) {
         bool result = m_Weapon->ShotBullet();
-        if (result) LOG_INFO(result);
+        if (result) {
+            this->TriggerAttackVisual();
+            LOG_INFO(result);
+        }
     }
-
-    Character::Update();
 }
 
 glm::vec2 Mob::GetMoveIntent() const {

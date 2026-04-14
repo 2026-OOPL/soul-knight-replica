@@ -92,12 +92,34 @@ void Character::UpdateFaceDirection() {
 }
 
 void Character::SetSpriteTypeByMoveIntent(glm::vec2 moveIntent) {
+    if (this->IsAttackVisualActive() && this->m_AttackAnimation != nullptr) {
+        this->SetDrawable(this->m_AttackAnimation);
+        return;
+    }
+
     if (moveIntent == glm::vec2(0.0F, 0.0F)) {
         this->SetDrawable(this->m_StandAnimation);
         return;
     }
 
     this->SetDrawable(this->m_WalkAnimation);
+}
+
+void Character::SetAttackAnimation(std::shared_ptr<Util::Animation> attackAnimation) {
+    this->m_AttackAnimation = std::move(attackAnimation);
+}
+
+void Character::TriggerAttackVisual(float durationMs) {
+    this->m_AttackVisualEndTime = Util::Time::GetElapsedTimeMs() + durationMs;
+
+    if (this->m_AttackAnimation != nullptr) {
+        this->m_AttackAnimation->SetCurrentFrame(0);
+        this->m_AttackAnimation->Play();
+    }
+}
+
+bool Character::IsAttackVisualActive() const {
+    return Util::Time::GetElapsedTimeMs() < this->m_AttackVisualEndTime;
 }
 
 Util::Transform Character::GetObjectTransform() const {
@@ -185,12 +207,10 @@ bool Character::CanBeDamagedBy(const Bullet &bullet) const {
 void Character::Update() {
     const glm::vec2 moveIntent = this->GetMoveIntent();
 
-    // Set weapon position
-    if (this->m_Weapon != nullptr && moveIntent != glm::vec2(0, 0)) {
-        m_Weapon->SetAnchorPoint(this->GetAbsoluteTranslation());
+    if (this->m_Weapon != nullptr) {
+        this->m_Weapon->SetAnchorPoint(this->GetAbsoluteTranslation());
+        this->m_Weapon->SetFacingDirection(this->GetFaceDirection());
     }
-    
-    m_Weapon->SetFacingDirection(this->GetFaceDirection());
 
     this->SetSpriteTypeByMoveIntent(moveIntent);
     this->UpdateFaceDirection();

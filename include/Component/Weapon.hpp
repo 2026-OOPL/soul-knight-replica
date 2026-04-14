@@ -49,8 +49,11 @@ public:
     
 protected:
     void SetWeaponPointingByMoveDirection();
+    void TriggerRecoil(float durationMs = 80.0F);
     float m_LastShotTime = 0;
     float m_WeaponRadius = 20;
+    float m_RecoilDistance = 6;
+    float m_RecoilEndTime = 0;
     
     glm::vec2 m_AnchorPoint = glm::vec2(0 ,0);
     glm::vec2 m_FacingDirection = glm::vec2(1,0);

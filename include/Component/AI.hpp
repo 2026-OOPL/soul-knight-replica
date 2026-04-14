@@ -55,8 +55,6 @@ protected:
 
     Status m_Status = Status::WANDER;
 
-    Util::ms_t m_LastShotTime;
-
 private:
     // 觸鬚避障相關方法
     glm::vec2 ApplyObstacleAvoidance(const glm::vec2& currentPos, const glm::vec2& desiredDir);

@@ -155,6 +155,8 @@ PlayerHudState Player::GetHudState() const {
 }
 
 void Player::Update() {
+    Character::Update();
+
     if (Util::Input::IsKeyPressed(Util::Keycode::SPACE)) {
         if (this->m_Weapon != nullptr) {
             int cost = this->m_Weapon->GetAmmoCostPerShot();
@@ -162,11 +164,10 @@ void Player::Update() {
             // Check if player has enough ammo before attempting to fire
             if (this->GetCurrentAmmo() >= cost || cost <= 0) {
                 if (this->m_Weapon->ShotBullet()) {
+                    this->TriggerAttackVisual();
                     this->TryConsumeAmmo(cost);
                 }
             }
         }
     }
-    
-    Character::Update();
 }

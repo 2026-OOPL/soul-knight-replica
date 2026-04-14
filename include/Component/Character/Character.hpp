@@ -11,6 +11,7 @@
 
 #include "Util/Animation.hpp"
 #include "Util/GameObject.hpp"
+#include "Util/Time.hpp"
 #include "Util/Transform.hpp"
 
 #include "Common/CombatFaction.hpp"
@@ -88,6 +89,9 @@ public:
     
 protected:
     virtual bool CanBeDamagedBy(const Bullet &bullet) const;
+    void SetAttackAnimation(std::shared_ptr<Util::Animation> attackAnimation);
+    void TriggerAttackVisual(float durationMs = 120.0F);
+    bool IsAttackVisualActive() const;
 
     int m_CurrentHealth = 10;
     int m_MaxHealth = 10;
@@ -100,8 +104,10 @@ protected:
     std::shared_ptr<Util::Animation> m_DieAnimation;
     std::shared_ptr<Util::Animation> m_StandAnimation;
     std::shared_ptr<Util::Animation> m_WalkAnimation;
+    std::shared_ptr<Util::Animation> m_AttackAnimation;
     std::vector<Collision::CollisionBox> m_CollisionBoxes;
     CollisionResolver m_CollisionResolver = nullptr;
+    Util::ms_t m_AttackVisualEndTime = 0;
 
 private:
 
