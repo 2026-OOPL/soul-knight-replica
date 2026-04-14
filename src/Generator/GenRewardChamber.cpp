@@ -5,10 +5,12 @@
 
 #include <glm/vec2.hpp>
 
+#include "Common/Enums.hpp"
 #include "Common/Random.hpp"
 #include "Generator/MapBlueprint.hpp"
 #include "Generator/GenRewardChamber.hpp"
 #include "Generator/MapGenerator.hpp"
+#include "Generator/RoomInfo.hpp"
 
 GenRewardChamber::GenRewardChamber(
 
@@ -90,8 +92,7 @@ std::vector<glm::ivec2> GenRewardChamber::GetAvailableCooridinate() {
 
 void GenRewardChamber::CreateRoom(glm::ivec2 cooridinate) {
     std::shared_ptr<RoomInfo> info = std::make_shared<RoomInfo>(
-        RoomType::ROOM_13_13, 
-        RoomPurpose::REWARD
+        RoomType::ROOM_13_13, RoomPurpose::REWARD, m_RandomChoose
     );
 
     this->m_Blueprint->SetElementByCooridinate(cooridinate, info);

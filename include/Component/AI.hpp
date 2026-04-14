@@ -41,6 +41,9 @@ public:
     glm::vec2 GetMoveDirection();
     glm::vec2 GetFaceDirection();
 
+    void Freeze();
+    void UnFreeze();
+
 protected:
     Character* m_Owner;       // AI 控制的本體 (Mob)
     std::weak_ptr<Character> m_TracePlayer;
@@ -71,6 +74,8 @@ private:
     Util::ms_t m_LastUpdateTime = 0;
 
     glm::vec2 m_LastPosition;
+
+    bool m_Freezed = false;
 };
 
 #endif //

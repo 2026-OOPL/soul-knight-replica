@@ -3,10 +3,14 @@
 
 #include "Component/Map/BaseRoom.hpp"
 #include "Component/Map/MapSystem.hpp"
+#include "Generator/GenFightChamber.hpp"
 #include "Generator/MapGenerator.hpp"
+#include "Generator/RoomInfo.hpp"
 #include <cstddef>
 #include <memory>
 #include <vector>
+
+struct MonsterWave;
 
 enum class WaveStatus {
     IDLE,
@@ -29,7 +33,7 @@ public:
     void OnPlayerLeave() override;
 
     // MapSystem pointer is needed to be bound after the initialization
-    void SetMapSystem(MapSystem* system);
+    void Initialize(MapSystem* system) override;
 
     // Determine whether all wave in room were cleared
     bool IsRoomCleared(); 
@@ -53,7 +57,7 @@ private:
     int m_MaxMobWave = 0;
     int m_CompletedWave = 0;
 
-    std::vector<MonsterWave> m_MonsterWaves;
+    std::vector<std::vector<SpawnInfo<MobType>>> m_MonsterWaves;
 };
 
 #endif

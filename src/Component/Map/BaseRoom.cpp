@@ -35,9 +35,6 @@ BaseRoom::BaseRoom(
     this->BuildDoors();
 }
 
-void BaseRoom::Update() {
-}
-
 bool BaseRoom::IsPlayerInside(const glm::vec2 &playerPos) const {
     return this->IsPointInside(playerPos);
 }
@@ -73,11 +70,11 @@ const std::vector<std::shared_ptr<Door>> &BaseRoom::GetDoors() const {
     return this->m_Doors;
 }
 
-const std::vector<std::shared_ptr<Character>> &BaseRoom::GetMobs() const {
+const std::vector<std::shared_ptr<Mob>> &BaseRoom::GetMobs() const {
     return this->m_Mobs;
 }
 
-void BaseRoom::AddMob(const std::shared_ptr<Character> &mob) {
+void BaseRoom::AddMob(const std::shared_ptr<Mob> &mob) {
     if (mob == nullptr) {
         return;
     }
@@ -351,4 +348,10 @@ void BaseRoom::BuildDoors() {
         this->m_Doors.push_back(door);
         this->AddChild(door);
     }
+}
+
+void BaseRoom::Update() {
+}
+
+void BaseRoom::Initialize(MapSystem* _) {
 }

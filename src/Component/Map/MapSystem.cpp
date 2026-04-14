@@ -244,6 +244,9 @@ void MapSystem::Update() {
         for (const auto &bullet : this->m_World.GetBullets()) {
             this->ApplyCameraRecursive(bullet);
         }
+        for (const auto &prop : this->m_World.GetProps()) {
+            this->ApplyCameraRecursive(prop);
+        }
     }
 
     if (this->m_CollisionDebugOverlay != nullptr) {
@@ -303,11 +306,7 @@ void MapSystem::AddRoom(const std::shared_ptr<BaseRoom> &room) {
         return;
     }
 
-    std::shared_ptr<FightRoom> fightRoom = std::dynamic_pointer_cast<FightRoom>(room);
-    if (fightRoom != nullptr) {
-        // FightRoom requires pointer of map system to spawn waves
-        fightRoom->SetMapSystem(this);
-    }
+    room->Initialize(this);
 
     this->m_World.AddRoom(room);
 }
@@ -581,6 +580,19 @@ const std::vector<std::shared_ptr<Character>>& MapSystem::GetMob() const {
     return this->m_World.GetMobs();
 }
 
+void MapSystem::AddProp(const std::shared_ptr<Prop> &prop) {
+    // Implement custom collider for each prop here
+    this->m_World.AddProp(prop);
+}
+
+void MapSystem::RemoveProp(const std::shared_ptr<Prop> &prop) {
+    this->m_World.RemoveProp(prop);
+}
+
+const std::vector<std::shared_ptr<Prop>> & MapSystem::GetProps() const {
+    return this->m_World.GetProps();
+}
+
 void MapSystem::PruneDestroyedBullets() {
     std::vector<std::shared_ptr<Bullet>> destroyedBullets;
 
@@ -652,6 +664,10 @@ std::vector<CollisionDebugVisualEntry> MapSystem::BuildCollisionDebugVisualEntri
 
     for (const auto &bullet : this->m_World.GetBullets()) {
         AppendDebugVisualEntry(bullet, entries, seenOwners);
+    }
+
+    for (const auto &prop : this->m_World.GetProps()) {
+        AppendDebugVisualEntry(prop, entries, seenOwners);
     }
 
     return entries;

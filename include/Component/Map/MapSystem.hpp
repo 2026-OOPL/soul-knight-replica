@@ -71,6 +71,10 @@ public:
     void RemoveMob(std::shared_ptr<Character> mob);
     const std::vector<std::shared_ptr<Character>>& GetMob() const;
 
+    void AddProp(const std::shared_ptr<Prop> &prop);
+    void RemoveProp(const std::shared_ptr<Prop> &prop);
+    const std::vector<std::shared_ptr<Prop>> &GetProps() const;
+
     Collision::CollisionSystem* GetCollisionSystem() { return &this->m_CollisionSystem; }
 
 protected:

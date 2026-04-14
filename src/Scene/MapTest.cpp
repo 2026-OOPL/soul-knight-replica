@@ -14,27 +14,7 @@
 #include "Generator/MapGenerator.hpp"
 #include "Scene/MapTest.hpp"
 
-MapTest::MapTest()
-    : MapSystem() {
-    std::shared_ptr<MapGenerator> generator = std::make_shared<MapGenerator>("I Love OOP");
-
-    generator->Generate();
-    this->m_RoomsInScene = generator->GetRooms();
-    this->m_GangwaysInScene = generator->GetGangways();
-    this->AddRooms(this->m_RoomsInScene);
-    this->AddGangways(this->m_GangwaysInScene);
-
-    for (const auto &room : this->m_RoomsInScene) {
-        if (room == nullptr) {
-            continue;
-        }
-
-        if (this->m_MainRoom == nullptr &&
-            room->GetPurpose() == RoomPurpose::STARTER) {
-            this->m_MainRoom = room;
-        }
-    }
-
+MapTest::MapTest() : MapSystem() {
     this->m_MainPlayer = std::make_shared<Knight>(
         [this] () {return this->GetNearestMonster();}
     );
@@ -53,6 +33,28 @@ MapTest::MapTest()
 
     this->m_MainPlayer->SetAbsoluteScale({0.75F, 0.75F});
     this->AddPlayer(this->m_MainPlayer);
+    
+    std::shared_ptr<MapGenerator> generator = std::make_shared<MapGenerator>("I Love OOP");
+
+    generator->Generate();
+
+    this->m_RoomsInScene = generator->GetRooms();
+    this->m_GangwaysInScene = generator->GetGangways();
+    
+    this->AddRooms(this->m_RoomsInScene);
+    this->AddGangways(this->m_GangwaysInScene);
+
+    for (const auto &room : this->m_RoomsInScene) {
+        if (room == nullptr) {
+            continue;
+        }
+
+        if (this->m_MainRoom == nullptr &&
+            room->GetPurpose() == RoomPurpose::STARTER) {
+            this->m_MainRoom = room;
+        }
+    }
+
     this->m_PlayUI = std::make_shared<PlayUI>(
         [weakPlayer = std::weak_ptr<Player>(this->m_MainPlayer)]() {
             const std::shared_ptr<Player> player = weakPlayer.lock();

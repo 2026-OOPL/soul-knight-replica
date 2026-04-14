@@ -7,6 +7,7 @@
 #include <string>
 #include <vector>
 
+#include "Component/Prop/Prop.hpp"
 #include "Util/GameObject.hpp"
 
 #include "Component/Bullet.hpp"
@@ -49,6 +50,18 @@ public:
 
     const std::vector<std::shared_ptr<BaseRoom>> &GetRooms() const {
         return this->m_Rooms;
+    }
+
+    void AddProp(const std::shared_ptr<Prop> &prop) {
+        this->AddEntity(prop, this->m_Props, "prop");
+    }
+
+    void RemoveProp(const std::shared_ptr<Prop> &prop) {
+        this->RemoveEntity(prop, this->m_Props, "prop");
+    }
+
+    const std::vector<std::shared_ptr<Prop>> &GetProps() const {
+        return this->m_Props;
     }
 
     void AddGangway(const std::shared_ptr<Gangway> &gangway) {
@@ -139,6 +152,7 @@ private:
     std::vector<std::shared_ptr<Gangway>> m_Gangways;
     std::vector<std::shared_ptr<Character>> m_Mobs;
     std::vector<std::shared_ptr<Bullet>> m_Bullets;
+    std::vector<std::shared_ptr<Prop>> m_Props;
 };
 
 #endif

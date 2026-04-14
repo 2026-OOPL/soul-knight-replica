@@ -1,13 +1,11 @@
-#ifndef MOB_HPP
-#define MOB_HPP
+#ifndef GOBLIN_GUARD_HPP
+#define GOBLIN_GUARD_HPP
 
-#include <cstddef>
-#include <functional>
 #include <memory>
 #include <vector>
 
-#include "Component/AI.hpp"
 #include "Component/Character/Character.hpp"
+#include "Component/Mobs/Mob.hpp"
 
 namespace {
     const std::vector<std::string> WALK_SPRITE = {
@@ -29,37 +27,21 @@ namespace {
     };
 }
 
-class GoblinGuard : public Character {
+class GoblinGuard : public Mob {
 public:
     GoblinGuard(
         std::weak_ptr<Character> tracePlayer,
         Collision::CollisionSystem* collisionSystem
-    ) : Character(
+    ) : Mob(
         STAND_SPRITE,
         WALK_SPRITE,
         DIE_SPRITE,
-        4
+        tracePlayer,
+        collisionSystem
     ) {
-        m_TracePlayerTemp = tracePlayer;
-        m_CollisionSystemTemp = collisionSystem;
 
-        this->m_AI = std::make_shared<AI>(this, m_TracePlayerTemp, m_CollisionSystemTemp);
-
-        this->m_PlayerSpeed = 0.05F;
     };
 
-    glm::vec2 GetMoveIntent() const override;
-    glm::vec2 GetFaceDirection() const override;
-
-    void Update() override;
-    
-    std::shared_ptr<AI> m_AI = nullptr;
-private:
-    // 暫存建構子傳入的參數，供後續 InitAI 使用
-    std::weak_ptr<Character> m_TracePlayerTemp;
-    Collision::CollisionSystem* m_CollisionSystemTemp;
-
-    glm::vec2 m_FacingDirection;
 };
 
 #endif

@@ -1,5 +1,6 @@
 #include <memory>
 
+#include "Generator/RoomInfo.hpp"
 #include "Util/Logger.hpp"
 
 #include "Component/Map/FightRoom.hpp"
@@ -16,39 +17,47 @@ FightRoom::FightRoom(
 )
 : BaseRoom(
     absolutePosition,
-    info->roomType,
+    info->GetRoomType(),
     RoomPurpose::FIGHTING,
     doorConfig,
     BaseRoom::BuildWallConfigFromDoorConfig(
         doorConfig,
         wallThickness,
-        info->roomType,
+        info->GetRoomType(),
         RoomPurpose::FIGHTING
     )
 ) {
     this->OpenAllDoors();
 
-    for (auto const& i : info->obstacles) {
+    for (auto const& i : info->GetObstacle()) {
         // TODO: Implement boxes creation
     }
 
-    this->m_MonsterWaves = info->monsterWaves;
+    this->m_MonsterWaves = info->GetMonsterWaves();
 
     this->m_CompletedWave = 0;
-    this->m_MaxMobWave = info->monsterWaves.size();
+    this->m_MaxMobWave = this->m_MonsterWaves.size();
 
 }
 
 void FightRoom::OnPlayerEnter() {
     m_PlayerInside = true;
+
+    if (m_WaveStatus == WaveStatus::IDLE) {
+        this->CloseAllDoors();
+        m_WaveStatus = WaveStatus::FIGHTING;
+
+        for (auto const& i : this->GetMobs()) {
+            i->m_AI->UnFreeze();
+        }
+
+        LOG_INFO("Player entered a room, start spawning mobs.");
+    }
+
 }
 
 void FightRoom::OnPlayerLeave() {
     m_PlayerInside = false;
-}
-
-void FightRoom::SetMapSystem(MapSystem* system) {
-    this->m_MapSystem = system;
 }
 
 void FightRoom::Update() {
@@ -58,10 +67,6 @@ void FightRoom::Update() {
 
     switch (m_WaveStatus) {
         case WaveStatus::IDLE:
-            this->CloseAllDoors();
-            this->StartNextMonsterWave();
-            LOG_INFO("Player entered a room, start spawning mobs.");
-            m_WaveStatus = WaveStatus::FIGHTING;
             break;
 
         case WaveStatus::FIGHTING:
@@ -95,36 +100,41 @@ bool FightRoom::IsRoomCleared() {
 }
 
 bool FightRoom::IsWaveCleared() {
-    return m_MapSystem->GetMob().empty();
+    for (auto const& i : this->GetMobs()) {
+        if (i->IsDead()) continue;
+        return false;
+    }
+
+    return true;
 }
 
 void FightRoom::StartNextMonsterWave() {
     if (m_MapSystem == NULL) {
-        LOG_WARN("Failed to start next wave, no map system bound.");
+        LOG_ERROR("Failed to start next wave, no map system bound.");
         return;
     }
 
     if (m_CompletedWave >= m_MaxMobWave) {
-        LOG_WARN("Failed to start next wave, max waves exceeded.");
+        LOG_ERROR("Failed to start next wave, max waves exceeded.");
         return;
     }
 
     std::weak_ptr<Character> target;
 
     if (m_MapSystem->GetPlayers().empty()) {
-        LOG_WARN("Failed to start next wave, target player not found.");
+        LOG_ERROR("Failed to start next wave, target player not found.");
         return;
     }
     
     target = m_MapSystem->GetPlayers().front();
     
-    MonsterWave wave = m_MonsterWaves[m_CompletedWave];
+    std::vector<SpawnInfo<MobType>>& wave = m_MonsterWaves[m_CompletedWave];
 
-    for (auto const &i : wave.monsters) {
-        std::shared_ptr<Character> mob;
+    for (auto const &i : wave) {
+        std::shared_ptr<Mob> mob;
 
-        switch (static_cast<MonsterType>(i.type)) {
-            case MonsterType::GOBLIN_GUARD:
+        switch (i.type) {
+            case MobType::GOBLIN_GUARD:
                 mob = std::make_shared<GoblinGuard>(target, m_MapSystem->GetCollisionSystem());
                 break;
                 
@@ -139,6 +149,16 @@ void FightRoom::StartNextMonsterWave() {
             this->m_MapSystem->AddMob(mob); // 將怪物註冊到 MapSystem，確保碰撞和更新正常運作
         }
     }
+}
 
-    m_WaveStatus = WaveStatus::FIGHTING;
+void FightRoom::Initialize(MapSystem* system) {
+    this->m_MapSystem = system;
+
+    // Spawn the mobs in the first wave 
+    this->StartNextMonsterWave();
+
+    // Freeze the mob in the first place 
+    for (auto const& i : this->GetMobs()) {
+        i->m_AI->Freeze();
+    }
 }

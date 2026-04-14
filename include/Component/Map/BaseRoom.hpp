@@ -13,6 +13,9 @@
 #include "Component/IStateful.hpp"
 #include "Component/Map/Door.hpp"
 #include "Component/Map/RectMapArea.hpp"
+#include "Component/Mobs/Mob.hpp"
+
+class MapSystem;
 
 class BaseRoom : public RectMapArea, public IStateful {
 public:
@@ -36,9 +39,9 @@ public:
     const std::vector<Collision::AxisAlignedBox> &GetStaticColliders() const;
 
     const std::vector<std::shared_ptr<Door>> &GetDoors() const;
-    const std::vector<std::shared_ptr<Character>> &GetMobs() const;
+    const std::vector<std::shared_ptr<Mob>> &GetMobs() const;
 
-    void AddMob(const std::shared_ptr<Character> &mob);
+    void AddMob(const std::shared_ptr<Mob> &mob);
 
     virtual void OpenAllDoors();
     virtual void CloseAllDoors();
@@ -56,6 +59,8 @@ public:
         RoomType roomType,
         RoomPurpose purpose
     );
+
+    virtual void Initialize(MapSystem* MapSystem);
 
 protected:
     static glm::vec2 ResolveRoomSize(RoomType roomType);
@@ -84,7 +89,7 @@ private:
     RoomPurpose m_Purpose = RoomPurpose::FIGHTING;
     DoorConfig m_DoorConfig;
     std::vector<std::shared_ptr<Door>> m_Doors;
-    std::vector<std::shared_ptr<Character>> m_Mobs;
+    std::vector<std::shared_ptr<Mob>> m_Mobs;
 };
 
 #endif

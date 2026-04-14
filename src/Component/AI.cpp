@@ -100,6 +100,10 @@ glm::vec2 AI::CalculateStopAndAttack(glm::vec2 ownerPos, glm::vec2 targetPos) {
 }
 
 glm::vec2 AI::GetMoveDirection() {
+    if (m_Freezed) {
+        return glm::vec2(0.0f);
+    }
+
     std::shared_ptr<Character> player = m_TracePlayer.lock();
     
     if (!player || !m_Owner) return glm::vec2(0.0f);
@@ -210,6 +214,10 @@ bool AI::IsPointBlocked(const glm::vec2& point) {
 }
 
 glm::vec2 AI::GetFaceDirection() {
+    if (m_Freezed) {
+        return glm::vec2(0.0f);
+    }
+
     switch (m_Status) {
         case Status::WANDER:
             return m_LastMoveDirection;
@@ -220,4 +228,12 @@ glm::vec2 AI::GetFaceDirection() {
     }
 
     return glm::vec2(0.0f);
+}
+
+void AI::Freeze() {
+    m_Freezed = true;
+}
+
+void AI::UnFreeze() {
+    m_Freezed = false;
 }
