@@ -25,9 +25,15 @@ private:
 
     HudStateProvider m_HudStateProvider;
     std::shared_ptr<Util::Image> m_Background;
+    std::shared_ptr<Util::Image> m_HealthBar;
+    std::shared_ptr<Util::Image> m_ShieldBar;
+    std::shared_ptr<Util::Image> m_AmmoBar;
     std::shared_ptr<Util::Text> m_HealthText;
     std::shared_ptr<Util::Text> m_ShieldText;
     std::shared_ptr<Util::Text> m_AmmoText;
+    std::shared_ptr<Util::GameObject> m_HealthBarNode;
+    std::shared_ptr<Util::GameObject> m_ShieldBarNode;
+    std::shared_ptr<Util::GameObject> m_AmmoBarNode;
     std::shared_ptr<Util::GameObject> m_HealthTextNode;
     std::shared_ptr<Util::GameObject> m_ShieldTextNode;
     std::shared_ptr<Util::GameObject> m_AmmoTextNode;
