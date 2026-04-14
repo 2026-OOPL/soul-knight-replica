@@ -3,6 +3,7 @@
 
 #include "Util/Input.hpp"
 #include "Util/Keycode.hpp"
+#include "Util/Time.hpp"
 
 #include "Component/Player/Player.hpp"
 
@@ -65,6 +66,47 @@ glm::vec2 Player::GetMoveIntent() const {
     return glm::normalize(moveIntent);
 }
 
+void Player::Update() {
+    Character::Update();
+
+    if (this->IsDead() || this->GetMaxShield() <= 0) {
+        this->m_ShieldRegenDelayRemainingMs = 0.0F;
+        this->m_ShieldRegenElapsedMs = 0.0F;
+        return;
+    }
+
+    if (this->GetCurrentShield() >= this->GetMaxShield()) {
+        this->m_ShieldRegenDelayRemainingMs = 0.0F;
+        this->m_ShieldRegenElapsedMs = 0.0F;
+        return;
+    }
+
+    float deltaTimeMs = Util::Time::GetDeltaTimeMs();
+
+    if (this->m_ShieldRegenDelayRemainingMs > 0.0F) {
+        if (deltaTimeMs < this->m_ShieldRegenDelayRemainingMs) {
+            this->m_ShieldRegenDelayRemainingMs -= deltaTimeMs;
+            return;
+        }
+
+        deltaTimeMs -= this->m_ShieldRegenDelayRemainingMs;
+        this->m_ShieldRegenDelayRemainingMs = 0.0F;
+    }
+
+    this->m_ShieldRegenElapsedMs += deltaTimeMs;
+
+    while (this->m_ShieldRegenElapsedMs >= kShieldRegenIntervalMs) {
+        this->RestoreShield(1);
+        this->m_ShieldRegenElapsedMs -= kShieldRegenIntervalMs;
+
+        if (this->GetCurrentShield() >= this->GetMaxShield()) {
+            this->m_ShieldRegenDelayRemainingMs = 0.0F;
+            this->m_ShieldRegenElapsedMs = 0.0F;
+            break;
+        }
+    }
+}
+
 void Player::SetWeapon(std::shared_ptr<Weapon> weapon) {
     if (this->m_Weapon != nullptr) {
         this->m_Weapon->SetAmmoConsumer(nullptr);
@@ -78,6 +120,9 @@ void Player::ApplyDamage(int damage) {
     if (damage <= 0) {
         return;
     }
+
+    this->m_ShieldRegenDelayRemainingMs = kShieldRegenDelayMs;
+    this->m_ShieldRegenElapsedMs = 0.0F;
 
     const int shieldDamage = std::min(this->m_CurrentShield, damage);
     this->SetCurrentShield(this->m_CurrentShield - shieldDamage);
