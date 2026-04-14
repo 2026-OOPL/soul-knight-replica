@@ -72,7 +72,6 @@ private:
         glm::vec2 colliderSize = {0.0F, 0.0F};
         glm::vec2 renderSize = {0.0F, 0.0F};
         float openingOffset = 0.0F;
-        glm::vec2 positionOffset = {0.0F, 0.0F};
         bool startsOpen = true;
         Door::Visuals visuals;
     };

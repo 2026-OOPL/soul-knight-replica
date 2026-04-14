@@ -14,13 +14,14 @@
 #include "Component/Character/Character.hpp"
 #include "Component/Collision/CollisionQueryService.hpp"
 #include "Component/Collision/CollisionSystem.hpp"
-#include "Component/Debug/CollisionDebugOverlay.hpp"
 #include "Component/Map/BaseRoom.hpp"
 #include "Component/Map/Gangway.hpp"
 #include "Component/Map/RoomTransitionSystem.hpp"
 #include "Component/Player/Player.hpp"
 #include "Component/World/WorldRegistry.hpp"
 #include "Scene.hpp"
+
+class CollisionDebugOverlay;
 
 class MapSystem : public Scene {
 public:
@@ -101,9 +102,6 @@ protected:
 
 private:
     void ApplyCameraRecursive(const std::shared_ptr<Util::GameObject> &object);
-    CollisionDebugCameraState CaptureCollisionDebugCameraState() const;
-    std::vector<CollisionDebugVisualEntry> BuildCollisionDebugVisualEntries() const;
-    std::vector<CollisionDebugEntry> BuildCollisionDebugEntries() const;
     void PruneDestroyedBullets();
     void PruneDefeatedMobs();
 

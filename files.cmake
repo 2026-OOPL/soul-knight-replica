@@ -11,6 +11,7 @@ set(SRC_FILES
     Component/Character/Character.cpp
     Component/Collision/CollisionSystem.cpp
     Component/Debug/CollisionDebugOverlay.cpp
+    Component/Debug/CollisionDebugSnapshot.cpp
     Component/Debug/SolidColorRectDrawable.cpp
     Component/Player/Player.cpp
     Component/Player/Knight.cpp
@@ -56,6 +57,7 @@ set(INCLUDE_FILES
     Component/TextButton/TextButtonProperty.hpp
     Component/Character/Character.hpp
     Component/Debug/CollisionDebugOverlay.hpp
+    Component/Debug/CollisionDebugSnapshot.hpp
     Component/Debug/SolidColorRectDrawable.hpp
 
     Component/IMapObject.hpp

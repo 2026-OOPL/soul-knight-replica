@@ -196,22 +196,6 @@ DoorSide Door::GetSide() const {
     return this->m_Side;
 }
 
-void Door::SetColliderOffset(const glm::vec2 &colliderOffset) {
-    if (this->m_CollisionBoxes.empty()) {
-        this->m_CollisionBoxes.push_back(BuildDefaultDoorBodyBox(this->GetColliderSize()));
-    }
-
-    this->m_CollisionBoxes.front().offset = colliderOffset;
-}
-
-glm::vec2 Door::GetColliderCenter() const {
-    if (this->m_CollisionBoxes.empty()) {
-        return this->GetAbsoluteTranslation();
-    }
-
-    return this->GetAbsoluteTranslation() + this->m_CollisionBoxes.front().offset;
-}
-
 void Door::ApplyDrawable(const std::shared_ptr<Core::Drawable> &drawable) {
     this->SetDrawable(drawable);
     this->m_Transform.rotation = this->m_BaseRotation;

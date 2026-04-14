@@ -10,9 +10,26 @@ namespace {
 
 constexpr char kHorizontalClosedDoorSprite[] = RESOURCE_DIR "/Map/Room/Fence_5x2.png";
 constexpr char kVerticalClosedDoorSprite[] = RESOURCE_DIR "/Map/Room/Fence_1x5.png";
-constexpr float kBottomDoorVisualOffsetY = 15.0F;
-constexpr float kTopDoorVisualOffsetY = 10.0F;
-constexpr float kStarterBottomWallThicknessOffset = 20.0F;
+
+glm::vec2 BuildDoorColliderSize(DoorSide side, const WallSideConfig &wallSideConfig) {
+    switch (side) {
+    case DoorSide::Top:
+    case DoorSide::Bottom:
+        return {
+            wallSideConfig.openingSize,
+            wallSideConfig.thickness
+        };
+
+    case DoorSide::Right:
+    case DoorSide::Left:
+        return {
+            wallSideConfig.thickness,
+            wallSideConfig.openingSize
+        };
+    }
+
+    return {0.0F, 0.0F};
+}
 
 } // namespace
 
@@ -133,19 +150,19 @@ WallConfig BaseRoom::BuildWallConfigFromDoorConfig(
 
     wallConfig.top.hasOpening = doorConfig.top.hasDoor;
     wallConfig.top.openingSize = doorConfig.top.hasDoor ?
-        MapColliderConfig::kHorizontalDoorColliderSize.x :
+        MapColliderConfig::kHorizontalDoorOpeningWidth :
         0.0F;
     wallConfig.right.hasOpening = doorConfig.right.hasDoor;
     wallConfig.right.openingSize = doorConfig.right.hasDoor ?
-        MapColliderConfig::kVerticalDoorColliderSize.y :
+        MapColliderConfig::kVerticalDoorOpeningHeight :
         0.0F;
     wallConfig.bottom.hasOpening = doorConfig.bottom.hasDoor;
     wallConfig.bottom.openingSize = doorConfig.bottom.hasDoor ?
-        MapColliderConfig::kHorizontalDoorColliderSize.x :
+        MapColliderConfig::kHorizontalDoorOpeningWidth :
         0.0F;
     wallConfig.left.hasOpening = doorConfig.left.hasDoor;
     wallConfig.left.openingSize = doorConfig.left.hasDoor ?
-        MapColliderConfig::kVerticalDoorColliderSize.y :
+        MapColliderConfig::kVerticalDoorOpeningHeight :
         0.0F;
 
     return BaseRoomWallLayoutConfig::ResolveWallConfig(wallConfig, purpose, roomType);
@@ -217,7 +234,7 @@ glm::vec2 BaseRoom::BuildDoorPosition(const DoorBuildInfo &doorInfo) const {
             roomCenter.x + doorInfo.openingOffset,
             roomCenter.y +
                 roomSize.y / 2.0F -
-                doorInfo.renderSize.y / 2.0F +
+                wallSideConfig.thickness / 2.0F +
                 wallSideConfig.centerOffset
         };
 
@@ -225,7 +242,7 @@ glm::vec2 BaseRoom::BuildDoorPosition(const DoorBuildInfo &doorInfo) const {
         return {
             roomCenter.x +
                 roomSize.x / 2.0F -
-                doorInfo.renderSize.x / 2.0F +
+                wallSideConfig.thickness / 2.0F +
                 wallSideConfig.centerOffset,
             roomCenter.y + doorInfo.openingOffset
         };
@@ -235,7 +252,7 @@ glm::vec2 BaseRoom::BuildDoorPosition(const DoorBuildInfo &doorInfo) const {
             roomCenter.x + doorInfo.openingOffset,
             roomCenter.y -
                 roomSize.y / 2.0F +
-                doorInfo.renderSize.y / 2.0F +
+                wallSideConfig.thickness / 2.0F +
                 wallSideConfig.centerOffset
         };
 
@@ -243,7 +260,7 @@ glm::vec2 BaseRoom::BuildDoorPosition(const DoorBuildInfo &doorInfo) const {
         return {
             roomCenter.x -
                 roomSize.x / 2.0F +
-                doorInfo.renderSize.x / 2.0F +
+                wallSideConfig.thickness / 2.0F +
                 wallSideConfig.centerOffset,
             roomCenter.y + doorInfo.openingOffset
         };
@@ -302,48 +319,43 @@ void BaseRoom::BuildDoors() {
             continue;
         }
 
+        const WallSideConfig &wallSideConfig = this->GetWallSideConfig(side);
         DoorBuildInfo doorInfo;
         doorInfo.side = side;
         doorInfo.startsOpen = doorSideConfig.startsOpen;
-        doorInfo.openingOffset = this->GetWallSideConfig(side).openingOffset;
+        doorInfo.openingOffset = wallSideConfig.openingOffset;
+        doorInfo.colliderSize = BuildDoorColliderSize(side, wallSideConfig);
 
         switch (side) {
         case DoorSide::Top:
-            doorInfo.colliderSize = MapColliderConfig::kHorizontalDoorColliderSize;
             doorInfo.renderSize = MapColliderConfig::kHorizontalDoorRenderSize;
-            doorInfo.positionOffset = {0.0F, kTopDoorVisualOffsetY};
             doorInfo.visuals = BaseRoom::BuildHorizontalDoorVisuals();
             break;
 
         case DoorSide::Right:
-            doorInfo.colliderSize = MapColliderConfig::kVerticalDoorColliderSize;
             doorInfo.renderSize = MapColliderConfig::kVerticalDoorRenderSize;
             doorInfo.visuals = BaseRoom::BuildVerticalDoorVisuals();
             break;
 
         case DoorSide::Bottom:
-            doorInfo.colliderSize = MapColliderConfig::kHorizontalDoorColliderSize;
             doorInfo.renderSize = MapColliderConfig::kHorizontalDoorRenderSize;
-            doorInfo.positionOffset = {0.0F, kBottomDoorVisualOffsetY};
             doorInfo.visuals = BaseRoom::BuildHorizontalDoorVisuals();
             break;
 
         case DoorSide::Left:
-            doorInfo.colliderSize = MapColliderConfig::kVerticalDoorColliderSize;
             doorInfo.renderSize = MapColliderConfig::kVerticalDoorRenderSize;
             doorInfo.visuals = BaseRoom::BuildVerticalDoorVisuals();
             break;
         }
 
         const std::shared_ptr<Door> door = std::make_shared<Door>(
-            this->BuildDoorPosition(doorInfo) + doorInfo.positionOffset,
+            this->BuildDoorPosition(doorInfo),
             doorInfo.side,
             doorInfo.colliderSize,
             doorInfo.renderSize,
             doorInfo.visuals,
             doorInfo.startsOpen
         );
-        door->SetColliderOffset(-doorInfo.positionOffset);
 
         this->m_Doors.push_back(door);
         this->AddChild(door);

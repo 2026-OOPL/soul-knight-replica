@@ -18,6 +18,7 @@ struct WallSideLayout {
     // top: 正值往上、bottom: 負值往下、right: 正值往右、left: 負值往左。
     // 這個值會同時影響 door 的對位，避免門和牆分離。
     float centerOffset = 0.0F;
+    float openingOffsetDelta = 0.0F;
 };
 
 struct WallLayout {
@@ -37,12 +38,14 @@ inline WallSideLayout MakeWallSideLayout(
     // 在目前厚度上加減。
     float thicknessDelta = 0.0F,
     // 推移牆的位置；方向依牆面不同而不同。
-    float centerOffset = 0.0F
+    float centerOffset = 0.0F,
+    float openingOffsetDelta = 0.0F
 ) {
     return {
         thicknessOverride,
         thicknessDelta,
-        centerOffset
+        centerOffset,
+        openingOffsetDelta
     };
 }
 
@@ -66,10 +69,10 @@ inline WallLayout MakeWallLayout(
 
 // 全域套用到所有 BaseRoom 的牆設定。
 inline const WallLayout kGlobalWallLayout = MakeWallLayout(
-    MakeWallSideLayout(-1.0F, 0.0F, 0.0F),
-    MakeWallSideLayout(-1.0F, 5.0F, 0.0F),
-    MakeWallSideLayout(30.0F, 0.0F, 0.0F),
-    MakeWallSideLayout(-1.0F, 5.0F, 0.0F)
+    MakeWallSideLayout(-1.0F, 0.0F, -5.0F),
+    MakeWallSideLayout(-1.0F, 5.0F, 0.0F, 5.0F),
+    MakeWallSideLayout(-1.0F, 0.0F, 22.0F),
+    MakeWallSideLayout(-1.0F, 5.0F, 0.0F, 5.0F)
 );
 
 // 依房間用途分類的牆設定。
@@ -93,6 +96,7 @@ inline void ApplySideLayout(WallSideConfig &side, const WallSideLayout &layout) 
 
     side.thickness = std::max(0.0F, side.thickness + layout.thicknessDelta);
     side.centerOffset += layout.centerOffset;
+    side.openingOffset += layout.openingOffsetDelta;
 }
 
 // 一次套用四面牆設定。
