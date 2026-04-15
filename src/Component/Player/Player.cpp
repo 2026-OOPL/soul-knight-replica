@@ -18,7 +18,8 @@ Player::Player(
     StandSprite,
     WalkSprite,
     DieSprite,
-    4
+    4,
+    CombatFaction::Player
 ) {
     this->SetMaxHealth(maxHealth);
     this->SetCurrentHealth(this->GetMaxHealth());
@@ -26,21 +27,9 @@ Player::Player(
     this->SetCurrentShield(this->GetMaxShield());
     this->SetMaxAmmo(maxAmmo);
     this->SetCurrentAmmo(this->GetMaxAmmo());
-    this->SetFaction(CombatFaction::Player);
     this->BindWeaponAmmoConsumer();
 
     this->m_AbsoluteTransform.translation = {0.0F, 0.0F};
-
-    Collision::CollisionFilter filter = this->GetCollisionFilter();
-    filter.layer = Collision::CollisionLayer::Player;
-    filter.mask =
-        Collision::ToMask(Collision::CollisionLayer::World) |
-        Collision::ToMask(Collision::CollisionLayer::Prop) |
-        Collision::ToMask(Collision::CollisionLayer::Enemy) |
-        Collision::ToMask(Collision::CollisionLayer::EnemyProjectile) |
-        Collision::ToMask(Collision::CollisionLayer::Trigger);
-    filter.blocking = true;
-    this->SetCollisionFilter(filter);
 }
 
 glm::vec2 Player::GetMoveIntent() const {
