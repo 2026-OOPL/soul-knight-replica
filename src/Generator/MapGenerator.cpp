@@ -104,7 +104,7 @@ std::shared_ptr<Gangway> BuildGangway(
 
     if (std::abs(delta.x) >= std::abs(delta.y)) {
         config.orientation = GangwayOrientation::Horizontal;
-        config.width = MapColliderConfig::kHorizontalDoorColliderSize.x;
+        config.width = MapColliderConfig::kHorizontalDoorOpeningWidth;
         config.positionOffset = GangwayLayoutConfig::kHorizontalPositionOffset;
         config.topWallOffset = GangwayLayoutConfig::kHorizontalTopWallOffset;
         config.rightWallOffset = GangwayLayoutConfig::kHorizontalRightWallOffset;
@@ -119,7 +119,7 @@ std::shared_ptr<Gangway> BuildGangway(
         config.length = gap + MapColliderConfig::kDefaultWallThickness;
     } else {
         config.orientation = GangwayOrientation::Vertical;
-        config.width = MapColliderConfig::kVerticalDoorColliderSize.y;
+        config.width = MapColliderConfig::kVerticalDoorOpeningHeight;
         config.positionOffset = GangwayLayoutConfig::kVerticalPositionOffset;
         config.topWallOffset = GangwayLayoutConfig::kVerticalTopWallOffset;
         config.rightWallOffset = GangwayLayoutConfig::kVerticalRightWallOffset;

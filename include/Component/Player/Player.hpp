@@ -29,6 +29,7 @@ public:
     );
 
     virtual glm::vec2 GetMoveIntent() const override;
+    void Update() override;
     void SetWeapon(std::shared_ptr<Weapon> weapon) override;
     void ApplyDamage(int damage) override;
 
@@ -50,10 +51,15 @@ public:
 private:
     void BindWeaponAmmoConsumer();
 
+    float m_ShieldRegenDelayRemainingMs = 0.0F;
+    float m_ShieldRegenElapsedMs = 0.0F;
     int m_CurrentShield = 0;
     int m_MaxShield = 0;
     int m_CurrentAmmo = 0;
     int m_MaxAmmo = 0;
+
+    static constexpr float kShieldRegenDelayMs = 1000.0F;
+    static constexpr float kShieldRegenIntervalMs = 1000.0F;
 };
 
 #endif

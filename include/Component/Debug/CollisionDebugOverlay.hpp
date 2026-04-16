@@ -2,49 +2,20 @@
 #define COMPONENT_DEBUG_COLLISION_DEBUG_OVERLAY_HPP
 
 #include <memory>
-#include <string>
 #include <vector>
 
-#include <glm/vec2.hpp>
-
-#include "Core/Drawable.hpp"
-#include "Util/Color.hpp"
+#include "Component/Debug/CollisionDebugSnapshot.hpp"
 #include "Util/GameObject.hpp"
 #include "Util/Text.hpp"
 
 class SolidColorRectDrawable;
-
-struct CollisionDebugEntry {
-    glm::vec2 worldCenter = {0.0F, 0.0F};
-    glm::vec2 worldSize = {0.0F, 0.0F};
-    float worldRotation = 0.0F;
-    Util::Color color = Util::Color(255, 255, 255, 255);
-    std::string label;
-};
-
-struct CollisionDebugVisualEntry {
-    std::shared_ptr<Core::Drawable> drawable = nullptr;
-    glm::vec2 screenTranslation = {0.0F, 0.0F};
-    glm::vec2 screenScale = {1.0F, 1.0F};
-    float screenRotation = 0.0F;
-};
-
-struct CollisionDebugCameraState {
-    glm::vec2 coordinate = {0.0F, 0.0F};
-    glm::vec2 scale = {1.0F, 1.0F};
-    float rotation = 0.0F;
-};
 
 class CollisionDebugOverlay : public Util::GameObject {
 public:
     CollisionDebugOverlay();
 
     void SetEnabled(bool enabled);
-    void Sync(
-        const std::vector<CollisionDebugVisualEntry> &visualEntries,
-        const std::vector<CollisionDebugEntry> &entries,
-        const CollisionDebugCameraState &cameraState
-    );
+    void Sync(const CollisionDebugSnapshot &snapshot);
 
 private:
     struct SpriteVisual {

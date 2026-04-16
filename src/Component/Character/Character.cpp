@@ -18,25 +18,48 @@ namespace {
 
 constexpr float kMaxCharacterMovementDeltaTimeMs = 50.0F;
 
-Collision::CollisionFilter BuildDefaultCharacterFilter() {
+Collision::CollisionFilter BuildCharacterFilter(CombatFaction faction) {
     Collision::CollisionFilter filter;
-    filter.layer = Collision::CollisionLayer::Enemy;
-    filter.mask =
-        Collision::ToMask(Collision::CollisionLayer::World) |
-        Collision::ToMask(Collision::CollisionLayer::Prop) |
-        Collision::ToMask(Collision::CollisionLayer::Player) |
-        Collision::ToMask(Collision::CollisionLayer::PlayerProjectile) |
-        Collision::ToMask(Collision::CollisionLayer::Trigger);
     filter.blocking = true;
+
+    switch (faction) {
+    case CombatFaction::Player:
+        filter.layer = Collision::CollisionLayer::Player;
+        filter.mask =
+            Collision::ToMask(Collision::CollisionLayer::World) |
+            Collision::ToMask(Collision::CollisionLayer::Prop) |
+            Collision::ToMask(Collision::CollisionLayer::Enemy) |
+            Collision::ToMask(Collision::CollisionLayer::EnemyProjectile) |
+            Collision::ToMask(Collision::CollisionLayer::Trigger);
+        break;
+
+    case CombatFaction::Enemy:
+        filter.layer = Collision::CollisionLayer::Enemy;
+        filter.mask =
+            Collision::ToMask(Collision::CollisionLayer::World) |
+            Collision::ToMask(Collision::CollisionLayer::Prop) |
+            Collision::ToMask(Collision::CollisionLayer::Player) |
+            Collision::ToMask(Collision::CollisionLayer::PlayerProjectile) |
+            Collision::ToMask(Collision::CollisionLayer::Trigger);
+        break;
+
+    case CombatFaction::Neutral:
+    default:
+        filter.layer = Collision::CollisionLayer::None;
+        filter.mask = 0U;
+        filter.blocking = false;
+        break;
+    }
+
     return filter;
 }
 
-Collision::CollisionBox BuildDefaultCharacterBodyBox() {
+Collision::CollisionBox BuildDefaultCharacterBodyBox(CombatFaction faction) {
     Collision::CollisionBox bodyBox;
     bodyBox.id = 0;
     bodyBox.type = Collision::CollisionBoxType::Body;
     bodyBox.size = {24.0F, 24.0F};
-    bodyBox.filter = BuildDefaultCharacterFilter();
+    bodyBox.filter = BuildCharacterFilter(faction);
     return bodyBox;
 }
 
@@ -46,13 +69,15 @@ Character::Character(
     std::shared_ptr<Util::Animation> StandAnimation,
     std::shared_ptr<Util::Animation> WalkAnimation,
     std::shared_ptr<Util::Animation> DieAnimation,
-    int zIndex
-) : GameObject(nullptr, zIndex) {
+    int zIndex,
+    CombatFaction faction
+) : GameObject(nullptr, zIndex),
+    m_Faction(faction) {
     this->m_WalkAnimation = WalkAnimation;
     this->m_DieAnimation = DieAnimation;
     this->m_StandAnimation = StandAnimation;
 
-    this->m_CollisionBoxes.push_back(BuildDefaultCharacterBodyBox());
+    this->m_CollisionBoxes.push_back(BuildDefaultCharacterBodyBox(this->m_Faction));
     this->SetWeapon(std::make_shared<BadPistol>());
     this->SetDrawable(this->m_StandAnimation);
 };
@@ -61,8 +86,10 @@ Character::Character(
     const std::vector<std::string>& StandSprite,
     const std::vector<std::string>& WalkSprite,
     const std::vector<std::string>& DieSprite,
-    int zIndex
-) : GameObject(nullptr, zIndex) {
+    int zIndex,
+    CombatFaction faction
+) : GameObject(nullptr, zIndex),
+    m_Faction(faction) {
     this->m_WalkAnimation = std::make_shared<Util::Animation>(
         WalkSprite, true, 20, true, 0, false
     );
@@ -75,7 +102,7 @@ Character::Character(
         StandSprite, true, 20, true, 0, false
     );
 
-    this->m_CollisionBoxes.push_back(BuildDefaultCharacterBodyBox());
+    this->m_CollisionBoxes.push_back(BuildDefaultCharacterBodyBox(this->m_Faction));
     this->SetWeapon(std::make_shared<BadPistol>());
     this->SetDrawable(this->m_StandAnimation);
 };
@@ -148,6 +175,7 @@ CombatFaction Character::GetFaction() const {
 
 void Character::SetFaction(CombatFaction faction) {
     this->m_Faction = faction;
+    this->SetCollisionFilter(BuildCharacterFilter(this->m_Faction));
 
     if (this->m_Weapon != nullptr) {
         this->m_Weapon->SetProjectileFaction(this->m_Faction);
@@ -253,7 +281,7 @@ glm::vec2 Character::GetColliderSize() const {
 
 void Character::SetColliderSize(const glm::vec2 &colliderSize) {
     if (this->m_CollisionBoxes.empty()) {
-        this->m_CollisionBoxes.push_back(BuildDefaultCharacterBodyBox());
+        this->m_CollisionBoxes.push_back(BuildDefaultCharacterBodyBox(this->m_Faction));
     }
 
     this->m_CollisionBoxes.front().size = colliderSize;
@@ -261,7 +289,7 @@ void Character::SetColliderSize(const glm::vec2 &colliderSize) {
 
 Collision::CollisionFilter Character::GetCollisionFilter() const {
     if (this->m_CollisionBoxes.empty()) {
-        return BuildDefaultCharacterFilter();
+        return BuildCharacterFilter(this->m_Faction);
     }
 
     return this->m_CollisionBoxes.front().filter;
@@ -269,7 +297,7 @@ Collision::CollisionFilter Character::GetCollisionFilter() const {
 
 void Character::SetCollisionFilter(const Collision::CollisionFilter &filter) {
     if (this->m_CollisionBoxes.empty()) {
-        this->m_CollisionBoxes.push_back(BuildDefaultCharacterBodyBox());
+        this->m_CollisionBoxes.push_back(BuildDefaultCharacterBodyBox(this->m_Faction));
     }
 
     this->m_CollisionBoxes.front().filter = filter;

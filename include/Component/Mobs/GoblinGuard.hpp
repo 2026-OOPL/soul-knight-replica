@@ -38,7 +38,8 @@ public:
         STAND_SPRITE,
         WALK_SPRITE,
         DIE_SPRITE,
-        4
+        4,
+        CombatFaction::Enemy
     ) {
         m_TracePlayerTemp = tracePlayer;
         m_CollisionSystemTemp = collisionSystem;

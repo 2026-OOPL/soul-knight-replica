@@ -35,14 +35,16 @@ public:
         std::shared_ptr<Util::Animation> StandAnimation,
         std::shared_ptr<Util::Animation> WalkAnimation,
         std::shared_ptr<Util::Animation> DieAnimation,
-        int zIndex
+        int zIndex,
+        CombatFaction faction
     );
 
     Character(
         const std::vector<std::string>& StandSprite,
         const std::vector<std::string>& WalkSprite,
         const std::vector<std::string>& DieSprite,
-        int zIndex
+        int zIndex,
+        CombatFaction faction
     );
 
     // Override for MapObject
@@ -91,7 +93,7 @@ protected:
 
     int m_CurrentHealth = 10;
     int m_MaxHealth = 10;
-    CombatFaction m_Faction = CombatFaction::Enemy;
+    CombatFaction m_Faction = CombatFaction::Neutral;
     
     float m_PlayerSpeed = 0.15F;
 

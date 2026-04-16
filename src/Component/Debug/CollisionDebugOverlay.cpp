@@ -43,30 +43,30 @@ void CollisionDebugOverlay::SetEnabled(bool enabled) {
     }
 }
 
-void CollisionDebugOverlay::Sync(
-    const std::vector<CollisionDebugVisualEntry> &visualEntries,
-    const std::vector<CollisionDebugEntry> &entries,
-    const CollisionDebugCameraState &cameraState
-) {
+void CollisionDebugOverlay::Sync(const CollisionDebugSnapshot &snapshot) {
     if (!this->m_Enabled) {
         this->HideUnusedSpriteVisuals(0);
         this->HideUnusedVisuals(0);
         return;
     }
 
-    this->EnsureSpriteVisualCount(visualEntries.size());
-    for (std::size_t index = 0; index < visualEntries.size(); ++index) {
-        this->ApplySpriteVisual(this->m_SpriteVisuals[index], visualEntries[index]);
+    this->EnsureSpriteVisualCount(snapshot.visualEntries.size());
+    for (std::size_t index = 0; index < snapshot.visualEntries.size(); ++index) {
+        this->ApplySpriteVisual(this->m_SpriteVisuals[index], snapshot.visualEntries[index]);
     }
-    this->HideUnusedSpriteVisuals(visualEntries.size());
+    this->HideUnusedSpriteVisuals(snapshot.visualEntries.size());
 
-    this->EnsureVisualCount(entries.size());
+    this->EnsureVisualCount(snapshot.entries.size());
 
-    for (std::size_t index = 0; index < entries.size(); ++index) {
-        this->ApplyEntryVisual(this->m_EntryVisuals[index], entries[index], cameraState);
+    for (std::size_t index = 0; index < snapshot.entries.size(); ++index) {
+        this->ApplyEntryVisual(
+            this->m_EntryVisuals[index],
+            snapshot.entries[index],
+            snapshot.cameraState
+        );
     }
 
-    this->HideUnusedVisuals(entries.size());
+    this->HideUnusedVisuals(snapshot.entries.size());
 }
 
 void CollisionDebugOverlay::EnsureSpriteVisualCount(std::size_t count) {
