@@ -4,6 +4,7 @@
 #include <memory>
 #include <vector>
 
+#include "Common/CombatFaction.hpp"
 #include "Component/AI.hpp"
 #include "Component/Character/Character.hpp"
 
@@ -21,7 +22,8 @@ public:
         StandAnimation,
         WalkAnimation,
         DieAnimation,
-        4
+        4,
+        CombatFaction::Enemy
     ) {
         m_TracePlayerTemp = tracePlayer;
         m_CollisionSystemTemp = collisionSystem;
