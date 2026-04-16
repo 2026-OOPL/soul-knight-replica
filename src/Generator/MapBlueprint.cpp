@@ -7,6 +7,7 @@
 #include "Generator/MapBlueprint.hpp"
 #include "Common/Enums.hpp"
 #include "Generator/MapGenerator.hpp"
+#include "Generator/RoomInfo.hpp"
 #include "Util/Logger.hpp"
 
 MapBlueprint::MapBlueprint(glm::ivec2 size) {
@@ -80,7 +81,7 @@ std::vector<glm::ivec2> MapBlueprint::GetAllFightChamberCooirdinate() {
             continue;
         }
 
-        if (i->roomPurpose != RoomPurpose::FIGHTING) {
+        if (i->GetRoomPurpose() != RoomPurpose::FIGHTING) {
             continue;
         }
 
@@ -115,7 +116,7 @@ void MapBlueprint::OutputMapGridType() {
                 buf += "X ";
                 continue;
             }
-            RoomPurpose purpose = this->m_MapGrid[index]->roomPurpose;
+            RoomPurpose purpose = this->m_MapGrid[index]->GetRoomPurpose();
 
             switch (purpose) {
                 case RoomPurpose::FIGHTING:

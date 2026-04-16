@@ -11,24 +11,48 @@
 
 namespace {
 
-Collision::CollisionFilter BuildDefaultBulletFilter() {
+Collision::CollisionFilter BuildBulletFilterForFaction(CombatFaction faction) {
     Collision::CollisionFilter filter;
-    filter.layer = Collision::CollisionLayer::PlayerProjectile;
-    filter.mask =
-        Collision::ToMask(Collision::CollisionLayer::World) |
-        Collision::ToMask(Collision::CollisionLayer::Prop) |
-        Collision::ToMask(Collision::CollisionLayer::Enemy) |
-        Collision::ToMask(Collision::CollisionLayer::Trigger);
+
+    switch (faction) {
+        case CombatFaction::Player:
+            filter.layer = Collision::CollisionLayer::PlayerProjectile;
+            filter.mask =
+                Collision::ToMask(Collision::CollisionLayer::World) |
+                Collision::ToMask(Collision::CollisionLayer::Prop) |
+                Collision::ToMask(Collision::CollisionLayer::Enemy) |
+                Collision::ToMask(Collision::CollisionLayer::Trigger);
+            break;
+
+        case CombatFaction::Enemy:
+            filter.layer = Collision::CollisionLayer::EnemyProjectile;
+            filter.mask =
+                Collision::ToMask(Collision::CollisionLayer::World) |
+                Collision::ToMask(Collision::CollisionLayer::Prop) |
+                Collision::ToMask(Collision::CollisionLayer::Player) |
+                Collision::ToMask(Collision::CollisionLayer::Trigger);
+            break;
+
+        case CombatFaction::Neutral:
+        default:
+            filter.layer = Collision::CollisionLayer::PlayerProjectile;
+            filter.mask =
+                Collision::ToMask(Collision::CollisionLayer::World) |
+                Collision::ToMask(Collision::CollisionLayer::Prop) |
+                Collision::ToMask(Collision::CollisionLayer::Trigger);
+            break;
+    }
+
     filter.blocking = false;
     return filter;
 }
 
-Collision::CollisionBox BuildDefaultBulletBodyBox() {
+Collision::CollisionBox BuildDefaultBulletBodyBox(CombatFaction faction) {
     Collision::CollisionBox box;
     box.id = 0;
     box.type = Collision::CollisionBoxType::Body;
     box.size = {12.0F, 12.0F};
-    box.filter = BuildDefaultBulletFilter();
+    box.filter = BuildBulletFilterForFaction(faction);
     return box;
 }
 
@@ -48,7 +72,7 @@ Bullet::Bullet(
     this->m_Faction = faction;
 
     this->m_AbsoluteTransform.translation = cooridinate;
-    this->m_CollisionBoxes.push_back(BuildDefaultBulletBodyBox());
+    this->m_CollisionBoxes.push_back(BuildDefaultBulletBodyBox(this->m_Faction));
 
     this->SetDrawable(this->m_Animation);
 
@@ -72,7 +96,7 @@ Bullet::Bullet(
     int damage,
     CombatFaction faction
 ) : Bullet(
-    std::make_shared<Util::Animation>(sprite, 20, true),
+    std::make_shared<Util::Animation>(sprite, true, 20),
     cooridinate,
     momentum,
     zIndex,
@@ -132,7 +156,7 @@ glm::vec2 Bullet::GetColliderSize() const {
 
 void Bullet::SetColliderSize(const glm::vec2 &colliderSize) {
     if (this->m_CollisionBoxes.empty()) {
-        this->m_CollisionBoxes.push_back(BuildDefaultBulletBodyBox());
+        this->m_CollisionBoxes.push_back(BuildDefaultBulletBodyBox(this->m_Faction));
     }
 
     this->m_CollisionBoxes.front().size = colliderSize;
@@ -140,7 +164,7 @@ void Bullet::SetColliderSize(const glm::vec2 &colliderSize) {
 
 void Bullet::SetCollisionFilter(const Collision::CollisionFilter &filter) {
     if (this->m_CollisionBoxes.empty()) {
-        this->m_CollisionBoxes.push_back(BuildDefaultBulletBodyBox());
+        this->m_CollisionBoxes.push_back(BuildDefaultBulletBodyBox(this->m_Faction));
     }
 
     this->m_CollisionBoxes.front().filter = filter;
@@ -164,6 +188,7 @@ CombatFaction Bullet::GetFaction() const {
 
 void Bullet::SetFaction(CombatFaction faction) {
     this->m_Faction = faction;
+    this->SetCollisionFilter(BuildBulletFilterForFaction(this->m_Faction));
 }
 
 bool Bullet::HasRegisteredImpact() const {

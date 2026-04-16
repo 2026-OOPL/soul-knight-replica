@@ -7,6 +7,7 @@
 #include <string>
 #include <vector>
 
+#include "Component/Prop/Prop.hpp"
 #include "Util/GameObject.hpp"
 
 #include "Component/Bullet.hpp"
@@ -51,6 +52,18 @@ public:
         return this->m_Rooms;
     }
 
+    void AddProp(const std::shared_ptr<Prop> &prop) {
+        this->AddEntity(prop, this->m_Props, "prop");
+    }
+
+    void RemoveProp(const std::shared_ptr<Prop> &prop) {
+        this->RemoveEntity(prop, this->m_Props, "prop");
+    }
+
+    const std::vector<std::shared_ptr<Prop>> &GetProps() const {
+        return this->m_Props;
+    }
+
     void AddGangway(const std::shared_ptr<Gangway> &gangway) {
         this->AddEntity(gangway, this->m_Gangways, "gangway");
     }
@@ -63,15 +76,15 @@ public:
         return this->m_Gangways;
     }
 
-    void AddMob(const std::shared_ptr<Character> &mob) {
+    void AddMob(const std::shared_ptr<Mob> &mob) {
         this->AddEntity(mob, this->m_Mobs, "mob");
     }
 
-    void RemoveMob(const std::shared_ptr<Character> &mob) {
+    void RemoveMob(const std::shared_ptr<Mob> &mob) {
         this->RemoveEntity(mob, this->m_Mobs, "mob");
     }
 
-    const std::vector<std::shared_ptr<Character>> &GetMobs() const {
+    const std::vector<std::shared_ptr<Mob>> &GetMobs() const {
         return this->m_Mobs;
     }
 
@@ -137,8 +150,9 @@ private:
     std::vector<std::shared_ptr<Player>> m_Players;
     std::vector<std::shared_ptr<BaseRoom>> m_Rooms;
     std::vector<std::shared_ptr<Gangway>> m_Gangways;
-    std::vector<std::shared_ptr<Character>> m_Mobs;
+    std::vector<std::shared_ptr<Mob>> m_Mobs;
     std::vector<std::shared_ptr<Bullet>> m_Bullets;
+    std::vector<std::shared_ptr<Prop>> m_Props;
 };
 
 #endif

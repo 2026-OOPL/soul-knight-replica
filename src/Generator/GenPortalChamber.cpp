@@ -7,6 +7,7 @@
 #include "Generator/MapGenerator.hpp"
 #include "Generator/GenPortalChamber.hpp"
 #include "Generator/MapBlueprint.hpp"
+#include "Generator/RoomInfo.hpp"
 #include "Common/Enums.hpp" 
 
 GenPortalChamber::GenPortalChamber(
@@ -33,7 +34,9 @@ void GenPortalChamber::Generate() {
     }
     
     std::shared_ptr<RoomInfo> info = std::make_shared<RoomInfo>(
-        RoomType::ROOM_13_13, RoomPurpose::PORTAL
+        RoomType::ROOM_13_13,
+        RoomPurpose::PORTAL,
+        m_RandomChoose
     );
 
     m_Blueprint->SetElementByCooridinate(cooridinates[0], info);

@@ -2,6 +2,7 @@
 #include <glm/geometric.hpp>
 #include <iterator>
 #include <memory>
+#include <stdexcept>
 #include <unordered_set>
 #include <vector>
 
@@ -85,6 +86,9 @@ void MapSystem::Update() {
         for (const auto &bullet : this->m_World.GetBullets()) {
             this->ApplyCameraRecursive(bullet);
         }
+        for (const auto &prop : this->m_World.GetProps()) {
+            this->ApplyCameraRecursive(prop);
+        }
     }
 
     if (this->m_CollisionDebugOverlay != nullptr) {
@@ -148,11 +152,7 @@ void MapSystem::AddRoom(const std::shared_ptr<BaseRoom> &room) {
         return;
     }
 
-    std::shared_ptr<FightRoom> fightRoom = std::dynamic_pointer_cast<FightRoom>(room);
-    if (fightRoom != nullptr) {
-        // FightRoom requires pointer of map system to spawn waves
-        fightRoom->SetMapSystem(this);
-    }
+    room->Initialize(this);
 
     this->m_World.AddRoom(room);
 }
@@ -406,24 +406,41 @@ void MapSystem::RemoveBullet(std::shared_ptr<Bullet> bullet) {
     this->m_World.RemoveBullet(bullet);
 }
 
-void MapSystem::AddMob(std::shared_ptr<Character> mob) {
-    if (mob != nullptr) {
-        mob->SetCollisionResolver(
-            [this](const ICollidable &body, const glm::vec2 &intendedDelta) {
-                return this->ResolveMapMovement(body, intendedDelta);
-            }
-        );
+void MapSystem::AddMob(std::shared_ptr<Mob> mob) {
+    if (mob == nullptr) {
+        throw std::runtime_error("Trying to add a null mob is not allowed");
     }
+
+    mob->SetCollisionResolver(
+        [this](const ICollidable &body, const glm::vec2 &intendedDelta) {
+            return this->ResolveMapMovement(body, intendedDelta);
+        }
+    );
+
+    mob->Initialize(this);
 
     this->m_World.AddMob(mob);
 }
 
-void MapSystem::RemoveMob(std::shared_ptr<Character> mob) {
+void MapSystem::RemoveMob(std::shared_ptr<Mob> mob) {
     this->m_World.RemoveMob(mob);
 }
 
-const std::vector<std::shared_ptr<Character>>& MapSystem::GetMob() const {
+const std::vector<std::shared_ptr<Mob>>& MapSystem::GetMob() const {
     return this->m_World.GetMobs();
+}
+
+void MapSystem::AddProp(const std::shared_ptr<Prop> &prop) {
+    // Implement custom collider for each prop here
+    this->m_World.AddProp(prop);
+}
+
+void MapSystem::RemoveProp(const std::shared_ptr<Prop> &prop) {
+    this->m_World.RemoveProp(prop);
+}
+
+const std::vector<std::shared_ptr<Prop>> & MapSystem::GetProps() const {
+    return this->m_World.GetProps();
 }
 
 void MapSystem::PruneDestroyedBullets() {
@@ -441,7 +458,7 @@ void MapSystem::PruneDestroyedBullets() {
 }
 
 void MapSystem::PruneDefeatedMobs() {
-    std::vector<std::shared_ptr<Character>> defeatedMobs;
+    std::vector<std::shared_ptr<Mob>> defeatedMobs;
 
     for (const auto &mob : this->m_World.GetMobs()) {
         if (mob != nullptr && mob->IsDead()) {

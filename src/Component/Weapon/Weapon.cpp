@@ -25,7 +25,12 @@ Weapon::Weapon(
 }
 
 void Weapon::SetFacingDirection(glm::vec2 direction) {
+    if (glm::length(direction) <= 0.0001F) {
+        return;
+    }
+
     this->m_FacingDirection = glm::normalize(direction);
+    this->SetWeaponPointingByMoveDirection();
 }
 
 glm::vec2 Weapon::GetFacingDirection() {
@@ -33,19 +38,8 @@ glm::vec2 Weapon::GetFacingDirection() {
 }
 
 void Weapon::Update() {
-    this->SetWeaponPointingByMoveDirection();
     // Apply the rotation for the weapon
-
-    if (Util::Input::IsKeyPressed(Util::Keycode::SPACE) &&
-        Util::Time::GetElapsedTimeMs() - m_LastShotTime > m_FireDelay
-    ) {
-        if (this->m_AmmoCostPerShot > 0 && this->m_AmmoConsumer != nullptr &&
-            !this->m_AmmoConsumer(this->m_AmmoCostPerShot)) {
-            return;
-        }
-
-        this->ShotBullet();
-    }
+    this->SetWeaponPointingByMoveDirection();
 }
 
 Util::Transform Weapon::GetObjectTransform() const {
@@ -54,6 +48,10 @@ Util::Transform Weapon::GetObjectTransform() const {
 
 void Weapon::SetWeaponPointingByMoveDirection() {
     float rotation = atan2(m_FacingDirection.y, m_FacingDirection.x);
+    const float recoilOffset =
+        Util::Time::GetElapsedTimeMs() < this->m_RecoilEndTime ?
+        -this->m_RecoilDistance :
+        0.0F;
 
     // Set scale
     glm::vec2 currentScale = this->GetAbsoluteScale();
@@ -69,7 +67,9 @@ void Weapon::SetWeaponPointingByMoveDirection() {
     this->SetAbsoluteRotation(rotation);
 
     // Set translation
-    this->SetAbsoluteTranslation(m_AnchorPoint + m_FacingDirection * m_WeaponRadius);
+    this->SetAbsoluteTranslation(
+        m_AnchorPoint + m_FacingDirection * (m_WeaponRadius + recoilOffset)
+    );
 }
 
 glm::vec2 Weapon::GetAnchorPoint() {
@@ -78,6 +78,7 @@ glm::vec2 Weapon::GetAnchorPoint() {
 
 void Weapon::SetAnchorPoint(glm::vec2 anchor) {
     this->m_AnchorPoint = anchor;
+    this->SetWeaponPointingByMoveDirection();
 }
 
 int Weapon::GetAmmoCostPerShot() const {
@@ -104,16 +105,24 @@ void Weapon::SetProjectileFaction(CombatFaction projectileFaction) {
     this->m_ProjectileFaction = projectileFaction;
 }
 
-void Weapon::SetAmmoConsumer(std::function<bool(int)> ammoConsumer) {
-    this->m_AmmoConsumer = std::move(ammoConsumer);
-}
-
 void Weapon::SetOnBulletFired(std::function<void(std::shared_ptr<Bullet>)> callback) {
     this->m_OnBulletFired = callback;
 }
 
-void Weapon::ShotBullet() {
+void Weapon::TriggerRecoil(float durationMs) {
+    this->m_RecoilEndTime = Util::Time::GetElapsedTimeMs() + durationMs;
+    this->SetWeaponPointingByMoveDirection();
+}
+
+bool Weapon::ShotBullet() {
+    this->SetWeaponPointingByMoveDirection();
+
+    if (Util::Time::GetElapsedTimeMs() - m_LastShotTime < m_FireDelay) {
+        return false;
+    }
+
     m_LastShotTime = Util::Time::GetElapsedTimeMs();
+    this->TriggerRecoil();
 
     std::shared_ptr<Bullet> bullet = std::make_shared<TestBullet>(
         this->GetAbsoluteTranslation(),
@@ -126,4 +135,6 @@ void Weapon::ShotBullet() {
     if (this->m_OnBulletFired != nullptr) {
         this->m_OnBulletFired(bullet);
     }
+    
+    return true;
 }

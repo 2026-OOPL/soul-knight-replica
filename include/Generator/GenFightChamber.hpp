@@ -7,7 +7,9 @@
 
 #include <glm/vec2.hpp>
 
+#include "Common/Enums.hpp"
 #include "GenChamber.hpp"
+#include "Generator/MapGenerator.hpp"
 
 class GenChamber;
 class RandomChoose;
@@ -36,6 +38,7 @@ public:
 
 protected:
     void CreateRoom(glm::ivec2 position);
+    void PopulateRoomContents(glm::ivec2 position);
 
     glm::ivec2 m_Start;
 

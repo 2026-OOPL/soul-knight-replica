@@ -1,6 +1,8 @@
 #include <algorithm>
+#include <memory>
 #include <utility>
 
+#include "Component/Weapon.hpp"
 #include "Util/Input.hpp"
 #include "Util/Keycode.hpp"
 #include "Util/Time.hpp"
@@ -27,7 +29,7 @@ Player::Player(
     this->SetCurrentShield(this->GetMaxShield());
     this->SetMaxAmmo(maxAmmo);
     this->SetCurrentAmmo(this->GetMaxAmmo());
-    this->BindWeaponAmmoConsumer();
+    this->SetFaction(CombatFaction::Player);
 
     this->m_AbsoluteTransform.translation = {0.0F, 0.0F};
 }
@@ -58,6 +60,20 @@ glm::vec2 Player::GetMoveIntent() const {
 void Player::Update() {
     Character::Update();
 
+    if (Util::Input::IsKeyPressed(Util::Keycode::SPACE)) {
+        if (this->m_Weapon != nullptr) {
+            int cost = this->m_Weapon->GetAmmoCostPerShot();
+            
+            // Check if player has enough ammo before attempting to fire
+            if (this->GetCurrentAmmo() >= cost || cost <= 0) {
+                if (this->m_Weapon->ShotBullet()) {
+                    this->TriggerAttackVisual();
+                    this->TryConsumeAmmo(cost);
+                }
+            }
+        }
+    }
+    
     if (this->IsDead() || this->GetMaxShield() <= 0) {
         this->m_ShieldRegenDelayRemainingMs = 0.0F;
         this->m_ShieldRegenElapsedMs = 0.0F;
@@ -94,15 +110,12 @@ void Player::Update() {
             break;
         }
     }
+    
+    
 }
 
 void Player::SetWeapon(std::shared_ptr<Weapon> weapon) {
-    if (this->m_Weapon != nullptr) {
-        this->m_Weapon->SetAmmoConsumer(nullptr);
-    }
-
     Character::SetWeapon(std::move(weapon));
-    this->BindWeaponAmmoConsumer();
 }
 
 void Player::ApplyDamage(int damage) {
@@ -190,16 +203,4 @@ PlayerHudState Player::GetHudState() const {
         this->GetCurrentAmmo(),
         this->GetMaxAmmo()
     };
-}
-
-void Player::BindWeaponAmmoConsumer() {
-    if (this->m_Weapon == nullptr) {
-        return;
-    }
-
-    this->m_Weapon->SetAmmoConsumer(
-        [this](int amount) {
-            return this->TryConsumeAmmo(amount);
-        }
-    );
 }

@@ -6,8 +6,8 @@
 
 #include <glm/vec2.hpp>
 
-struct RoomInfo;
 class MapPiece;
+class RoomInfo;
 
 class MapBlueprint {
 public:
@@ -24,7 +24,7 @@ public:
     glm::ivec2 GetSize();
 
     bool isCooridinateInBound(glm::ivec2 pos);
-    
+
     std::vector<std::shared_ptr<MapPiece>> GetMapPieces();
 
     void OutputMapGridType();

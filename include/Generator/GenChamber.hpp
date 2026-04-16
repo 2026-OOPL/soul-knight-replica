@@ -9,6 +9,7 @@
 
 class MapBlueprint;
 class RandomChoose;
+enum class RoomType;
 
 class GenChamber {
 public:

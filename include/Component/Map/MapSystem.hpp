@@ -68,9 +68,13 @@ public:
     void RemoveBullet(std::shared_ptr<Bullet> bullet);
     const std::vector<std::shared_ptr<Bullet>>& GetBullets() const;
 
-    void AddMob(std::shared_ptr<Character> mob);
-    void RemoveMob(std::shared_ptr<Character> mob);
-    const std::vector<std::shared_ptr<Character>>& GetMob() const;
+    void AddMob(std::shared_ptr<Mob> mob);
+    void RemoveMob(std::shared_ptr<Mob> mob);
+    const std::vector<std::shared_ptr<Mob>>& GetMob() const;
+
+    void AddProp(const std::shared_ptr<Prop> &prop);
+    void RemoveProp(const std::shared_ptr<Prop> &prop);
+    const std::vector<std::shared_ptr<Prop>> &GetProps() const;
 
     Collision::CollisionSystem* GetCollisionSystem() { return &this->m_CollisionSystem; }
 

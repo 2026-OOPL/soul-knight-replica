@@ -6,7 +6,9 @@
 #include <vector>
 #include <functional>
 
+#include "Common/Enums.hpp"
 #include "GenChamber.hpp"
+#include "Generator/MapGenerator.hpp"
 
 enum class Direction;
 

@@ -8,6 +8,7 @@
 #include "Common/Enums.hpp"
 #include "Common/Random.hpp"
 #include "Generator/MapGenerator.hpp"
+#include "Generator/RoomInfo.hpp"
 #include "Generator/GenFightChamber.hpp"
 
 GenFightChamber::GenFightChamber(
@@ -56,6 +57,7 @@ void GenFightChamber::Generate() {
         currentPosition = m_RandomChoose->ChooseFromVector(candidateCooridinate);
         
         this->CreateRoom(currentPosition);
+        this->PopulateRoomContents(currentPosition);
 
         i++;
     } while (i < m_MaxChamberCount);
@@ -70,7 +72,9 @@ void GenFightChamber::CreateRoom(glm::ivec2 position) {
     }
 
     std::shared_ptr<RoomInfo> info = std::make_shared<RoomInfo>(
-        type, RoomPurpose::FIGHTING
+        type,
+        RoomPurpose::FIGHTING,
+        m_RandomChoose
     );
 
     m_Blueprint->SetElementByCooridinate(position, info);
@@ -110,4 +114,59 @@ std::vector<glm::ivec2> GenFightChamber::GetAvailableCooridinate() {
     }
 
     return results;
+}
+
+void GenFightChamber::PopulateRoomContents(glm::ivec2 position) {
+    std::shared_ptr<RoomInfo> info = m_Blueprint->GetElementByCooridinate(position);
+
+    int boxCount = this->m_RandomChoose->GetInteger(0, 4);
+            
+    for (int i = 0; i < boxCount; ++i) {
+        glm::vec2 pos = info->GetRandomPositionInChamberAligned();
+
+        SpawnInfo<ObstacleType> spawn (
+            ObstacleType::WOODEN_BOX, pos
+        );
+        
+        info->AddSpawnObject(spawn);
+    }
+
+    int waveCount = this->m_RandomChoose->GetInteger(1, 3); // 隨機 1 到 3 波
+    const float safeDistance = 60.0F; // 怪物與箱子之間的最短安全距離 (可依照你的素材大小調整)
+    
+    for (int i = 0; i < waveCount; ++i) {
+        std::vector<SpawnInfo<MobType>> wave;
+        int monsterCount = this->m_RandomChoose->GetInteger(2, 5); // 每波 2 到 5 隻
+
+        for (int j = 0; j < monsterCount; ++j) {
+            glm::vec2 spawnPos;
+            bool isValid = false;
+
+            // 嘗試產生相對於房間中心的隨機位置，並檢查是否與箱子重疊 (最多嘗試 10 次避免無窮迴圈)
+            for (int attempt = 0; attempt < 10; ++attempt) {
+                spawnPos = info->GetRandomPositionInChamber();
+                
+                isValid = true;
+
+                for (const auto& obs : info->GetObstacle()) {
+                    if (glm::distance(spawnPos, obs.localPosition) < safeDistance) {
+                        isValid = false;
+                        break;
+                    }
+                }
+                
+                if (isValid) {
+                    break; // 找到沒和箱子重疊的位置
+                }
+            }
+
+            SpawnInfo<MobType> spawn (
+                MobType::GOBLIN_GUARD, spawnPos
+            );
+            
+            wave.push_back(spawn);
+        }
+        
+        info->AddMonsterWave(wave);
+    }
 }

@@ -29,28 +29,27 @@ public:
     );
 
     virtual glm::vec2 GetMoveIntent() const override;
-    void Update() override;
     void SetWeapon(std::shared_ptr<Weapon> weapon) override;
     void ApplyDamage(int damage) override;
-
+    
     int GetCurrentShield() const;
     int GetMaxShield() const;
     void SetCurrentShield(int shield);
     void SetMaxShield(int maxShield);
     void RestoreShield(int amount);
-
+    
     int GetCurrentAmmo() const;
     int GetMaxAmmo() const;
     void SetCurrentAmmo(int ammo);
     void SetMaxAmmo(int maxAmmo);
     bool TryConsumeAmmo(int amount);
     void RecoverAmmo(int amount);
-
+    
     PlayerHudState GetHudState() const;
-
+    
+    void Update() override;
+    
 private:
-    void BindWeaponAmmoConsumer();
-
     float m_ShieldRegenDelayRemainingMs = 0.0F;
     float m_ShieldRegenElapsedMs = 0.0F;
     int m_CurrentShield = 0;
