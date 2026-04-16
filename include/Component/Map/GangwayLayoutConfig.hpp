@@ -5,8 +5,8 @@
 
 namespace GangwayLayoutConfig {
 
-inline const glm::vec2 kHorizontalPositionOffset = {0.0F, 0.0F};
-inline const glm::vec2 kVerticalPositionOffset = {0.0F, 0.0F};
+inline const glm::vec2 kHorizontalPositionOffset = {6.0F, 0.0F};
+inline const glm::vec2 kVerticalPositionOffset = {0.0F, -1.0F};
 inline constexpr float kHorizontalTopWallOffset = 7.0F;
 inline constexpr float kHorizontalRightWallOffset = 0.0F;
 inline constexpr float kHorizontalBottomWallOffset = 7.0F;

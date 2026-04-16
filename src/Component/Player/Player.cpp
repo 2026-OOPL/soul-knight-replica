@@ -5,6 +5,7 @@
 #include "Component/Weapon.hpp"
 #include "Util/Input.hpp"
 #include "Util/Keycode.hpp"
+#include "Util/Time.hpp"
 
 #include "Component/Player/Player.hpp"
 
@@ -19,7 +20,8 @@ Player::Player(
     StandSprite,
     WalkSprite,
     DieSprite,
-    4
+    4,
+    CombatFaction::Player
 ) {
     this->SetMaxHealth(maxHealth);
     this->SetCurrentHealth(this->GetMaxHealth());
@@ -30,17 +32,6 @@ Player::Player(
     this->SetFaction(CombatFaction::Player);
 
     this->m_AbsoluteTransform.translation = {0.0F, 0.0F};
-
-    Collision::CollisionFilter filter = this->GetCollisionFilter();
-    filter.layer = Collision::CollisionLayer::Player;
-    filter.mask =
-        Collision::ToMask(Collision::CollisionLayer::World) |
-        Collision::ToMask(Collision::CollisionLayer::Prop) |
-        Collision::ToMask(Collision::CollisionLayer::Enemy) |
-        Collision::ToMask(Collision::CollisionLayer::EnemyProjectile) |
-        Collision::ToMask(Collision::CollisionLayer::Trigger);
-    filter.blocking = true;
-    this->SetCollisionFilter(filter);
 }
 
 glm::vec2 Player::GetMoveIntent() const {
@@ -66,6 +57,63 @@ glm::vec2 Player::GetMoveIntent() const {
     return glm::normalize(moveIntent);
 }
 
+void Player::Update() {
+    Character::Update();
+
+    if (Util::Input::IsKeyPressed(Util::Keycode::SPACE)) {
+        if (this->m_Weapon != nullptr) {
+            int cost = this->m_Weapon->GetAmmoCostPerShot();
+            
+            // Check if player has enough ammo before attempting to fire
+            if (this->GetCurrentAmmo() >= cost || cost <= 0) {
+                if (this->m_Weapon->ShotBullet()) {
+                    this->TriggerAttackVisual();
+                    this->TryConsumeAmmo(cost);
+                }
+            }
+        }
+    }
+    
+    if (this->IsDead() || this->GetMaxShield() <= 0) {
+        this->m_ShieldRegenDelayRemainingMs = 0.0F;
+        this->m_ShieldRegenElapsedMs = 0.0F;
+        return;
+    }
+
+    if (this->GetCurrentShield() >= this->GetMaxShield()) {
+        this->m_ShieldRegenDelayRemainingMs = 0.0F;
+        this->m_ShieldRegenElapsedMs = 0.0F;
+        return;
+    }
+
+    float deltaTimeMs = Util::Time::GetDeltaTimeMs();
+
+    if (this->m_ShieldRegenDelayRemainingMs > 0.0F) {
+        if (deltaTimeMs < this->m_ShieldRegenDelayRemainingMs) {
+            this->m_ShieldRegenDelayRemainingMs -= deltaTimeMs;
+            return;
+        }
+
+        deltaTimeMs -= this->m_ShieldRegenDelayRemainingMs;
+        this->m_ShieldRegenDelayRemainingMs = 0.0F;
+    }
+
+    this->m_ShieldRegenElapsedMs += deltaTimeMs;
+
+    while (this->m_ShieldRegenElapsedMs >= kShieldRegenIntervalMs) {
+        this->RestoreShield(1);
+        this->m_ShieldRegenElapsedMs -= kShieldRegenIntervalMs;
+
+        if (this->GetCurrentShield() >= this->GetMaxShield()) {
+            this->m_ShieldRegenDelayRemainingMs = 0.0F;
+            this->m_ShieldRegenElapsedMs = 0.0F;
+            break;
+        }
+    }
+    
+    
+}
+
 void Player::SetWeapon(std::shared_ptr<Weapon> weapon) {
     Character::SetWeapon(std::move(weapon));
 }
@@ -74,6 +122,9 @@ void Player::ApplyDamage(int damage) {
     if (damage <= 0) {
         return;
     }
+
+    this->m_ShieldRegenDelayRemainingMs = kShieldRegenDelayMs;
+    this->m_ShieldRegenElapsedMs = 0.0F;
 
     const int shieldDamage = std::min(this->m_CurrentShield, damage);
     this->SetCurrentShield(this->m_CurrentShield - shieldDamage);
@@ -152,22 +203,4 @@ PlayerHudState Player::GetHudState() const {
         this->GetCurrentAmmo(),
         this->GetMaxAmmo()
     };
-}
-
-void Player::Update() {
-    Character::Update();
-
-    if (Util::Input::IsKeyPressed(Util::Keycode::SPACE)) {
-        if (this->m_Weapon != nullptr) {
-            int cost = this->m_Weapon->GetAmmoCostPerShot();
-            
-            // Check if player has enough ammo before attempting to fire
-            if (this->GetCurrentAmmo() >= cost || cost <= 0) {
-                if (this->m_Weapon->ShotBullet()) {
-                    this->TriggerAttackVisual();
-                    this->TryConsumeAmmo(cost);
-                }
-            }
-        }
-    }
 }
