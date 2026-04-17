@@ -65,7 +65,7 @@ protected:
 private:
     int m_FireDelay;
     int m_AmmoCostPerShot = 1;
-    int m_BulletDamage = 100;
+    int m_BulletDamage = 1;
     CombatFaction m_ProjectileFaction = CombatFaction::Neutral;
 };
 

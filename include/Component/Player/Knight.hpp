@@ -19,9 +19,9 @@
 
 namespace KnightPlayer {
 
-constexpr int MAX_HEALTH = 10;
+constexpr int MAX_HEALTH = 100;
 constexpr int MAX_SHIELD = 5;
-constexpr int MAX_AMMO = 100;
+constexpr int MAX_AMMO = 1000;
 
 const std::vector<std::string> WALK_SPRITES = {
     std::string(RESOURCE_DIR) + "/Character/Knight/knight_walk_0.png",
