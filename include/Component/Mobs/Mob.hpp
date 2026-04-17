@@ -5,7 +5,7 @@
 #include <vector>
 
 #include "Common/CombatFaction.hpp"
-#include "Component/AI.hpp"
+#include "Component/AI/AI.hpp"
 #include "Component/Character/Character.hpp"
 
 class MapSystem;
@@ -16,7 +16,7 @@ public:
         const std::vector<std::string>& StandAnimation,
         const std::vector<std::string>& WalkAnimation,
         const std::vector<std::string>& DieAnimation,
-        std::weak_ptr<Character> tracePlayer,
+        std::shared_ptr<Character> tracePlayer,
         Collision::CollisionSystem* collisionSystem
     ) : Character(
         StandAnimation,
@@ -43,7 +43,7 @@ public:
     void Initialize(MapSystem* mapSystem);
     
 protected:
-    std::weak_ptr<Character> m_TracePlayerTemp;
+    std::shared_ptr<Character> m_TracePlayerTemp;
     Collision::CollisionSystem* m_CollisionSystemTemp;
 
     glm::vec2 m_FacingDirection;

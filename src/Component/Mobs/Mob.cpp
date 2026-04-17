@@ -1,15 +1,16 @@
 #include <glm/vec2.hpp>
 
+#include "Util/Logger.hpp"
+
 #include "Component/Mobs/Mob.hpp"
 #include "Component/Map/MapSystem.hpp"
 #include "Component/Character/Character.hpp"
-#include "Util/Logger.hpp"
 
 void Mob::Update() {
     m_AI->Update();
     Character::Update();
 
-    if (m_AI->GetAttackTrigger()) {
+    if (m_AI->GetAttackDirection() != glm::vec2(0.0F)) {
         bool result = m_Weapon->ShotBullet();
         if (result) {
             this->TriggerAttackVisual();

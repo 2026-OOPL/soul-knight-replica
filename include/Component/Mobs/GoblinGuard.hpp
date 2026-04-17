@@ -30,7 +30,7 @@ namespace {
 class GoblinGuard : public Mob {
 public:
     GoblinGuard(
-        std::weak_ptr<Character> tracePlayer,
+        std::shared_ptr<Character> tracePlayer,
         Collision::CollisionSystem* collisionSystem
     ) : Mob(
         STAND_SPRITE,

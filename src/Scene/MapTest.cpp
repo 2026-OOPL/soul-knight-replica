@@ -56,8 +56,8 @@ MapTest::MapTest() : MapSystem() {
     }
 
     this->m_PlayUI = std::make_shared<PlayUI>(
-        [weakPlayer = std::weak_ptr<Player>(this->m_MainPlayer)]() {
-            const std::shared_ptr<Player> player = weakPlayer.lock();
+        [weakPlayer = std::shared_ptr<Player>(this->m_MainPlayer)]() {
+            const std::shared_ptr<Player> player = weakPlayer;
             if (player == nullptr) {
                 return PlayerHudState{};
             }

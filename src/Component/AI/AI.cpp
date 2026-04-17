@@ -1,27 +1,23 @@
-#include "Component/AI.hpp"
+#include "Component/AI/AI.hpp"
+#include "Component/Character/Character.hpp"
 #include "Component/Collision/CollisionSystem.hpp"
 #include "Component/Collision/CollisionTypes.hpp"
 #include "Util/Transform.hpp"
 #include <cmath>
 #include <glm/ext/vector_float2.hpp>
-#include <glm/fwd.hpp>
-#include <iterator>
+#include <glm/vec2.hpp>
+
 #include <memory>
-#include <glm/geometric.hpp> // 為了使用 glm::distance
+#include <glm/geometric.hpp>
 #include <random>
 #include "Util/Logger.hpp"
 
 void AI::Update() {
-    std::shared_ptr<Character> player = m_TracePlayer.lock();
-
-    if (!player || !m_Owner) {
+    if (!m_Target || !m_Owner) {
         return;
     }
 
-    Util::Transform playerTransform = player->GetAbsoluteTransform();
-    Util::Transform ownerTransform = m_Owner->GetAbsoluteTransform();
-
-    float dist = glm::distance(ownerTransform.translation, playerTransform.translation);
+    float dist = GetDistanceToTarget();
     
     if (dist > 300.0f) {
         m_Status = Status::WANDER;
@@ -40,36 +36,21 @@ void AI::Update() {
     m_LastPosition = m_Owner->GetAbsoluteTranslation();
 }
 
-bool AI::IsArriveDestinaton() {
-    if ( glm::distance(m_LastPosition, m_Owner->GetAbsoluteTranslation()) < 0.005F) {
-        return true;
-    }
-    
-    // LOG_INFO(m_LastMoveDirection);
-    if (glm::distance(m_Owner->GetAbsoluteTransform().translation, m_DesiredDirection) < 1.0F) {
-        return true;
-    }
-
-    return false;
-}
-
 void AI::UpdateDesiredDirection() {
-    std::shared_ptr<Character> target = m_TracePlayer.lock();
-
     switch (m_Status) {
         case Status::WANDER:
-            m_DesiredDirection = this->m_Owner->GetAbsoluteTranslation() + 
+            m_DesiredTranslation = this->m_Owner->GetAbsoluteTranslation() + 
                 glm::vec2(1, 0);
             break;
 
         case Status::PURSUIT:
-            m_DesiredDirection = target->GetAbsoluteTranslation();
+            m_DesiredTranslation = m_Target->GetAbsoluteTranslation();
             break;
 
         case Status::STOPANDATTACK:
-            m_DesiredDirection = this->CalculateStopAndAttack(
+            m_DesiredTranslation = this->CalculateStopAndAttack(
                 this->m_Owner->GetAbsoluteTranslation(),
-                target->GetAbsoluteTranslation()
+                this->m_Target->GetAbsoluteTranslation()
             );
 
             break;
@@ -87,7 +68,7 @@ glm::vec2 AI::CalculateStopAndAttack(glm::vec2 ownerPos, glm::vec2 targetPos) {
     }
 
     // 2. 在 owner 那側的半圓隨機取一個角度 (-90度 到 90度)
-    float randomAngle = (this->distr(this->gen) - 0.5f) * M_PI / 1.5F;
+    float randomAngle = (this->m_Random.GetFloat() - 0.5f) * M_PI / 1.5F;
 
     // 3. 將向量旋轉該隨機角度
     float s = std::sin(randomAngle);
@@ -95,7 +76,7 @@ glm::vec2 AI::CalculateStopAndAttack(glm::vec2 ownerPos, glm::vec2 targetPos) {
     glm::vec2 rotatedDir = glm::vec2(toOwner.x * c - toOwner.y * s, toOwner.x * s + toOwner.y * c);
 
     // 4. 計算並回傳半圓上的目標座標
-    float radius = 50.0f + 20.0f * this->distr(this->gen);
+    float radius = 50.0f + 20.0f * m_Random.GetFloat();
     return targetPos + rotatedDir * radius;
 }
 
@@ -103,24 +84,22 @@ glm::vec2 AI::GetMoveDirection() {
     if (m_Freezed) {
         return glm::vec2(0.0f);
     }
-
-    std::shared_ptr<Character> player = m_TracePlayer.lock();
     
-    if (!player || !m_Owner) return glm::vec2(0.0f);
+    if (!m_Target || !m_Owner) return glm::vec2(0.0f);
 
     glm::vec2 ownerPos = m_Owner->GetAbsoluteTranslation();
     
     // 1. 計算原始渴望移動的方向 (正規化)
-    glm::vec2 desiredDir = glm::normalize(m_DesiredDirection - ownerPos);
+    glm::vec2 desiredDir = glm::normalize(m_DesiredTranslation - ownerPos);
 
-    if (glm::distance(m_DesiredDirection, ownerPos) < 0.5F) {
+    if (glm::distance(m_DesiredTranslation, ownerPos) < 0.5F) {
         return glm::vec2(0);
     }
 
     // 2. 透過觸鬚避障修正方向
     glm::vec2 finalDir = ApplyObstacleAvoidance(ownerPos, desiredDir);
 
-    m_LastMoveDirection = finalDir;
+    m_LastFacing = finalDir;
 
     return finalDir;
 }
@@ -218,11 +197,11 @@ glm::vec2 AI::GetFaceDirection() {
 
     switch (m_Status) {
         case Status::WANDER:
-            return m_LastMoveDirection;
+            return m_LastFacing;
 
         case Status::STOPANDATTACK:
         case Status::PURSUIT:
-            return m_TracePlayer.lock()->GetAbsoluteTranslation() - m_Owner->GetAbsoluteTranslation();
+            return m_Target->GetAbsoluteTranslation() - m_Owner->GetAbsoluteTranslation();
     }
 
     return glm::vec2(0.0f);
@@ -236,18 +215,46 @@ void AI::UnFreeze() {
     m_Freezed = false;
 }
 
-bool AI::GetAttackTrigger() {
+glm::vec2 AI::GetAttackDirection() {
     if (m_Freezed) {
-        return false;
+        return glm::vec2(0.0F);
     }
 
     switch (m_Status) {
         case Status::WANDER:
         case Status::PURSUIT:
-            return false;
+            return glm::vec2(0.0F);
 
         case Status::STOPANDATTACK:
-            return true;
+            return m_LastFacing;
+    }
+
+    return glm::vec2(0.0F);
+}
+
+glm::vec2 AI::GetFacingToTarget() {
+    glm::vec2 owner = m_Owner->GetAbsoluteTranslation();
+    glm::vec2 target = m_Target->GetAbsoluteTranslation();
+
+    return glm::normalize(target - owner);
+}
+
+float AI::GetDistanceToTarget() {
+    glm::vec2 owner = m_Owner->GetAbsoluteTranslation();
+    glm::vec2 target = m_Target->GetAbsoluteTranslation();
+    
+    return glm::distance(owner, target);
+}
+
+bool AI::IsArriveDestinaton() {
+    // Consider arrived destination if mob is moving too slow   
+    if ( glm::distance(m_LastPosition, m_Owner->GetAbsoluteTranslation()) < AIConfig::ARRIVE_MOVING_DISTANCE) {
+        return true;
+    }
+    
+    // Consider arrived destination if it's close to the desired translation 
+    if (glm::distance(m_Owner->GetAbsoluteTranslation(), m_DesiredTranslation) < AIConfig::ARRIVE_DESTINATION_DISTANCE) {
+        return true;
     }
 
     return false;

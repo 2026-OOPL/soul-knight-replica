@@ -119,7 +119,7 @@ void FightRoom::StartNextMonsterWave() {
         return;
     }
 
-    std::weak_ptr<Character> target;
+    std::shared_ptr<Character> target;
 
     if (m_MapSystem->GetPlayers().empty()) {
         LOG_ERROR("Failed to start next wave, target player not found.");
