@@ -1,21 +1,21 @@
 #ifndef AI_HPP
 #define AI_HPP
 
-#include <glm/ext/vector_float2.hpp>
-#include <glm/fwd.hpp>
-#include <memory>
-#include <random>
+#include <glm/vec2.hpp>
 
 #include "Common/Random.hpp"
+#include "Component/AI/StateMachine.hpp"
+#include "Component/Character/Character.hpp"
 #include "Component/Collision/CollisionSystem.hpp"
 #include "Component/IStateful.hpp"
-#include "Component/Player/Player.hpp"
 #include "Util/Time.hpp"
 
 enum class Status {
-    WANDER, 
+    WANDER,
+    FRIGHTENED,
     PURSUIT,
-    STOPANDATTACK
+    STOPANDATTACK,
+    MAX = STOPANDATTACK
 };
 
 namespace AIConfig {
@@ -25,6 +25,24 @@ namespace AIConfig {
 
     /// The radius we consider that ai is arrived to the desired translation
     constexpr float ARRIVE_DESTINATION_DISTANCE = 1.0F;
+
+    /// The radius of the mob standing in attack status
+    constexpr float ATTACK_MINIMAL_RADIUS = 50.0F;
+    constexpr float ATTACK_MAXIMAL_RADIUS = 90.0F;
+
+    /// The maximum random angle that apply to the mob while attacking 
+    /// Which simulate the handshake
+    // TODO...
+
+    /// 
+    constexpr float PURSUIT_RADUIS_ANGLE = M_PI / 3.0F;
+
+    constexpr float STATE_PERSUIT_MIN_RANGE = 130.0F;
+
+    constexpr float STATE_STOPANDATTACK_MIN_RANGE = 50.0F;
+    constexpr float STATE_STOPANDATTACK_MAX_RANGE = 120.0F;
+
+    constexpr float FRIGHTENED_WAIT_TIME = 3000;
 }
 
 class AI : public IStateful {
@@ -39,6 +57,7 @@ public:
       this->m_CollisionSystem = collision;
 
       m_Random = RandomChoose();
+
     };
 
     ~AI() override = default;
@@ -69,7 +88,7 @@ protected:
     glm::vec2 m_DesiredTranslation;
 
     /// Current state machine of the AI
-    Status m_Status = Status::WANDER;
+    StateMachine m_StateMachine = StateMachine(Status::WANDER);
 
     /// The last facing of the mob
     glm::vec2  m_LastFacing;
@@ -80,22 +99,27 @@ protected:
 
     bool m_Freezed = false;
 
-    glm::vec2 GetFacingToTarget();
+    glm::vec2 GetFaceToTarget();
     float     GetDistanceToTarget();
 
-private:
+    /// Return the vactor after applied the angle between [-angle/2, angle/2]
+    glm::vec2 ApplyRandomAngle(glm::vec2 vector, float angle);
     /// Correct move direction by the information of the 3-way tenetacles check
     glm::vec2 ApplyObstacleAvoidance(const glm::vec2& currentPos, const glm::vec2& desiredDir);
-    
+
+    Status GetNextState();
+
+    Util::ms_t m_FrightenedStartTime = 0;
+    Util::ms_t m_StopAndAttackStartTime = 0;
+    Util::ms_t m_PursuitStartTime = 0;
+
+    bool NeedUpdate();
+
+private:
     /// Check if the desired place is occupied by obastacles
-    bool IsPointBlocked(const glm::vec2& point); 
+    bool IsPointBlocked(const glm::vec2& point);
 
-
-    void UpdateDesiredDirection();
-
-    glm::vec2 CalculateStopAndAttack(glm::vec2 ownerPos, glm::vec2 targetPos);
-
-    
+    void UpdateDesiredTranslation();
 };
 
-#endif //
+#endif // AI_HPP

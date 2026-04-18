@@ -1,107 +1,124 @@
+#include <cmath>
+
+#include <glm/ext/vector_float2.hpp>
+#include <glm/geometric.hpp>
+#include <glm/vec2.hpp>
+
 #include "Component/AI/AI.hpp"
 #include "Component/Character/Character.hpp"
 #include "Component/Collision/CollisionSystem.hpp"
 #include "Component/Collision/CollisionTypes.hpp"
-#include "Util/Transform.hpp"
-#include <cmath>
-#include <glm/ext/vector_float2.hpp>
-#include <glm/vec2.hpp>
-
-#include <memory>
-#include <glm/geometric.hpp>
-#include <random>
 #include "Util/Logger.hpp"
+#include "Util/Time.hpp"
 
 void AI::Update() {
     if (!m_Target || !m_Owner) {
         return;
     }
 
-    float dist = GetDistanceToTarget();
-    
-    if (dist > 300.0f) {
-        m_Status = Status::WANDER;
-    } else if (dist > 100.0f) {
-        m_Status = Status::PURSUIT;
-    } else {
-        m_Status = Status::STOPANDATTACK;
-    }
+    m_StateMachine.SetState(
+        this->GetNextState()
+    );
 
-    Util::ms_t updateInterval = Util::Time::GetElapsedTimeMs() - m_LastUpdateTime;
-    if ((IsArriveDestinaton() || updateInterval > 3000) && updateInterval > 1500) {
+    if ( this->NeedUpdate() ) {
+        this->UpdateDesiredTranslation();
         this->m_LastUpdateTime = Util::Time::GetElapsedTimeMs();
-        this->UpdateDesiredDirection();
     }
 
     m_LastPosition = m_Owner->GetAbsoluteTranslation();
 }
 
-void AI::UpdateDesiredDirection() {
-    switch (m_Status) {
-        case Status::WANDER:
-            m_DesiredTranslation = this->m_Owner->GetAbsoluteTranslation() + 
-                glm::vec2(1, 0);
-            break;
-
-        case Status::PURSUIT:
-            m_DesiredTranslation = m_Target->GetAbsoluteTranslation();
-            break;
-
-        case Status::STOPANDATTACK:
-            m_DesiredTranslation = this->CalculateStopAndAttack(
-                this->m_Owner->GetAbsoluteTranslation(),
-                this->m_Target->GetAbsoluteTranslation()
-            );
-
-            break;
+bool AI::NeedUpdate() {
+    if (m_Freezed) {
+        return false;
     }
+
+    Util::ms_t now = Util::Time::GetElapsedTimeMs();
+
+    if (now - m_LastUpdateTime > 3500) {
+        return true;
+    }
+
+    if (this->IsArriveDestinaton()) {
+        return true;
+    }
+
+    return false;
 }
 
-glm::vec2 AI::CalculateStopAndAttack(glm::vec2 ownerPos, glm::vec2 targetPos) {
-    // 1. 計算由 target 指向 owner 的單位向量
-    glm::vec2 toOwner = ownerPos - targetPos;
-    
-    if (glm::length(toOwner) < 0.01f) {
-        toOwner = glm::vec2(1.0f, 0.0f); // 防呆處理，避免位置完全重疊導致除以零
-    } else {
-        toOwner = glm::normalize(toOwner);
+void AI::UpdateDesiredTranslation() {
+    Status currentState = m_StateMachine.GetState();
+
+    const glm::vec2 mobPosition = this->m_Owner->GetAbsoluteTranslation();
+    const glm::vec2 targetPosition = this->m_Target->GetAbsoluteTranslation();
+
+    if (currentState == Status::WANDER) {
+        glm::vec2 toTargetVec = targetPosition - mobPosition;
+
+        toTargetVec = this->ApplyRandomAngle(toTargetVec, M_PI * 2.0F);
+        toTargetVec = glm::normalize(toTargetVec);
+
+        float distance = m_Random.GetFloat(
+            this->GetDistanceToTarget() / 3.0F
+        );
+
+        m_DesiredTranslation = mobPosition + toTargetVec * distance;
+        return;
     }
 
-    // 2. 在 owner 那側的半圓隨機取一個角度 (-90度 到 90度)
-    float randomAngle = (this->m_Random.GetFloat() - 0.5f) * M_PI / 1.5F;
+    if (currentState == Status::FRIGHTENED) {
+        // Stand still if mob is frightened
+        m_DesiredTranslation = this->m_Owner->GetAbsoluteTranslation();
+        return;
+    }
 
-    // 3. 將向量旋轉該隨機角度
-    float s = std::sin(randomAngle);
-    float c = std::cos(randomAngle);
-    glm::vec2 rotatedDir = glm::vec2(toOwner.x * c - toOwner.y * s, toOwner.x * s + toOwner.y * c);
+    if (currentState == Status::PURSUIT) {
+        // Head toward to the player while pursuit mode
+        glm::vec2 playerPosition = this->m_Target->GetAbsoluteTranslation();
+        float rangeToPlayer = m_Random.GetFloat(AIConfig::STATE_STOPANDATTACK_MIN_RANGE, AIConfig::STATE_STOPANDATTACK_MAX_RANGE);
 
-    // 4. 計算並回傳半圓上的目標座標
-    float radius = 50.0f + 20.0f * m_Random.GetFloat();
-    return targetPos + rotatedDir * radius;
+        glm::vec2 vector = glm::normalize( this->m_Owner->GetAbsoluteTranslation() - playerPosition);
+
+        vector = this->ApplyRandomAngle(vector, M_PI);
+
+        this->m_DesiredTranslation = playerPosition + vector * rangeToPlayer;
+        return;
+    }
+
+    if (currentState == Status::STOPANDATTACK) {
+        // float randAngle = m_Random.GetFloat() * AIConfig::PURSUIT_RADUIS_ANGLE;
+
+        // const float radius = (AIConfig::ATTACK_MAXIMAL_RADIUS - AIConfig::ATTACK_MINIMAL_RADIUS);
+        // float randRadius = AIConfig::ATTACK_MINIMAL_RADIUS + radius * m_Random.GetFloat();
+
+        // this->m_DesiredTranslation = this->ApplyRandomAngle(-GetFaceToTarget(), randAngle);
+        // this->m_DesiredTranslation = this->m_DesiredTranslation * randRadius;
+        
+        this->m_DesiredTranslation = this->m_Owner->GetAbsoluteTranslation();
+
+        return;
+    }
 }
 
 glm::vec2 AI::GetMoveDirection() {
     if (m_Freezed) {
         return glm::vec2(0.0f);
     }
-    
-    if (!m_Target || !m_Owner) return glm::vec2(0.0f);
 
-    glm::vec2 ownerPos = m_Owner->GetAbsoluteTranslation();
-    
-    // 1. 計算原始渴望移動的方向 (正規化)
-    glm::vec2 desiredDir = glm::normalize(m_DesiredTranslation - ownerPos);
+    Status currentState = m_StateMachine.GetState();
 
-    if (glm::distance(m_DesiredTranslation, ownerPos) < 0.5F) {
-        return glm::vec2(0);
+    if (currentState == Status::STOPANDATTACK) {
+        return glm::vec2(0.0f);
     }
+    glm::vec2 ownerPos = m_Owner->GetAbsoluteTranslation();
 
-    // 2. 透過觸鬚避障修正方向
-    glm::vec2 finalDir = ApplyObstacleAvoidance(ownerPos, desiredDir);
+    glm::vec2 finalDir = ApplyObstacleAvoidance(
+        ownerPos,
+        m_DesiredTranslation - ownerPos);
 
-    m_LastFacing = finalDir;
+        finalDir = glm::normalize(finalDir);
 
-    return finalDir;
+    return m_LastFacing = finalDir;
 }
 
 glm::vec2 AI::ApplyObstacleAvoidance(const glm::vec2& currentPos, const glm::vec2& desiredDir) {
@@ -125,8 +142,8 @@ glm::vec2 AI::ApplyObstacleAvoidance(const glm::vec2& currentPos, const glm::vec
     glm::vec2 leftWhisker = rotateVec(desiredDir, sideAngle) * sideLength;
     glm::vec2 rightWhisker = rotateVec(desiredDir, -sideAngle) * sideLength;
 
-    glm::vec2 avoidanceForce(0.0f); // 最終要疊加的迴避力
     int hitCount = 0;
+    glm::vec2 avoidanceForce(0.0f); // 最終要疊加的迴避力
 
     // 檢測一根觸鬚上的 3 個點 (利用迴圈)
     auto checkWhisker = [&](const glm::vec2& whiskerBase, float length, float avoidWeight, const glm::vec2& avoidDir) {
@@ -163,7 +180,6 @@ glm::vec2 AI::ApplyObstacleAvoidance(const glm::vec2& currentPos, const glm::vec
 }
 
 bool AI::IsPointBlocked(const glm::vec2& point) {
-
     if (!m_CollisionSystem) {
         return false;
     }
@@ -195,13 +211,16 @@ glm::vec2 AI::GetFaceDirection() {
         return glm::vec2(0.0f);
     }
 
-    switch (m_Status) {
+    Status currentState = m_StateMachine.GetState();
+
+    switch (currentState) {
         case Status::WANDER:
+        case Status::FRIGHTENED:
             return m_LastFacing;
 
         case Status::STOPANDATTACK:
         case Status::PURSUIT:
-            return m_Target->GetAbsoluteTranslation() - m_Owner->GetAbsoluteTranslation();
+            return this->GetFaceToTarget();
     }
 
     return glm::vec2(0.0f);
@@ -220,19 +239,23 @@ glm::vec2 AI::GetAttackDirection() {
         return glm::vec2(0.0F);
     }
 
-    switch (m_Status) {
+    Status currentState = m_StateMachine.GetState();
+
+    switch (currentState) {
         case Status::WANDER:
         case Status::PURSUIT:
+        case Status::FRIGHTENED:
             return glm::vec2(0.0F);
 
         case Status::STOPANDATTACK:
-            return m_LastFacing;
+            float angle = m_Random.GetFloat() * AIConfig::PURSUIT_RADUIS_ANGLE;
+            return this->ApplyRandomAngle(this->GetFaceToTarget(), angle);
     }
 
     return glm::vec2(0.0F);
 }
 
-glm::vec2 AI::GetFacingToTarget() {
+glm::vec2 AI::GetFaceToTarget() {
     glm::vec2 owner = m_Owner->GetAbsoluteTranslation();
     glm::vec2 target = m_Target->GetAbsoluteTranslation();
 
@@ -258,4 +281,66 @@ bool AI::IsArriveDestinaton() {
     }
 
     return false;
+}
+
+glm::vec2 AI::ApplyRandomAngle(glm::vec2 vector, float angle) {    
+    if (glm::length(vector) < 0.01f) {
+        vector = glm::vec2(1.0f, 0.0f);
+    } else {
+        vector = glm::normalize(vector);
+    }
+
+    // 1. Generate random angle in [-angle/2, angle/2] to the vector
+    float randomAngle = (this->m_Random.GetFloat() - 0.5f) * angle;
+
+    // 2. Apply the angle to the vector
+    float s = std::sin(randomAngle);
+    float c = std::cos(randomAngle);
+
+    return glm::vec2(vector.x * c - vector.y * s, vector.x * s + vector.y * c);
+}
+
+Status AI::GetNextState() {
+    float dist = GetDistanceToTarget();
+
+    Util::ms_t now = Util::Time::GetElapsedTimeMs();
+
+    Status currentState = m_StateMachine.GetState();
+
+    switch(currentState) {
+        case Status::WANDER:
+            if (dist < AIConfig::STATE_PERSUIT_MIN_RANGE) {
+                return Status::FRIGHTENED;
+            }
+
+            return Status::WANDER;
+
+        case Status::FRIGHTENED:
+            if (now - m_FrightenedStartTime > AIConfig::FRIGHTENED_WAIT_TIME) {
+                return Status::PURSUIT;
+            }
+
+            return Status::FRIGHTENED;
+
+        case Status::PURSUIT:
+            if (dist < AIConfig::STATE_STOPANDATTACK_MAX_RANGE &&
+                dist > AIConfig::STATE_STOPANDATTACK_MIN_RANGE && 
+                m_StateMachine.GetCurrentStateDuration() > 3000
+            ) {
+                return Status::STOPANDATTACK;
+            }
+
+            return Status::PURSUIT;
+
+        case Status::STOPANDATTACK:
+            if (! (dist < AIConfig::STATE_STOPANDATTACK_MAX_RANGE && dist > AIConfig::STATE_STOPANDATTACK_MIN_RANGE) ) {
+                return Status::PURSUIT;
+            }
+
+            if (m_StateMachine.GetCurrentStateDuration() > 4000) {
+                return Status::PURSUIT;
+            }
+            
+            return Status::STOPANDATTACK;
+    }
 }
