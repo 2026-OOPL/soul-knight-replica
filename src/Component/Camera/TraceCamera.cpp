@@ -5,7 +5,7 @@
 #include "Util/Transform.hpp"
 
 Util::Transform TraceCamera::GetTransformByCamera(std::shared_ptr<MapObject> object) {
-    Util::Transform objectAbs = object->GetAbsoluteTransform();
+    Util::Transform objectAbs = object->GetRenderTransform();
     Util::Transform cameraAbs = this->m_Transform;
 
     // 1. 計算世界空間位移 (World Delta)

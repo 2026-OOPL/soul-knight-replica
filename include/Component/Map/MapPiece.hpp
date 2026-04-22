@@ -32,6 +32,7 @@ public:
     }
 
     Util::Transform GetObjectTransform() const override;
+    Util::Transform GetRenderTransform() const override;
     const std::shared_ptr<Core::Drawable> &GetDebugDrawable() const {
         return this->m_Drawable;
     }
@@ -39,9 +40,13 @@ public:
         return this->m_Visible;
     }
 
+protected:
+    void SetRenderTranslationOffset(const glm::vec2 &renderTranslationOffset);
+
 private:
     std::shared_ptr<Util::Image> m_Image;
     glm::vec2 m_ColliderSize = {48.0F, 48.0F};
+    glm::vec2 m_RenderTranslationOffset = {0.0F, 0.0F};
 };
 
 #endif

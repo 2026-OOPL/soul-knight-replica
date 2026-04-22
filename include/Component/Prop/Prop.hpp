@@ -7,11 +7,18 @@
 #include "Util/GameObject.hpp"
 #include <memory>
 
+class MapSystem;
+
 class Prop : public MapObject,
              public IStateful,
              public Util::GameObject {
 public:
     Prop();
+    ~Prop() override = default;
+
+    virtual void Initialize(MapSystem *mapSystem);
+    bool IsDestroyRequested() const;
+    void RequestDestroy();
 
     bool IsDebugVisible() {
         return false;
@@ -23,6 +30,9 @@ public:
 
 
     virtual Util::Transform GetObjectTransform() const override;
+
+private:
+    bool m_DestroyRequested = false;
 };
 
 #endif

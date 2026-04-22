@@ -79,10 +79,6 @@ std::vector<Collision::CollisionPrimitive> BaseRoom::CollectBlockingPrimitives(
     return primitives;
 }
 
-const std::vector<Collision::AxisAlignedBox> &BaseRoom::GetStaticColliders() const {
-    return RectMapArea::GetStaticColliders();
-}
-
 const std::vector<std::shared_ptr<Door>> &BaseRoom::GetDoors() const {
     return this->m_Doors;
 }
@@ -121,10 +117,6 @@ void BaseRoom::OnPlayerEnter() {}
 
 void BaseRoom::OnPlayerLeave() {}
 
-glm::vec2 BaseRoom::GetRoomSize() const {
-    return this->GetAreaSize();
-}
-
 RoomType BaseRoom::GetRoomType() const {
     return this->m_RoomType;
 }
@@ -136,6 +128,61 @@ RoomPurpose BaseRoom::GetPurpose() const {
 bool BaseRoom::HasPassageOnSide(DoorSide side) const {
     return this->GetWallSideConfig(side).hasOpening ||
            this->GetDoorSideConfig(side).hasDoor;
+}
+
+BaseRoom::PassageSocket BaseRoom::GetPassageSocket(DoorSide side) const {
+    const glm::vec2 roomCenter = this->GetAbsoluteTranslation();
+    const glm::vec2 roomSize = this->GetAreaSize();
+    const WallSideConfig &wallSideConfig = this->GetWallSideConfig(side);
+
+    PassageSocket socket;
+    socket.side = side;
+    socket.openingSize = wallSideConfig.openingSize;
+    socket.wallThickness = wallSideConfig.thickness;
+
+    switch (side) {
+    case DoorSide::Top:
+        socket.worldCenter = {
+            roomCenter.x + wallSideConfig.openingOffset,
+            roomCenter.y +
+                roomSize.y / 2.0F -
+                wallSideConfig.thickness / 2.0F +
+                wallSideConfig.centerOffset
+        };
+        return socket;
+
+    case DoorSide::Right:
+        socket.worldCenter = {
+            roomCenter.x +
+                roomSize.x / 2.0F -
+                wallSideConfig.thickness / 2.0F +
+                wallSideConfig.centerOffset,
+            roomCenter.y + wallSideConfig.openingOffset
+        };
+        return socket;
+
+    case DoorSide::Bottom:
+        socket.worldCenter = {
+            roomCenter.x + wallSideConfig.openingOffset,
+            roomCenter.y -
+                roomSize.y / 2.0F +
+                wallSideConfig.thickness / 2.0F +
+                wallSideConfig.centerOffset
+        };
+        return socket;
+
+    case DoorSide::Left:
+        socket.worldCenter = {
+            roomCenter.x -
+                roomSize.x / 2.0F +
+                wallSideConfig.thickness / 2.0F +
+                wallSideConfig.centerOffset,
+            roomCenter.y + wallSideConfig.openingOffset
+        };
+        return socket;
+    }
+
+    return socket;
 }
 
 WallConfig BaseRoom::BuildWallConfigFromDoorConfig(
@@ -225,52 +272,6 @@ Door::Visuals BaseRoom::BuildVerticalDoorVisuals() {
     return visuals;
 }
 
-glm::vec2 BaseRoom::BuildDoorPosition(const DoorBuildInfo &doorInfo) const {
-    const glm::vec2 roomCenter = this->GetAbsoluteTranslation();
-    const glm::vec2 roomSize = this->GetAreaSize();
-    const WallSideConfig &wallSideConfig = this->GetWallSideConfig(doorInfo.side);
-
-    switch (doorInfo.side) {
-    case DoorSide::Top:
-        return {
-            roomCenter.x + doorInfo.openingOffset,
-            roomCenter.y +
-                roomSize.y / 2.0F -
-                wallSideConfig.thickness / 2.0F +
-                wallSideConfig.centerOffset
-        };
-
-    case DoorSide::Right:
-        return {
-            roomCenter.x +
-                roomSize.x / 2.0F -
-                wallSideConfig.thickness / 2.0F +
-                wallSideConfig.centerOffset,
-            roomCenter.y + doorInfo.openingOffset
-        };
-
-    case DoorSide::Bottom:
-        return {
-            roomCenter.x + doorInfo.openingOffset,
-            roomCenter.y -
-                roomSize.y / 2.0F +
-                wallSideConfig.thickness / 2.0F +
-                wallSideConfig.centerOffset
-        };
-
-    case DoorSide::Left:
-        return {
-            roomCenter.x -
-                roomSize.x / 2.0F +
-                wallSideConfig.thickness / 2.0F +
-                wallSideConfig.centerOffset,
-            roomCenter.y + doorInfo.openingOffset
-        };
-    }
-
-    return roomCenter;
-}
-
 const DoorSideConfig &BaseRoom::GetDoorSideConfig(DoorSide side) const {
     switch (side) {
     case DoorSide::Top:
@@ -322,10 +323,10 @@ void BaseRoom::BuildDoors() {
         }
 
         const WallSideConfig &wallSideConfig = this->GetWallSideConfig(side);
+        const PassageSocket socket = this->GetPassageSocket(side);
         DoorBuildInfo doorInfo;
         doorInfo.side = side;
         doorInfo.startsOpen = doorSideConfig.startsOpen;
-        doorInfo.openingOffset = wallSideConfig.openingOffset;
         doorInfo.colliderSize = BuildDoorColliderSize(side, wallSideConfig);
 
         switch (side) {
@@ -351,7 +352,7 @@ void BaseRoom::BuildDoors() {
         }
 
         const std::shared_ptr<Door> door = std::make_shared<Door>(
-            this->BuildDoorPosition(doorInfo),
+            socket.worldCenter,
             doorInfo.side,
             doorInfo.colliderSize,
             doorInfo.renderSize,

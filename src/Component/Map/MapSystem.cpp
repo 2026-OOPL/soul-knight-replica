@@ -12,10 +12,36 @@
 #include "Component/Character/Character.hpp"
 #include "Component/IStateful.hpp"
 #include "Component/Map/FightRoom.hpp"
+#include "Component/Prop/AmmoOrb.hpp"
+#include "Component/Prop/BlockingProp.hpp"
 #include "Util/Input.hpp"
 #include "Util/Keycode.hpp"
 
 namespace {
+
+constexpr int kAmmoOrbsPerMob = 3;
+constexpr int kAmmoRecoveredPerOrb = 5;
+constexpr float kAmmoOrbSpawnRadius = 12.0F;
+
+glm::vec2 BuildAmmoOrbSpawnOffset(
+    const glm::vec2 &origin,
+    int index,
+    int count
+) {
+    if (count <= 1) {
+        return {0.0F, 0.0F};
+    }
+
+    constexpr float kTau = 6.28318530718F;
+    const float baseAngle = origin.x * 0.013F + origin.y * 0.021F;
+    const float angle =
+        baseAngle +
+        kTau * static_cast<float>(index) / static_cast<float>(count);
+    return {
+        std::cos(angle) * kAmmoOrbSpawnRadius,
+        std::sin(angle) * kAmmoOrbSpawnRadius
+    };
+}
 
 Collision::AxisAlignedBox BuildPrimaryBodyBox(const ICollidable &body) {
     const std::vector<Collision::CollisionPrimitive> primitives =
@@ -62,6 +88,7 @@ void MapSystem::Update() {
     this->m_CollisionSystem.DispatchCollisions();
     this->PruneDestroyedBullets();
     this->PruneDefeatedMobs();
+    this->PruneDestroyedProps();
 
     if (this->m_AttachCamera != nullptr) {
         const std::shared_ptr<IStateful> statefulCamera =
@@ -302,6 +329,13 @@ std::vector<Collision::CollisionPrimitive> MapSystem::CollectCurrentRoomCollisio
         currentRoomColliders.begin(),
         currentRoomColliders.end()
     );
+    const std::vector<Collision::CollisionPrimitive> currentRoomPropColliders =
+        this->CollectPropCollisionPrimitives(currentRoom, ignoreBody);
+    colliders.insert(
+        colliders.end(),
+        currentRoomPropColliders.begin(),
+        currentRoomPropColliders.end()
+    );
 
     if (currentRoom != nullptr) {
         for (const auto &gangway : this->m_World.GetGangways()) {
@@ -331,6 +365,13 @@ std::vector<Collision::CollisionPrimitive> MapSystem::CollectCurrentRoomCollisio
             targetRoomColliders.begin(),
             targetRoomColliders.end()
         );
+        const std::vector<Collision::CollisionPrimitive> targetRoomPropColliders =
+            this->CollectPropCollisionPrimitives(doorPassage.targetRoom, ignoreBody);
+        colliders.insert(
+            colliders.end(),
+            targetRoomPropColliders.begin(),
+            targetRoomPropColliders.end()
+        );
 
         for (const auto &gangway : this->m_World.GetGangways()) {
             if (gangway == nullptr ||
@@ -350,6 +391,43 @@ std::vector<Collision::CollisionPrimitive> MapSystem::CollectCurrentRoomCollisio
     }
 
     return colliders;
+}
+
+std::vector<Collision::CollisionPrimitive> MapSystem::CollectPropCollisionPrimitives(
+    const std::shared_ptr<BaseRoom> &room,
+    const ICollidable *ignoreBody
+) const {
+    if (room == nullptr) {
+        return {};
+    }
+
+    const Collision::AxisAlignedBox ignoreBox = ignoreBody == nullptr ?
+        Collision::AxisAlignedBox{} :
+        BuildPrimaryBodyBox(*ignoreBody);
+    const Collision::AxisAlignedBox *ignoreOverlapBox =
+        ignoreBody == nullptr ? nullptr : &ignoreBox;
+    std::vector<Collision::CollisionPrimitive> primitives;
+
+    for (const auto &prop : this->m_World.GetProps()) {
+        if (prop == nullptr) {
+            continue;
+        }
+
+        const BlockingProp *blockingProp = dynamic_cast<const BlockingProp *>(prop.get());
+        if (blockingProp == nullptr || !blockingProp->BelongsToRoom(room)) {
+            continue;
+        }
+
+        const std::vector<Collision::CollisionPrimitive> propPrimitives =
+            blockingProp->CollectBlockingPrimitives(ignoreOverlapBox);
+        primitives.insert(
+            primitives.end(),
+            propPrimitives.begin(),
+            propPrimitives.end()
+        );
+    }
+
+    return primitives;
 }
 
 std::vector<ICollidable *> MapSystem::CollectDynamicCollisionBodies() const {
@@ -431,7 +509,11 @@ const std::vector<std::shared_ptr<Mob>>& MapSystem::GetMob() const {
 }
 
 void MapSystem::AddProp(const std::shared_ptr<Prop> &prop) {
-    // Implement custom collider for each prop here
+    if (prop == nullptr) {
+        return;
+    }
+
+    prop->Initialize(this);
     this->m_World.AddProp(prop);
 }
 
@@ -457,6 +539,20 @@ void MapSystem::PruneDestroyedBullets() {
     }
 }
 
+void MapSystem::PruneDestroyedProps() {
+    std::vector<std::shared_ptr<Prop>> destroyedProps;
+
+    for (const auto &prop : this->m_World.GetProps()) {
+        if (prop != nullptr && prop->IsDestroyRequested()) {
+            destroyedProps.push_back(prop);
+        }
+    }
+
+    for (const auto &prop : destroyedProps) {
+        this->RemoveProp(prop);
+    }
+}
+
 void MapSystem::PruneDefeatedMobs() {
     std::vector<std::shared_ptr<Mob>> defeatedMobs;
 
@@ -467,7 +563,27 @@ void MapSystem::PruneDefeatedMobs() {
     }
 
     for (const auto &mob : defeatedMobs) {
+        this->SpawnDropsForMob(mob);
         this->RemoveMob(mob);
+    }
+}
+
+void MapSystem::SpawnDropsForMob(const std::shared_ptr<Mob> &mob) {
+    if (mob == nullptr) {
+        return;
+    }
+
+    const glm::vec2 deathPosition = mob->GetAbsoluteTranslation();
+
+    for (int i = 0; i < kAmmoOrbsPerMob; ++i) {
+        AmmoOrb::Config config;
+        config.ammoAmount = kAmmoRecoveredPerOrb;
+        config.lingerDurationMs = 250.0F + static_cast<float>(i) * 35.0F;
+
+        this->AddProp(std::make_shared<AmmoOrb>(
+            deathPosition + BuildAmmoOrbSpawnOffset(deathPosition, i, kAmmoOrbsPerMob),
+            config
+        ));
     }
 }
 

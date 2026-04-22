@@ -68,6 +68,7 @@ public:
     void SetFaction(CombatFaction faction);
     virtual void ApplyDamage(int damage);
     void Heal(int amount);
+    void ApplyImpulse(const glm::vec2 &impulse);
     bool IsDead() const;
 
     void Update() override;
@@ -110,9 +111,10 @@ protected:
     std::vector<Collision::CollisionBox> m_CollisionBoxes;
     CollisionResolver m_CollisionResolver = nullptr;
     Util::ms_t m_AttackVisualEndTime = 0;
+    glm::vec2 m_ImpulseVelocity = {0.0F, 0.0F};
 
 private:
-
+    glm::vec2 BuildImpulseDelta(float deltaTimeMs);
     void UpdateFaceDirection();
     void SetSpriteTypeByMoveIntent(glm::vec2 moveIntent);
 };

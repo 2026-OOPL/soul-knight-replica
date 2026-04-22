@@ -86,6 +86,10 @@ protected:
         const std::shared_ptr<BaseRoom> &room,
         const ICollidable *ignoreBody
     ) const;
+    std::vector<Collision::CollisionPrimitive> CollectPropCollisionPrimitives(
+        const std::shared_ptr<BaseRoom> &room,
+        const ICollidable *ignoreBody
+    ) const;
     std::vector<ICollidable *> CollectDynamicCollisionBodies() const;
     void UpdateCurrentRoom(const glm::vec2 &playerPos);
 
@@ -103,7 +107,9 @@ protected:
 private:
     void ApplyCameraRecursive(const std::shared_ptr<Util::GameObject> &object);
     void PruneDestroyedBullets();
+    void PruneDestroyedProps();
     void PruneDefeatedMobs();
+    void SpawnDropsForMob(const std::shared_ptr<Mob> &mob);
 
     std::shared_ptr<CollisionDebugOverlay> m_CollisionDebugOverlay;
     bool m_ShowCollisionDebug = false;

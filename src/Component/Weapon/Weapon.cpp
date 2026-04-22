@@ -114,6 +114,21 @@ void Weapon::TriggerRecoil(float durationMs) {
     this->SetWeaponPointingByMoveDirection();
 }
 
+std::shared_ptr<Bullet> Weapon::CreateBullet() const {
+    std::shared_ptr<Bullet> bullet = std::make_shared<TestBullet>(
+        this->GetAbsoluteTranslation(),
+        this->m_FacingDirection,
+        this->m_BulletDamage,
+        this->m_ProjectileFaction
+    );
+    this->ConfigureBullet(bullet);
+    return bullet;
+}
+
+void Weapon::ConfigureBullet(const std::shared_ptr<Bullet> &bullet) const {
+    (void)bullet;
+}
+
 bool Weapon::ShotBullet() {
     this->SetWeaponPointingByMoveDirection();
 
@@ -124,12 +139,10 @@ bool Weapon::ShotBullet() {
     m_LastShotTime = Util::Time::GetElapsedTimeMs();
     this->TriggerRecoil();
 
-    std::shared_ptr<Bullet> bullet = std::make_shared<TestBullet>(
-        this->GetAbsoluteTranslation(),
-        this->m_FacingDirection,
-        this->m_BulletDamage,
-        this->m_ProjectileFaction
-    );
+    std::shared_ptr<Bullet> bullet = this->CreateBullet();
+    if (bullet == nullptr) {
+        return false;
+    }
 
     // Pass this bullet to map system to manage
     if (this->m_OnBulletFired != nullptr) {

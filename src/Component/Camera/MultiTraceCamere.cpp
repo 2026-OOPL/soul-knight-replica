@@ -5,7 +5,7 @@
 #include "Component/Camera/MultiTraceCamere.hpp"
 
 Util::Transform MultiTraceCamera::GetTransformByCamera(std::shared_ptr<MapObject> object) {
-    Util::Transform objectTransform = object->GetAbsoluteTransform();
+    Util::Transform objectTransform = object->GetRenderTransform();
 
     // The view center of this camera 
     glm::vec2 cameraCooridinate = this->m_TargetCooridinate;

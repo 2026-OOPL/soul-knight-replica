@@ -15,7 +15,7 @@ glm::vec2 Camera::GetCameraSize() {
 }
 
 bool Camera::GetVisibilityByCamera(std::shared_ptr<MapObject> object) {
-    Util::Transform objectTransform = object->GetAbsoluteTransform();
+    Util::Transform objectTransform = object->GetRenderTransform();
 
     glm::vec2 objectSize = object->GetAbsoluteScale();
     glm::vec2 cameraSize = this->GetCameraSize();

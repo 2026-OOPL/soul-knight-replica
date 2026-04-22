@@ -48,6 +48,8 @@ public:
     virtual WeaponType GetWeaponType() = 0;
     
 protected:
+    virtual std::shared_ptr<Bullet> CreateBullet() const;
+    virtual void ConfigureBullet(const std::shared_ptr<Bullet> &bullet) const;
     void SetWeaponPointingByMoveDirection();
     void TriggerRecoil(float durationMs = 80.0F);
     float m_LastShotTime = 0;

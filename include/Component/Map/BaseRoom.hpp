@@ -17,8 +17,17 @@
 
 class MapSystem;
 
-class BaseRoom : public RectMapArea, public IStateful {
+class BaseRoom : public RectMapArea,
+                 public IStateful,
+                 public std::enable_shared_from_this<BaseRoom> {
 public:
+    struct PassageSocket {
+        DoorSide side = DoorSide::Bottom;
+        glm::vec2 worldCenter = {0.0F, 0.0F};
+        float openingSize = 0.0F;
+        float wallThickness = 0.0F;
+    };
+
     BaseRoom(
         const glm::vec2 &absolutePosition,
         RoomType roomType,
@@ -36,8 +45,6 @@ public:
         const Collision::AxisAlignedBox *ignoreOverlapBox = nullptr
     ) const override;
 
-    const std::vector<Collision::AxisAlignedBox> &GetStaticColliders() const;
-
     const std::vector<std::shared_ptr<Door>> &GetDoors() const;
     const std::vector<std::shared_ptr<Mob>> &GetMobs() const;
 
@@ -48,10 +55,10 @@ public:
     virtual void OnPlayerEnter();
     virtual void OnPlayerLeave();
 
-    glm::vec2 GetRoomSize() const;
     RoomType GetRoomType() const;
     RoomPurpose GetPurpose() const;
     bool HasPassageOnSide(DoorSide side) const;
+    PassageSocket GetPassageSocket(DoorSide side) const;
 
     static WallConfig BuildWallConfigFromDoorConfig(
         const DoorConfig &doorConfig,
@@ -71,7 +78,6 @@ private:
         DoorSide side = DoorSide::Bottom;
         glm::vec2 colliderSize = {0.0F, 0.0F};
         glm::vec2 renderSize = {0.0F, 0.0F};
-        float openingOffset = 0.0F;
         bool startsOpen = true;
         Door::Visuals visuals;
     };
@@ -79,7 +85,6 @@ private:
     static Door::Visuals BuildHorizontalDoorVisuals();
     static Door::Visuals BuildVerticalDoorVisuals();
 
-    glm::vec2 BuildDoorPosition(const DoorBuildInfo &doorInfo) const;
     const DoorSideConfig &GetDoorSideConfig(DoorSide side) const;
     const WallSideConfig &GetWallSideConfig(DoorSide side) const;
     void BuildDoors();
