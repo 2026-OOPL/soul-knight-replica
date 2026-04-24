@@ -51,25 +51,16 @@ public:
         Character* owner,
         std::shared_ptr<Character> target,
         Collision::CollisionSystem* collision
-    ) {
-      this->m_Owner = owner;
-      this->m_Target = target;
-      this->m_CollisionSystem = collision;
+    );
 
-      m_Random = RandomChoose();
-
-    };
-
-    ~AI() override = default;
-    
-    void Update() override;
+    virtual ~AI() override = default;
     
     bool GetAttackTrigger();
     bool IsArriveDestinaton();
 
-    virtual glm::vec2 GetMoveDirection();
-    virtual glm::vec2 GetFaceDirection();
-    virtual glm::vec2 GetAttackDirection();
+    virtual glm::vec2 GetMoveDirection() = 0;
+    virtual glm::vec2 GetFaceDirection() = 0;
+    virtual glm::vec2 GetAttackDirection() = 0;
 
     void Freeze();
     void UnFreeze();
@@ -108,12 +99,6 @@ protected:
     glm::vec2 ApplyObstacleAvoidance(const glm::vec2& currentPos, const glm::vec2& desiredDir);
 
     Status GetNextState();
-
-    Util::ms_t m_FrightenedStartTime = 0;
-    Util::ms_t m_StopAndAttackStartTime = 0;
-    Util::ms_t m_PursuitStartTime = 0;
-
-    bool NeedUpdate();
 
 private:
     /// Check if the desired place is occupied by obastacles

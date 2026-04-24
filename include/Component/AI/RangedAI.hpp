@@ -24,7 +24,7 @@ namespace RangedAIConfig {
     constexpr float STATE_STOPANDATTACK_MIN_RANGE = 50.0F;
     constexpr float STATE_STOPANDATTACK_MAX_RANGE = 120.0F;
 
-    constexpr float FRIGHTENED_WAIT_TIME = 3000;
+    constexpr float FRIGHTENED_WAIT_TIME = 1200;
 }
 
 class RangedAI : public AI {
@@ -35,4 +35,18 @@ public:
         Collision::CollisionSystem* collision
     );
 
+    ~RangedAI() override = default;
+
+    glm::vec2 GetMoveDirection() override;
+    glm::vec2 GetFaceDirection() override;
+    glm::vec2 GetAttackDirection() override;
+
+    void Update() override;
+
+    
+protected:
+    Status GetNextState();
+    bool NeedUpdate();
+
+    glm::vec2 CalculateDesiredTranslation();
 };

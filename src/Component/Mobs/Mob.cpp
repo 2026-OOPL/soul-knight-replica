@@ -5,6 +5,7 @@
 #include "Component/Mobs/Mob.hpp"
 #include "Component/Map/MapSystem.hpp"
 #include "Component/Character/Character.hpp"
+#include "Component/AI/RangedAI.hpp"
 
 Mob::Mob(
     const std::vector<std::string>& StandAnimation,
@@ -22,7 +23,7 @@ Mob::Mob(
     m_TracePlayerTemp = tracePlayer;
     m_CollisionSystemTemp = collisionSystem;
 
-    this->m_AI = std::make_shared<AI>(this, m_TracePlayerTemp, m_CollisionSystemTemp);
+    this->m_AI = std::make_shared<RangedAI>(this, m_TracePlayerTemp, m_CollisionSystemTemp);
 
     this->m_PlayerSpeed = 0.05F;
 
