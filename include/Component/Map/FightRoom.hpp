@@ -58,6 +58,7 @@ private:
     int m_CompletedWave = 0;
 
     std::vector<std::vector<SpawnInfo<MobType>>> m_MonsterWaves;
+    std::vector<SpawnInfo<ObstacleType>> m_ObstacleSpawns;
 };
 
 #endif

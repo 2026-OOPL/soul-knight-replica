@@ -6,8 +6,44 @@
 #include "Component/Map/FightRoom.hpp"
 #include "Component/Map/BaseRoom.hpp"
 #include "Component/Map/MapSystem.hpp"
+#include "Component/Prop/IndestructibleObstacle.hpp"
 #include "Generator/MapGenerator.hpp"
 #include "Component/Mobs/GoblinGuard.hpp"
+#include "Util/Image.hpp"
+
+namespace {
+
+constexpr char kIndestructibleObstacleSprite[] =
+    RESOURCE_DIR "/Map/obstacle/ObstacleIndestructible.png";
+constexpr glm::vec2 kIndestructibleObstacleRenderSize = {64.0F, 48.0F};
+constexpr glm::vec2 kIndestructibleObstacleBlockingSize = {44.0F, 24.0F};
+constexpr glm::vec2 kIndestructibleObstacleBlockingOffset = {0.0F, -8.0F};
+
+std::shared_ptr<Prop> BuildObstacleProp(
+    const SpawnInfo<ObstacleType> &spawn,
+    const std::shared_ptr<BaseRoom> &owningRoom,
+    const glm::vec2 &roomOrigin
+) {
+    switch (spawn.type) {
+    case ObstacleType::WOODEN_BOX: {
+        IndestructibleObstacle::Config config;
+        config.owningRoom = owningRoom;
+        config.blockingSize = kIndestructibleObstacleBlockingSize;
+        config.blockingOffset = kIndestructibleObstacleBlockingOffset;
+        config.renderSize = kIndestructibleObstacleRenderSize;
+        config.visual =
+            std::make_shared<Util::Image>(kIndestructibleObstacleSprite, false);
+        return std::make_shared<IndestructibleObstacle>(
+            roomOrigin + spawn.localPosition,
+            std::move(config)
+        );
+    }
+    }
+
+    return nullptr;
+}
+
+} // namespace
 
 FightRoom::FightRoom(
     const glm::vec2 &absolutePosition,
@@ -29,11 +65,8 @@ FightRoom::FightRoom(
 ) {
     this->OpenAllDoors();
 
-    for (auto const& i : info->GetObstacle()) {
-        // TODO: Implement boxes creation
-    }
-
     this->m_MonsterWaves = info->GetMonsterWaves();
+    this->m_ObstacleSpawns = info->GetObstacle();
 
     this->m_CompletedWave = 0;
     this->m_MaxMobWave = this->m_MonsterWaves.size();
@@ -153,6 +186,23 @@ void FightRoom::StartNextMonsterWave() {
 
 void FightRoom::Initialize(MapSystem* system) {
     this->m_MapSystem = system;
+
+    const std::shared_ptr<BaseRoom> owningRoom =
+        std::static_pointer_cast<BaseRoom>(shared_from_this());
+    for (const auto &spawn : this->m_ObstacleSpawns) {
+        const std::shared_ptr<Prop> prop = BuildObstacleProp(
+            spawn,
+            owningRoom,
+            this->GetAbsoluteTranslation()
+        );
+
+        if (prop == nullptr) {
+            LOG_WARN("Failed to add obstacle, unknown obstacle type.");
+            continue;
+        }
+
+        system->AddProp(prop);
+    }
 
     // Spawn the mobs in the first wave 
     this->StartNextMonsterWave();
