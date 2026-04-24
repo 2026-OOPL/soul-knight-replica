@@ -9,6 +9,7 @@
 #include "Component/Prop/IndestructibleObstacle.hpp"
 #include "Generator/MapGenerator.hpp"
 #include "Component/Mobs/GoblinGuard.hpp"
+#include "Component/Mobs/RuinsGuard.hpp"
 #include "Util/Image.hpp"
 
 namespace {
@@ -183,6 +184,10 @@ void FightRoom::StartNextMonsterWave() {
         switch (i.type) {
             case MobType::GOBLIN_GUARD:
                 mob = std::make_shared<GoblinGuard>(target, m_MapSystem->GetCollisionSystem());
+                break;
+
+            case MobType::RUINS_GUARD:
+                mob = std::make_shared<RuinsGuard>(target, m_MapSystem->GetCollisionSystem());
                 break;
                 
             default:

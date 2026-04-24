@@ -233,6 +233,42 @@ bool Character::IsDead() const {
     return this->m_CurrentHealth <= 0;
 }
 
+bool Character::ConsumeDeathEvent() {
+    if (!this->IsDead()) {
+        return false;
+    }
+
+    this->StartDeathVisual();
+
+    if (this->m_DeathEventConsumed) {
+        return false;
+    }
+
+    this->m_DeathEventConsumed = true;
+    return true;
+}
+
+void Character::StartDeathVisual() {
+    if (this->m_DeathVisualStarted) {
+        return;
+    }
+
+    this->m_DeathVisualStarted = true;
+    this->m_DeathVisualStartTime = Util::Time::GetElapsedTimeMs();
+    this->m_ImpulseVelocity = {0.0F, 0.0F};
+
+    if (this->m_Weapon != nullptr) {
+        this->RemoveChild(this->m_Weapon);
+        this->m_Weapon = nullptr;
+    }
+
+    if (this->m_DieAnimation != nullptr) {
+        this->m_DieAnimation->SetCurrentFrame(0);
+        this->m_DieAnimation->Play();
+        this->SetDrawable(this->m_DieAnimation);
+    }
+}
+
 bool Character::CanBeDamagedBy(const Bullet &bullet) const {
     if (bullet.GetFaction() == CombatFaction::Neutral) {
         return false;
@@ -242,6 +278,11 @@ bool Character::CanBeDamagedBy(const Bullet &bullet) const {
 }
 
 void Character::Update() {
+    if (this->IsDead()) {
+        this->StartDeathVisual();
+        return;
+    }
+
     const glm::vec2 moveIntent = this->GetMoveIntent();
     const float movementDeltaTimeMs =
         std::min(Util::Time::GetDeltaTimeMs(), kMaxCharacterMovementDeltaTimeMs);

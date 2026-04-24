@@ -83,6 +83,10 @@ const std::vector<std::shared_ptr<Door>> &BaseRoom::GetDoors() const {
     return this->m_Doors;
 }
 
+const std::vector<Collision::AxisAlignedBox> &BaseRoom::GetStaticColliders() const {
+    return RectMapArea::GetStaticColliders();
+}
+
 const std::vector<std::shared_ptr<Mob>> &BaseRoom::GetMobs() const {
     return this->m_Mobs;
 }

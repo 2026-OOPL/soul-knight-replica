@@ -573,17 +573,10 @@ void MapSystem::PruneDestroyedProps() {
 }
 
 void MapSystem::PruneDefeatedMobs() {
-    std::vector<std::shared_ptr<Mob>> defeatedMobs;
-
     for (const auto &mob : this->m_World.GetMobs()) {
-        if (mob != nullptr && mob->IsDead()) {
-            defeatedMobs.push_back(mob);
+        if (mob != nullptr && mob->ConsumeDeathEvent()) {
+            this->SpawnDropsForMob(mob);
         }
-    }
-
-    for (const auto &mob : defeatedMobs) {
-        this->SpawnDropsForMob(mob);
-        this->RemoveMob(mob);
     }
 }
 
@@ -617,7 +610,7 @@ std::shared_ptr<Character> MapSystem::GetNearestMonster() {
     std::shared_ptr<Character> nearestMonster = nullptr;
 
     for (const auto &i : this->m_World.GetMobs()) {
-        if (i == nullptr) {
+        if (i == nullptr || i->IsDead()) {
             continue;
         }
 

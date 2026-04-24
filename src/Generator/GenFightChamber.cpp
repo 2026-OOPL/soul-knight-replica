@@ -160,8 +160,10 @@ void GenFightChamber::PopulateRoomContents(glm::ivec2 position) {
                 }
             }
 
+            const MobType mobType = this->m_RandomChoose->GetEnum<MobType>();
+
             SpawnInfo<MobType> spawn (
-                MobType::GOBLIN_GUARD, spawnPos
+                mobType, spawnPos
             );
             
             wave.push_back(spawn);

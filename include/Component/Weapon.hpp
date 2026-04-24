@@ -35,7 +35,7 @@ public:
     
     Util::Transform GetObjectTransform() const override;
 
-    bool ShotBullet();
+    virtual bool ShotBullet();
     int GetAmmoCostPerShot() const;
     void SetAmmoCostPerShot(int ammoCostPerShot);
     int GetBulletDamage() const;

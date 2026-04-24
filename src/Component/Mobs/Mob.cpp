@@ -6,6 +6,11 @@
 #include "Util/Logger.hpp"
 
 void Mob::Update() {
+    if (this->IsDead()) {
+        Character::Update();
+        return;
+    }
+
     m_AI->Update();
     Character::Update();
 
