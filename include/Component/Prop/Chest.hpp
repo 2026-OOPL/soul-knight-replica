@@ -39,6 +39,7 @@ public:
 
     void Initialize(MapSystem *mapSystem) override;
     void Update() override;
+    bool IsDebugVisible() const override;
 
     bool IsOpen() const;
     void SetReward(const std::shared_ptr<IChestReward> &reward);

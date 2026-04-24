@@ -141,6 +141,20 @@ bool FightRoom::IsWaveCleared() {
     return true;
 }
 
+void FightRoom::DebugClearRoom() {
+    for (const auto &mob : this->GetMobs()) {
+        if (mob == nullptr || mob->IsDead()) {
+            continue;
+        }
+
+        mob->ApplyDamage(mob->GetCurrentHealth());
+    }
+
+    this->m_CompletedWave = this->m_MaxMobWave;
+    this->m_WaveStatus = WaveStatus::FULL_CLEAR;
+    this->OpenAllDoors();
+}
+
 void FightRoom::StartNextMonsterWave() {
     if (m_MapSystem == NULL) {
         LOG_ERROR("Failed to start next wave, no map system bound.");

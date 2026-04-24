@@ -22,6 +22,10 @@ IndestructibleObstacle::IndestructibleObstacle(
 void IndestructibleObstacle::Update() {
 }
 
+bool IndestructibleObstacle::IsDebugVisible() const {
+    return true;
+}
+
 glm::vec2 IndestructibleObstacle::SafeScaleForSize(
     const std::shared_ptr<Core::Drawable> &drawable,
     const glm::vec2 &renderSize

@@ -20,14 +20,13 @@ public:
     bool IsDestroyRequested() const;
     void RequestDestroy();
 
-    bool IsDebugVisible() {
+    virtual bool IsDebugVisible() const {
         return false;
     }
 
-    std::shared_ptr<Core::Drawable> GetDebugDrawable() {
+    virtual std::shared_ptr<Core::Drawable> GetDebugDrawable() const {
         return this->m_Drawable;
     }
-
 
     virtual Util::Transform GetObjectTransform() const override;
 

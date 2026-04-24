@@ -3,9 +3,6 @@
 #include <glm/fwd.hpp>
 
 #include "Component/Mobs/GoblinGuard.hpp"
-#include "Util/Input.hpp"
-#include "Util/Keycode.hpp"
-
 #include "Component/Camera/Curve.hpp"
 #include "Component/Camera/TraceCamera.hpp"
 #include "Component/Player/Knight.hpp"
@@ -77,10 +74,5 @@ MapTest::MapTest() : MapSystem() {
 MapTest::~MapTest() = default;
 
 void MapTest::Update() {
-    const std::shared_ptr<BaseRoom> currentRoom = this->GetCurrentRoom();
-    if (Util::Input::IsKeyDown(Util::Keycode::E) && currentRoom != nullptr) {
-        currentRoom->OpenAllDoors();
-    }
-
     MapSystem::Update();
 }

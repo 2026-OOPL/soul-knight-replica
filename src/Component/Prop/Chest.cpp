@@ -79,6 +79,10 @@ void Chest::Update() {
     }
 }
 
+bool Chest::IsDebugVisible() const {
+    return true;
+}
+
 bool Chest::IsOpen() const {
     return this->m_IsOpen;
 }

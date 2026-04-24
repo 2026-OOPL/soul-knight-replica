@@ -28,6 +28,7 @@ public:
     ~IndestructibleObstacle() override = default;
 
     void Update() override;
+    bool IsDebugVisible() const override;
 
 private:
     static glm::vec2 SafeScaleForSize(

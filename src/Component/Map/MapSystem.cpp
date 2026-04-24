@@ -82,6 +82,9 @@ void MapSystem::Update() {
     if (Util::Input::IsKeyDown(Util::Keycode::R)) {
         this->m_ShowCollisionDebug = !this->m_ShowCollisionDebug;
     }
+    if (Util::Input::IsKeyDown(Util::Keycode::E)) {
+        this->DebugClearCurrentFightRoom();
+    }
 
     Scene::Update();
 
@@ -125,6 +128,7 @@ void MapSystem::Update() {
                 this->m_RoomTransitions.GetCurrentRoom(),
                 this->m_RoomTransitions.GetDoorPassage(),
                 this->m_World.GetGangways(),
+                this->m_World.GetProps(),
                 this->m_World.GetPlayers(),
                 this->m_World.GetMobs(),
                 this->m_World.GetBullets(),
@@ -132,6 +136,21 @@ void MapSystem::Update() {
             ));
         }
     }
+}
+
+void MapSystem::DebugClearCurrentFightRoom() {
+    const std::shared_ptr<BaseRoom> currentRoom = this->GetCurrentRoom();
+    if (currentRoom == nullptr) {
+        return;
+    }
+
+    const std::shared_ptr<FightRoom> fightRoom =
+        std::dynamic_pointer_cast<FightRoom>(currentRoom);
+    if (fightRoom == nullptr) {
+        return;
+    }
+
+    fightRoom->DebugClearRoom();
 }
 
 void MapSystem::ApplyCameraRecursive(const std::shared_ptr<Util::GameObject> &object) {
