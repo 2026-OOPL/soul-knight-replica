@@ -1,13 +1,49 @@
 #include <algorithm>
+#include <array>
+#include <cmath>
 #include <memory>
 #include <utility>
+#include <vector>
 
 #include "Component/Weapon.hpp"
+#include "Common/Constants.hpp"
+#include "Common/MapObject.hpp"
+#include "Util/Animation.hpp"
+#include "Util/GameObject.hpp"
 #include "Util/Input.hpp"
 #include "Util/Keycode.hpp"
 #include "Util/Time.hpp"
 
 #include "Component/Player/Player.hpp"
+
+namespace {
+
+const std::vector<std::string> kMeleeAttackEffectSprites = {
+    RESOURCE_DIR"/Effect/meleeattacking/MeleeAttack_0.png",
+    RESOURCE_DIR"/Effect/meleeattacking/MeleeAttack_1.png",
+    RESOURCE_DIR"/Effect/meleeattacking/MeleeAttack_2.png",
+    RESOURCE_DIR"/Effect/meleeattacking/MeleeAttack_3.png"
+};
+
+class PlayerMeleeAttackVisual : public Util::GameObject, public MapObject {
+public:
+    PlayerMeleeAttackVisual() : Util::GameObject(nullptr, 6) {
+    }
+
+    Util::Transform GetObjectTransform() const override {
+        return this->m_Transform;
+    }
+};
+
+glm::vec2 NormalizeOrRight(const glm::vec2 &direction) {
+    if (glm::length(direction) <= 0.0001F) {
+        return {1.0F, 0.0F};
+    }
+
+    return glm::normalize(direction);
+}
+
+} // namespace
 
 Player::Player(
     const std::vector<std::string>& StandSprite,
@@ -30,6 +66,19 @@ Player::Player(
     this->SetMaxAmmo(maxAmmo);
     this->SetCurrentAmmo(this->GetMaxAmmo());
     this->SetFaction(CombatFaction::Player);
+    this->m_WeaponSlots[this->m_ActiveWeaponSlot] = this->m_Weapon;
+
+    this->m_MeleeAttackAnimation = std::make_shared<Util::Animation>(
+        kMeleeAttackEffectSprites,
+        false,
+        35,
+        false,
+        0,
+        false
+    );
+    this->m_MeleeAttackVisual = std::make_shared<PlayerMeleeAttackVisual>();
+    this->m_MeleeAttackVisual->SetVisible(false);
+    this->AddChild(this->m_MeleeAttackVisual);
 
     this->m_AbsoluteTransform.translation = {0.0F, 0.0F};
 }
@@ -68,9 +117,14 @@ float Player::GetMoveSpeedMultiplier() const {
 
 void Player::Update() {
     Character::Update();
+    this->UpdateMeleeAttackVisual();
+
+    if (Util::Input::IsKeyDown(Util::Keycode::Q)) {
+        this->SwitchWeapon();
+    }
 
     if (Util::Input::IsKeyPressed(Util::Keycode::SPACE)) {
-        if (this->m_Weapon != nullptr) {
+        if (!this->TryMeleeAttack() && this->m_Weapon != nullptr) {
             int cost = this->m_Weapon->GetAmmoCostPerShot();
             
             // Check if player has enough ammo before attempting to fire
@@ -124,7 +178,137 @@ void Player::Update() {
 }
 
 void Player::SetWeapon(std::shared_ptr<Weapon> weapon) {
-    Character::SetWeapon(std::move(weapon));
+    if (weapon == nullptr) {
+        this->m_WeaponSlots[this->m_ActiveWeaponSlot] = nullptr;
+        Character::SetWeapon(nullptr);
+        return;
+    }
+
+    this->ApplyWeaponBulletCallback(weapon);
+
+    const int inactiveSlot = 1 - this->m_ActiveWeaponSlot;
+    if (this->m_WeaponSlots[this->m_ActiveWeaponSlot] != nullptr &&
+        this->m_WeaponSlots[inactiveSlot] == nullptr) {
+        this->m_WeaponSlots[inactiveSlot] = std::move(weapon);
+        this->EquipWeaponSlot(inactiveSlot);
+        return;
+    }
+
+    this->m_WeaponSlots[this->m_ActiveWeaponSlot] = std::move(weapon);
+    Character::SetWeapon(this->m_WeaponSlots[this->m_ActiveWeaponSlot]);
+}
+
+void Player::SetOnWeaponBulletFired(
+    std::function<void(std::shared_ptr<Bullet>)> callback
+) {
+    this->m_OnWeaponBulletFired = std::move(callback);
+
+    for (const auto &weapon : this->m_WeaponSlots) {
+        this->ApplyWeaponBulletCallback(weapon);
+    }
+}
+
+void Player::SetMeleeAttackResolver(MeleeAttackResolver resolver) {
+    this->m_MeleeAttackResolver = std::move(resolver);
+}
+
+void Player::SwitchWeapon() {
+    const int nextSlot = 1 - this->m_ActiveWeaponSlot;
+    if (this->m_WeaponSlots[nextSlot] == nullptr) {
+        return;
+    }
+
+    this->EquipWeaponSlot(nextSlot);
+}
+
+void Player::EquipWeaponSlot(int slotIndex) {
+    if (slotIndex < 0 ||
+        slotIndex >= static_cast<int>(this->m_WeaponSlots.size()) ||
+        this->m_WeaponSlots[slotIndex] == nullptr) {
+        return;
+    }
+
+    this->m_ActiveWeaponSlot = slotIndex;
+    this->ApplyWeaponBulletCallback(this->m_WeaponSlots[this->m_ActiveWeaponSlot]);
+    Character::SetWeapon(this->m_WeaponSlots[this->m_ActiveWeaponSlot]);
+}
+
+void Player::ApplyWeaponBulletCallback(const std::shared_ptr<Weapon> &weapon) {
+    if (weapon == nullptr || this->m_OnWeaponBulletFired == nullptr) {
+        return;
+    }
+
+    weapon->SetOnBulletFired(this->m_OnWeaponBulletFired);
+}
+
+bool Player::TryMeleeAttack() {
+    if (this->IsMeleeAttacking()) {
+        return true;
+    }
+
+    if (this->m_MeleeAttackResolver == nullptr ||
+        Util::Time::GetElapsedTimeMs() - this->m_LastMeleeAttackTime <
+            kMeleeAttackCooldownMs) {
+        return false;
+    }
+
+    if (!this->m_MeleeAttackResolver(*this)) {
+        return false;
+    }
+
+    this->m_LastMeleeAttackTime = Util::Time::GetElapsedTimeMs();
+    this->TriggerAttackVisual(kMeleeAttackVisualDurationMs);
+    this->StartMeleeAttackVisual();
+    return true;
+}
+
+bool Player::IsMeleeAttacking() const {
+    return Util::Time::GetElapsedTimeMs() < this->m_MeleeAttackVisualEndTime;
+}
+
+void Player::StartMeleeAttackVisual() {
+    if (this->m_MeleeAttackVisual == nullptr ||
+        this->m_MeleeAttackAnimation == nullptr) {
+        return;
+    }
+
+    this->m_MeleeAttackVisualEndTime =
+        Util::Time::GetElapsedTimeMs() + kMeleeAttackVisualDurationMs;
+    this->m_MeleeAttackAnimation->SetCurrentFrame(0);
+    this->m_MeleeAttackAnimation->Play();
+    this->m_MeleeAttackVisual->SetDrawable(this->m_MeleeAttackAnimation);
+    this->m_MeleeAttackVisual->SetVisible(true);
+    this->UpdateMeleeAttackVisual();
+}
+
+void Player::UpdateMeleeAttackVisual() {
+    if (this->m_MeleeAttackVisual == nullptr) {
+        return;
+    }
+
+    if (!this->IsMeleeAttacking()) {
+        this->m_MeleeAttackVisual->SetVisible(false);
+        this->m_MeleeAttackVisual->SetDrawable(nullptr);
+        return;
+    }
+
+    const glm::vec2 facingDirection = NormalizeOrRight(this->GetFaceDirection());
+    const float rotation = std::atan2(facingDirection.y, facingDirection.x);
+    const float attackRadius = MAP_PIXEL_PER_BLOCK * 2.4F;
+
+    const std::shared_ptr<MapObject> mapVisual =
+        std::dynamic_pointer_cast<MapObject>(this->m_MeleeAttackVisual);
+    if (mapVisual == nullptr) {
+        return;
+    }
+
+    mapVisual->SetAbsoluteTranslation(
+        this->GetAbsoluteTranslation() + facingDirection * (attackRadius * 0.5F)
+    );
+    mapVisual->SetAbsoluteRotation(rotation);
+    mapVisual->SetAbsoluteScale(
+        {1.5F, std::abs(rotation) > 3.14159265358979323846F / 2.0F ? -1.5F : 1.5F}
+    );
 }
 
 void Player::ApplyDamage(int damage) {

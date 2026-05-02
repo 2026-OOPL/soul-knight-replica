@@ -23,7 +23,7 @@ void WeaponChestReward::Grant(Player &player, MapSystem &mapSystem) {
         return;
     }
 
-    weapon->SetOnBulletFired(
+    player.SetOnWeaponBulletFired(
         [&mapSystem](std::shared_ptr<Bullet> bullet) {
             mapSystem.AddBullet(std::move(bullet));
         }

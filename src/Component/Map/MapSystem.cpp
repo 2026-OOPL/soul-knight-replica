@@ -8,6 +8,7 @@
 
 #include "Component/Debug/CollisionDebugOverlay.hpp"
 #include "Component/Debug/CollisionDebugSnapshot.hpp"
+#include "Common/Constants.hpp"
 #include "Component/Map/MapSystem.hpp"
 #include "Component/Character/Character.hpp"
 #include "Component/IStateful.hpp"
@@ -228,6 +229,12 @@ void MapSystem::AddPlayer(const std::shared_ptr<Player> &player) {
         return;
     }
 
+    player->SetMeleeAttackResolver(
+        [this](Player &attacker) {
+            return this->ResolvePlayerMeleeAttack(attacker);
+        }
+    );
+
     player->SetCollisionResolver(
         [this](const ICollidable &body, const glm::vec2 &intendedDelta) {
             return this->ResolvePlayerMovement(body, intendedDelta);
@@ -280,6 +287,77 @@ Collision::MovementResult MapSystem::ResolvePlayerMovement(
         this->m_World.GetRooms()
     );
     return result;
+}
+
+bool MapSystem::ResolvePlayerMeleeAttack(Player &player) {
+    constexpr int kPlayerMeleeDamage = 4;
+    constexpr float kTriggerDistance =
+        static_cast<float>(MAP_PIXEL_PER_BLOCK);
+    constexpr float kAttackRadius =
+        static_cast<float>(MAP_PIXEL_PER_BLOCK) * 2.4F;
+
+    const glm::vec2 playerPosition = player.GetAbsoluteTranslation();
+    glm::vec2 facingDirection = player.GetFaceDirection();
+    if (glm::length(facingDirection) <= 0.0001F) {
+        facingDirection = {1.0F, 0.0F};
+    } else {
+        facingDirection = glm::normalize(facingDirection);
+    }
+
+    const float playerRadius =
+        std::max(player.GetColliderSize().x, player.GetColliderSize().y) * 0.5F;
+
+    bool canTriggerMelee = false;
+    for (const auto &mob : this->m_World.GetMobs()) {
+        if (mob == nullptr || mob->IsDead()) {
+            continue;
+        }
+
+        const glm::vec2 toMob = mob->GetAbsoluteTranslation() - playerPosition;
+        const float distance = glm::length(toMob);
+        if (distance <= 0.0001F) {
+            canTriggerMelee = true;
+            break;
+        }
+
+        const float mobRadius =
+            std::max(mob->GetColliderSize().x, mob->GetColliderSize().y) * 0.5F;
+        if (glm::dot(glm::normalize(toMob), facingDirection) >= 0.0F &&
+            distance <= kTriggerDistance + playerRadius + mobRadius) {
+            canTriggerMelee = true;
+            break;
+        }
+    }
+
+    if (!canTriggerMelee) {
+        return false;
+    }
+
+    bool hitAnyMob = false;
+    for (const auto &mob : this->m_World.GetMobs()) {
+        if (mob == nullptr || mob->IsDead()) {
+            continue;
+        }
+
+        const glm::vec2 toMob = mob->GetAbsoluteTranslation() - playerPosition;
+        const float distance = glm::length(toMob);
+        const float mobRadius =
+            std::max(mob->GetColliderSize().x, mob->GetColliderSize().y) * 0.5F;
+
+        if (distance > kAttackRadius + mobRadius) {
+            continue;
+        }
+
+        if (distance > 0.0001F &&
+            glm::dot(glm::normalize(toMob), facingDirection) < 0.0F) {
+            continue;
+        }
+
+        mob->ApplyDamage(kPlayerMeleeDamage);
+        hitAnyMob = true;
+    }
+
+    return hitAnyMob;
 }
 
 Collision::MovementResult MapSystem::ResolveMapMovement(

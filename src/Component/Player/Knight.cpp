@@ -6,6 +6,7 @@
 #include <utility>
 
 #include "Component/Player/Player.hpp"
+#include "Component/Weapons/Plunger.hpp"
 #include "Util/Input.hpp"
 #include "Util/Keycode.hpp"
 #include "Util/Logger.hpp"
@@ -23,6 +24,7 @@ Knight::Knight(
     KnightPlayer::MAX_AMMO
 ) { 
     this->m_GetNearestMob = std::move(GetNearestMob);
+    this->SetWeapon(std::make_shared<Plunger>());
 }
 
 glm::vec2 Knight::GetFaceDirection() const {

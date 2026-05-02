@@ -20,13 +20,11 @@ MapTest::MapTest() : MapSystem() {
         this->m_MainPlayer->SetAbsoluteTranslation(glm::vec2(0.0F, 0.0F));
     }
 
-    if (this->m_MainPlayer->GetWeapon() != nullptr) {
-        this->m_MainPlayer->GetWeapon()->SetOnBulletFired(
-            [this](std::shared_ptr<Bullet> bullet) {
-                this->AddBullet(bullet);
-            }
-        );
-    }
+    this->m_MainPlayer->SetOnWeaponBulletFired(
+        [this](std::shared_ptr<Bullet> bullet) {
+            this->AddBullet(bullet);
+        }
+    );
 
     this->m_MainPlayer->SetAbsoluteScale({0.75F, 0.75F});
     this->AddPlayer(this->m_MainPlayer);

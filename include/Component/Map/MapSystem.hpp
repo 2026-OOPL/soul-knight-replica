@@ -107,6 +107,7 @@ protected:
 private:
     void ApplyCameraRecursive(const std::shared_ptr<Util::GameObject> &object);
     void DebugClearCurrentFightRoom();
+    bool ResolvePlayerMeleeAttack(Player &player);
     void PruneDestroyedBullets();
     void PruneDestroyedProps();
     void PruneDefeatedMobs();
