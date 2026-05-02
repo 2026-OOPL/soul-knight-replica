@@ -1,5 +1,5 @@
-#ifndef RUINS_GUARD_HPP
-#define RUINS_GUARD_HPP
+#ifndef SHEAR_RUINS_GUARD_HPP
+#define SHEAR_RUINS_GUARD_HPP
 
 #include <memory>
 #include <vector>
@@ -26,9 +26,9 @@ namespace {
     };
 }
 
-class RuinsGuard : public Mob {
+class ShearRuinsGuard : public Mob {
 public:
-    RuinsGuard(
+    ShearRuinsGuard(
         std::weak_ptr<Character> tracePlayer,
         Collision::CollisionSystem* collisionSystem
     ) : Mob(

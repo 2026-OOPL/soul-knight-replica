@@ -145,6 +145,11 @@ void Bullet::OnCollision(const Collision::CollisionSituation &situation) {
         return;
     }
 
+    Character *character = dynamic_cast<Character *>(situation.other);
+    if (character != nullptr && character->IsDead()) {
+        return;
+    }
+
     this->TryRegisterImpact();
 }
 

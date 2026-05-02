@@ -29,7 +29,7 @@ public:
         int damage,
         CombatFaction faction
     ) : Bullet(
-            std::make_shared<Util::Animation>(SHEAR_SPIKE_EFFECT, true, 40, false, 0, false),
+            std::shared_ptr<Util::Animation>(),
             coordinate,
             momentum,
             1,
@@ -37,8 +37,7 @@ public:
             faction
         ),
         m_SpawnTime(Util::Time::GetElapsedTimeMs()) {
-        this->SetAbsoluteScale({0.0F, 0.0F});
-        this->m_Transform.scale = this->m_AbsoluteTransform.scale;
+        this->SetVisible(false);
         this->SetColliderSize({46.0F, 28.0F});
     }
 
@@ -65,15 +64,14 @@ ShearAttackEffect::ShearAttackEffect()
         0,
         false
     );
-    this->SetDrawable(this->m_Animation);
-    this->SetAbsoluteScale({0.0F, 0.0F});
+    this->SetDrawable(nullptr);
     this->SetVisible(false);
 }
 
 void ShearAttackEffect::Update() {
     if (Util::Time::GetElapsedTimeMs() >= this->m_EndTime) {
         this->m_Active = false;
-        this->SetAbsoluteScale({0.0F, 0.0F});
+        this->SetDrawable(nullptr);
         this->SetVisible(false);
     }
 }
@@ -87,6 +85,7 @@ void ShearAttackEffect::Play(const glm::vec2 &anchor, const glm::vec2 &facingDir
     this->m_Active = true;
     this->m_Animation->SetCurrentFrame(0);
     this->m_Animation->Play();
+    this->SetDrawable(this->m_Animation);
     this->SetVisible(true);
     this->SyncToWeapon(anchor, facingDirection, 46.0F);
 }
@@ -100,13 +99,15 @@ void ShearAttackEffect::SyncToWeapon(
     this->SetAbsoluteTranslation(anchor + this->m_FacingDirection * distanceFromAnchor);
 
     if (!this->m_Active) {
-        this->SetAbsoluteScale({0.0F, 0.0F});
         return;
     }
 
     const float rotation = std::atan2(this->m_FacingDirection.y, this->m_FacingDirection.x);
+    const glm::vec2 currentScale = this->GetAbsoluteScale();
+    const float scaleX = std::abs(currentScale.x);
+    const float scaleY = std::abs(currentScale.y);
     this->SetAbsoluteRotation(rotation);
-    this->SetAbsoluteScale({1.0F, std::abs(rotation) > M_PI / 2.0F ? -1.0F : 1.0F});
+    this->SetAbsoluteScale({scaleX, std::abs(rotation) > M_PI / 2.0F ? -scaleY : scaleY});
 }
 
 Shear::Shear()
@@ -124,8 +125,11 @@ void Shear::Update() {
 
     const glm::vec2 facingDirection = NormalizeOrRight(this->m_FacingDirection);
     const float rotation = std::atan2(facingDirection.y, facingDirection.x);
+    const glm::vec2 currentScale = this->GetAbsoluteScale();
+    const float scaleX = std::abs(currentScale.x);
+    const float scaleY = std::abs(currentScale.y);
     this->SetAbsoluteRotation(rotation);
-    this->SetAbsoluteScale({1.0F, std::abs(rotation) > M_PI / 2.0F ? -1.0F : 1.0F});
+    this->SetAbsoluteScale({scaleX, std::abs(rotation) > M_PI / 2.0F ? -scaleY : scaleY});
     this->SetAbsoluteTranslation(
         this->m_AnchorPoint +
         facingDirection * (this->m_WeaponRadius + this->GetThrustOffset())
