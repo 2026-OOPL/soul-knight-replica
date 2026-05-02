@@ -277,6 +277,10 @@ bool Character::CanBeDamagedBy(const Bullet &bullet) const {
     return bullet.GetFaction() != this->m_Faction;
 }
 
+float Character::GetMoveSpeedMultiplier() const {
+    return 1.0F;
+}
+
 void Character::Update() {
     if (this->IsDead()) {
         this->StartDeathVisual();
@@ -300,7 +304,8 @@ void Character::Update() {
     }
 
     const glm::vec2 frameDelta =
-        moveIntent * this->m_PlayerSpeed * movementDeltaTimeMs +
+        moveIntent * this->m_PlayerSpeed * this->GetMoveSpeedMultiplier() *
+            movementDeltaTimeMs +
         this->BuildImpulseDelta(movementDeltaTimeMs);
 
     if (glm::length(frameDelta) <= 0.0001F) {

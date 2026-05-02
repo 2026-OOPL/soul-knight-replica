@@ -40,6 +40,10 @@ public:
     void SetAmmoCostPerShot(int ammoCostPerShot);
     int GetBulletDamage() const;
     void SetBulletDamage(int bulletDamage);
+    int GetCriticalChance() const;
+    void SetCriticalChance(int criticalChance);
+    float GetAttackMoveSpeedMultiplier() const;
+    void SetAttackMoveSpeedMultiplier(float multiplier);
     CombatFaction GetProjectileFaction() const;
     void SetProjectileFaction(CombatFaction projectileFaction);
 
@@ -68,6 +72,8 @@ private:
     int m_FireDelay;
     int m_AmmoCostPerShot = 1;
     int m_BulletDamage = 1;
+    int m_CriticalChance = 0;
+    float m_AttackMoveSpeedMultiplier = 1.0F;
     CombatFaction m_ProjectileFaction = CombatFaction::Neutral;
 };
 

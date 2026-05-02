@@ -49,6 +49,9 @@ public:
     
     void Update() override;
     
+protected:
+    float GetMoveSpeedMultiplier() const override;
+
 private:
     float m_ShieldRegenDelayRemainingMs = 0.0F;
     float m_ShieldRegenElapsedMs = 0.0F;

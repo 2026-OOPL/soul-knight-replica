@@ -5,11 +5,13 @@
 #include <glm/geometric.hpp>
 
 #include "Util/Time.hpp"
+#include "Component/BulletHitEffect.hpp"
 
 namespace {
 
 constexpr float kShearHitboxLifetimeMs = 120.0F;
 constexpr float kShearHitboxForwardOffset = 38.0F;
+constexpr float kShearKnockbackStrength = 0.16F;
 
 glm::vec2 NormalizeOrRight(const glm::vec2 &direction) {
     if (glm::length(direction) <= 0.0001F) {
@@ -45,8 +47,6 @@ public:
             this->RequestDestroy();
             return;
         }
-
-        Bullet::Update();
     }
 
 private:
@@ -145,12 +145,15 @@ bool Shear::ShotBullet() {
 
 std::shared_ptr<Bullet> Shear::CreateBullet() const {
     const glm::vec2 facingDirection = NormalizeOrRight(this->m_FacingDirection);
-    return std::make_shared<ShearHitbox>(
+    std::shared_ptr<Bullet> hitbox = std::make_shared<ShearHitbox>(
         this->m_AnchorPoint + facingDirection * kShearHitboxForwardOffset,
-        glm::vec2(0.0F, 0.0F),
+        facingDirection,
         this->GetBulletDamage(),
         this->GetProjectileFaction()
     );
+
+    hitbox->AddHitEffect(std::make_shared<KnockbackHitEffect>(kShearKnockbackStrength));
+    return hitbox;
 }
 
 void Shear::TriggerThrust() {

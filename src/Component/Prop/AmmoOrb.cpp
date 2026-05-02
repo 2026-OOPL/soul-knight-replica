@@ -15,7 +15,7 @@
 
 namespace {
 
-constexpr char kAmmoOrbSprite[] = RESOURCE_DIR "/Drops/BulletBall.png";
+constexpr char kAmmoOrbSprite[] = RESOURCE_DIR "/Drops/EnergyOrb.png";
 constexpr float kMaxOrbDeltaTimeMs = 50.0F;
 
 glm::vec2 SafeScaleForSize(

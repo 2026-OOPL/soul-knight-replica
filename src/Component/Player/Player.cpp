@@ -57,6 +57,15 @@ glm::vec2 Player::GetMoveIntent() const {
     return glm::normalize(moveIntent);
 }
 
+float Player::GetMoveSpeedMultiplier() const {
+    if (this->m_Weapon == nullptr ||
+        !Util::Input::IsKeyPressed(Util::Keycode::SPACE)) {
+        return 1.0F;
+    }
+
+    return this->m_Weapon->GetAttackMoveSpeedMultiplier();
+}
+
 void Player::Update() {
     Character::Update();
 

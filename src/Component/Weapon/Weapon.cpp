@@ -97,6 +97,22 @@ void Weapon::SetBulletDamage(int bulletDamage) {
     this->m_BulletDamage = std::max(0, bulletDamage);
 }
 
+int Weapon::GetCriticalChance() const {
+    return this->m_CriticalChance;
+}
+
+void Weapon::SetCriticalChance(int criticalChance) {
+    this->m_CriticalChance = std::clamp(criticalChance, 0, 100);
+}
+
+float Weapon::GetAttackMoveSpeedMultiplier() const {
+    return this->m_AttackMoveSpeedMultiplier;
+}
+
+void Weapon::SetAttackMoveSpeedMultiplier(float multiplier) {
+    this->m_AttackMoveSpeedMultiplier = std::max(0.0F, multiplier);
+}
+
 CombatFaction Weapon::GetProjectileFaction() const {
     return this->m_ProjectileFaction;
 }
