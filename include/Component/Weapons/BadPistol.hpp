@@ -49,6 +49,7 @@ public:
         this->SetAmmoCostPerShot(kBadPistolAmmoCost);
         this->SetCriticalChance(kBadPistolCriticalChance);
         this->SetAttackMoveSpeedMultiplier(kBadPistolAttackMoveSpeedMultiplier);
+        this->SetMuzzleOffset({18.0F, 0.0F});
     }
 
     WeaponType GetWeaponType() override { return WeaponType::RANGED; }
@@ -57,7 +58,7 @@ protected:
     std::shared_ptr<Bullet> CreateBullet() const override {
         std::shared_ptr<Bullet> bullet = std::make_shared<Bullet>(
             BAD_PISTOL_BULLET_SPRITE,
-            this->GetAbsoluteTranslation(),
+            this->GetMuzzlePoint(),
             ApplyBadPistolAttackOffset(this->m_FacingDirection),
             1,
             this->GetBulletDamage(),

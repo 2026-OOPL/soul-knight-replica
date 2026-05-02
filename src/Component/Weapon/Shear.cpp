@@ -131,7 +131,7 @@ void Shear::Update() {
     this->SetAbsoluteRotation(rotation);
     this->SetAbsoluteScale({scaleX, std::abs(rotation) > M_PI / 2.0F ? -scaleY : scaleY});
     this->SetAbsoluteTranslation(
-        this->m_AnchorPoint +
+        this->GetMountPoint() +
         facingDirection * (this->m_WeaponRadius + this->GetThrustOffset())
     );
 
@@ -150,7 +150,7 @@ bool Shear::ShotBullet() {
 std::shared_ptr<Bullet> Shear::CreateBullet() const {
     const glm::vec2 facingDirection = NormalizeOrRight(this->m_FacingDirection);
     std::shared_ptr<Bullet> hitbox = std::make_shared<ShearHitbox>(
-        this->m_AnchorPoint + facingDirection * kShearHitboxForwardOffset,
+        this->GetMountPoint() + facingDirection * kShearHitboxForwardOffset,
         facingDirection,
         this->GetBulletDamage(),
         this->GetProjectileFaction()
@@ -165,7 +165,7 @@ void Shear::TriggerThrust() {
     this->m_ThrustEndTime = this->m_ThrustStartTime + kShearThrustDurationMs;
 
     if (this->m_SpikeEffect != nullptr) {
-        this->m_SpikeEffect->Play(this->m_AnchorPoint, this->m_FacingDirection);
+        this->m_SpikeEffect->Play(this->GetMountPoint(), this->m_FacingDirection);
     }
 }
 
@@ -187,7 +187,7 @@ void Shear::SyncSpikeEffect() {
     }
 
     this->m_SpikeEffect->SyncToWeapon(
-        this->m_AnchorPoint,
+        this->GetMountPoint(),
         this->m_FacingDirection,
         this->m_WeaponRadius + this->GetThrustOffset() + 22.0F
     );

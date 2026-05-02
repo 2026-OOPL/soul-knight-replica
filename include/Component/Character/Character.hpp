@@ -59,6 +59,10 @@ public:
 
     std::shared_ptr<Weapon> GetWeapon();
     virtual void SetWeapon(std::shared_ptr<Weapon> weapon);
+    glm::vec2 GetWeaponOffset() const;
+    void SetWeaponOffset(glm::vec2 offset);
+    glm::vec2 GetWeaponSocketOffset() const;
+    void SetWeaponSocketOffset(glm::vec2 offset);
 
     int GetCurrentHealth() const;
     int GetMaxHealth() const;
@@ -105,6 +109,7 @@ protected:
     float m_PlayerSpeed = 0.15F;
 
     std::shared_ptr<Weapon> m_Weapon;
+    glm::vec2 m_WeaponSocketOffset = glm::vec2(0, 0);
  
     std::shared_ptr<Util::Animation> m_DieAnimation;
     std::shared_ptr<Util::Animation> m_StandAnimation;

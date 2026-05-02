@@ -6,6 +6,7 @@
 #include "Component/Map/FightRoom.hpp"
 #include "Component/Map/BaseRoom.hpp"
 #include "Component/Map/MapSystem.hpp"
+#include "Component/Mobs/BowRuinsGuard.hpp"
 #include "Component/Mobs/ShearRuinsGuard.hpp"
 
 FightRoom::FightRoom(
@@ -149,6 +150,10 @@ void FightRoom::StartNextMonsterWave() {
 
             case MobType::RUINS_GUARD:
                 mob = std::make_shared<ShearRuinsGuard>(target, m_MapSystem->GetCollisionSystem());
+                break;
+
+            case MobType::BOW_RUINS_GUARD:
+                mob = std::make_shared<BowRuinsGuard>(target, m_MapSystem->GetCollisionSystem());
                 break;
                 
             default:

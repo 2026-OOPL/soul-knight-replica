@@ -171,7 +171,28 @@ void Character::SetWeapon(std::shared_ptr<Weapon> weapon) {
 
     if (this->m_Weapon != nullptr) {
         this->m_Weapon->SetProjectileFaction(this->m_Faction);
+        this->m_Weapon->SetSocketOffset(this->m_WeaponSocketOffset);
         this->AddChild(this->m_Weapon);
+    }
+}
+
+glm::vec2 Character::GetWeaponOffset() const {
+    return this->GetWeaponSocketOffset();
+}
+
+void Character::SetWeaponOffset(glm::vec2 offset) {
+    this->SetWeaponSocketOffset(offset);
+}
+
+glm::vec2 Character::GetWeaponSocketOffset() const {
+    return this->m_WeaponSocketOffset;
+}
+
+void Character::SetWeaponSocketOffset(glm::vec2 offset) {
+    this->m_WeaponSocketOffset = offset;
+
+    if (this->m_Weapon != nullptr) {
+        this->m_Weapon->SetSocketOffset(this->m_WeaponSocketOffset);
     }
 }
 
@@ -293,6 +314,7 @@ void Character::Update() {
 
     if (this->m_Weapon != nullptr) {
         this->m_Weapon->SetAnchorPoint(this->GetAbsoluteTranslation());
+        this->m_Weapon->SetSocketOffset(this->m_WeaponSocketOffset);
         this->m_Weapon->SetFacingDirection(this->GetFaceDirection());
     }
 

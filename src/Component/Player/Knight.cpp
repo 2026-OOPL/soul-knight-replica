@@ -21,7 +21,7 @@ Knight::Knight(
     KnightPlayer::MAX_HEALTH,
     KnightPlayer::MAX_SHIELD,
     KnightPlayer::MAX_AMMO
-) {
+) { 
     this->m_GetNearestMob = std::move(GetNearestMob);
 }
 
