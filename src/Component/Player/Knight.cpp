@@ -6,6 +6,7 @@
 #include <utility>
 
 #include "Component/Player/Player.hpp"
+#include "Component/Weapons/BadPistol.hpp"
 #include "Component/Weapons/Plunger.hpp"
 #include "Util/Input.hpp"
 #include "Util/Keycode.hpp"
@@ -24,6 +25,7 @@ Knight::Knight(
     KnightPlayer::MAX_AMMO
 ) { 
     this->m_GetNearestMob = std::move(GetNearestMob);
+    this->SetWeapon(std::make_shared<BadPistol>());
     this->SetWeapon(std::make_shared<Plunger>());
 }
 

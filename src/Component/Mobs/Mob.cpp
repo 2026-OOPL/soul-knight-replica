@@ -125,6 +125,16 @@ bool Mob::TryMeleeAttack() {
     return true;
 }
 
+void Mob::UpdateWeaponPresentation() {
+    if (this->m_Weapon == nullptr) {
+        return;
+    }
+
+    this->m_Weapon->SetAnchorPoint(this->GetAbsoluteTranslation());
+    this->m_Weapon->SetSocketOffset(this->m_WeaponSocketOffset);
+    this->m_Weapon->SetFacingDirection(this->GetFaceDirection());
+}
+
 glm::vec2 Mob::GetMoveIntent() const {
     return m_AI->GetMoveDirection();
 }

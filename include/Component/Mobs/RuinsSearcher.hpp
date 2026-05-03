@@ -39,7 +39,6 @@ public:
         ) {
         this->SetMaxHealth(12);
         this->SetCurrentHealth(this->GetMaxHealth());
-        this->SetWeapon(nullptr);
         this->SetMeleeAttack(4, 8.0F, 700.0F, 0.12F);
     }
 };

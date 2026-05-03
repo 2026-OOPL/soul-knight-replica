@@ -98,6 +98,7 @@ public:
 protected:
     virtual bool CanBeDamagedBy(const Bullet &bullet) const;
     virtual float GetMoveSpeedMultiplier() const;
+    virtual void UpdateWeaponPresentation();
     void SetAttackAnimation(std::shared_ptr<Util::Animation> attackAnimation);
     void TriggerAttackVisual(float durationMs = 120.0F);
     bool IsAttackVisualActive() const;

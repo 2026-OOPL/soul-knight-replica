@@ -87,7 +87,10 @@ void MapSystem::Update() {
         this->DebugClearCurrentFightRoom();
     }
 
+    this->m_IsUpdatingScene = true;
     Scene::Update();
+    this->m_IsUpdatingScene = false;
+    this->FlushPendingBullets();
 
     this->m_CollisionSystem.DispatchCollisions();
     this->PruneDestroyedBullets();
@@ -574,7 +577,29 @@ void MapSystem::AddBullet(std::shared_ptr<Bullet> bullet) {
         );
     }
 
+    if (this->m_IsUpdatingScene) {
+        this->m_PendingBullets.push_back(std::move(bullet));
+        return;
+    }
+
+    this->AddBulletImmediately(bullet);
+}
+
+void MapSystem::AddBulletImmediately(const std::shared_ptr<Bullet> &bullet) {
     this->m_World.AddBullet(bullet);
+}
+
+void MapSystem::FlushPendingBullets() {
+    if (this->m_PendingBullets.empty()) {
+        return;
+    }
+
+    std::vector<std::shared_ptr<Bullet>> pending;
+    pending.swap(this->m_PendingBullets);
+
+    for (const auto &bullet : pending) {
+        this->AddBulletImmediately(bullet);
+    }
 }
 
 void MapSystem::RemoveBullet(std::shared_ptr<Bullet> bullet) {

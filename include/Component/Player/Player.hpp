@@ -59,6 +59,7 @@ public:
     
 protected:
     float GetMoveSpeedMultiplier() const override;
+    void UpdateWeaponPresentation() override;
 
 private:
     void SwitchWeapon();

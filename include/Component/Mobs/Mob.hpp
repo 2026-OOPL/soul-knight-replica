@@ -53,6 +53,7 @@ public:
     void Initialize(MapSystem* mapSystem);
     
 protected:
+    void UpdateWeaponPresentation() override;
     std::weak_ptr<Character> m_TracePlayerTemp;
     Collision::CollisionSystem* m_CollisionSystemTemp;
     bool TryMeleeAttack();

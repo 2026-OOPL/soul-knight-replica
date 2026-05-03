@@ -44,6 +44,7 @@ public:
 
     void Freeze();
     void UnFreeze();
+    bool IsFrozen() const;
 
 protected:
     Character* m_Owner;       // AI 控制的本體 (Mob)

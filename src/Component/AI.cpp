@@ -236,6 +236,10 @@ void AI::UnFreeze() {
     m_Freezed = false;
 }
 
+bool AI::IsFrozen() const {
+    return m_Freezed;
+}
+
 bool AI::GetAttackTrigger() {
     if (m_Freezed) {
         return false;

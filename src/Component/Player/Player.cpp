@@ -66,7 +66,6 @@ Player::Player(
     this->SetMaxAmmo(maxAmmo);
     this->SetCurrentAmmo(this->GetMaxAmmo());
     this->SetFaction(CombatFaction::Player);
-    this->m_WeaponSlots[this->m_ActiveWeaponSlot] = this->m_Weapon;
 
     this->m_MeleeAttackAnimation = std::make_shared<Util::Animation>(
         kMeleeAttackEffectSprites,
@@ -113,6 +112,16 @@ float Player::GetMoveSpeedMultiplier() const {
     }
 
     return this->m_Weapon->GetAttackMoveSpeedMultiplier();
+}
+
+void Player::UpdateWeaponPresentation() {
+    if (this->m_Weapon == nullptr) {
+        return;
+    }
+
+    this->m_Weapon->SetAnchorPoint(this->GetAbsoluteTranslation());
+    this->m_Weapon->SetSocketOffset(this->m_WeaponSocketOffset);
+    this->m_Weapon->SetFacingDirection(this->GetFaceDirection());
 }
 
 void Player::Update() {
@@ -187,8 +196,13 @@ void Player::SetWeapon(std::shared_ptr<Weapon> weapon) {
     this->ApplyWeaponBulletCallback(weapon);
 
     const int inactiveSlot = 1 - this->m_ActiveWeaponSlot;
-    if (this->m_WeaponSlots[this->m_ActiveWeaponSlot] != nullptr &&
-        this->m_WeaponSlots[inactiveSlot] == nullptr) {
+    if (this->m_WeaponSlots[this->m_ActiveWeaponSlot] == nullptr) {
+        this->m_WeaponSlots[this->m_ActiveWeaponSlot] = std::move(weapon);
+        Character::SetWeapon(this->m_WeaponSlots[this->m_ActiveWeaponSlot]);
+        return;
+    }
+
+    if (this->m_WeaponSlots[inactiveSlot] == nullptr) {
         this->m_WeaponSlots[inactiveSlot] = std::move(weapon);
         this->EquipWeaponSlot(inactiveSlot);
         return;

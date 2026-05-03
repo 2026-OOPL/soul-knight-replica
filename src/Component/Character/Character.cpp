@@ -12,7 +12,6 @@
 #include "Component/Bullet.hpp"
 #include "Component/Character/Character.hpp"
 #include "Component/Collision/CollisionSystem.hpp"
-#include "Component/Weapons/BadPistol.hpp"
 
 namespace {
 
@@ -79,7 +78,6 @@ Character::Character(
     this->m_StandAnimation = StandAnimation;
 
     this->m_CollisionBoxes.push_back(BuildDefaultCharacterBodyBox(this->m_Faction));
-    this->SetWeapon(std::make_shared<BadPistol>());
     this->SetDrawable(this->m_StandAnimation);
 };
 
@@ -104,7 +102,6 @@ Character::Character(
     );
 
     this->m_CollisionBoxes.push_back(BuildDefaultCharacterBodyBox(this->m_Faction));
-    this->SetWeapon(std::make_shared<BadPistol>());
     this->SetDrawable(this->m_StandAnimation);
 };
 
@@ -302,6 +299,16 @@ float Character::GetMoveSpeedMultiplier() const {
     return 1.0F;
 }
 
+void Character::UpdateWeaponPresentation() {
+    if (this->m_Weapon == nullptr) {
+        return;
+    }
+
+    this->m_Weapon->SetAnchorPoint(this->GetAbsoluteTranslation());
+    this->m_Weapon->SetSocketOffset(this->m_WeaponSocketOffset);
+    this->m_Weapon->SetFacingDirection(this->GetFaceDirection());
+}
+
 void Character::Update() {
     if (this->IsDead()) {
         this->StartDeathVisual();
@@ -312,11 +319,7 @@ void Character::Update() {
     const float movementDeltaTimeMs =
         std::min(Util::Time::GetDeltaTimeMs(), kMaxCharacterMovementDeltaTimeMs);
 
-    if (this->m_Weapon != nullptr) {
-        this->m_Weapon->SetAnchorPoint(this->GetAbsoluteTranslation());
-        this->m_Weapon->SetSocketOffset(this->m_WeaponSocketOffset);
-        this->m_Weapon->SetFacingDirection(this->GetFaceDirection());
-    }
+    this->UpdateWeaponPresentation();
 
     this->SetSpriteTypeByMoveIntent(moveIntent);
     this->UpdateFaceDirection();

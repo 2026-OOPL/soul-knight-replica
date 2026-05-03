@@ -161,9 +161,10 @@ void GenFightChamber::PopulateRoomContents(glm::ivec2 position) {
                 }
             }
 
-            constexpr std::array<MobType, 4> kFightRoomMobTypes = {
+            constexpr std::array<MobType, 5> kFightRoomMobTypes = {
                 MobType::GOBLIN_GUARD,
                 MobType::RUINS_GUARD,
+                MobType::SHEAR_RUINS_GUARD,
                 MobType::BOW_RUINS_GUARD,
                 MobType::RUINS_SEARCHER
             };
