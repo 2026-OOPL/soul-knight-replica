@@ -8,7 +8,6 @@
 #include <vector>
 
 #include "Component/Bullet.hpp"
-#include "Component/BulletHitEffect.hpp"
 #include "Component/Weapon.hpp"
 
 namespace {
@@ -22,7 +21,6 @@ namespace {
     constexpr int kBadPistolCriticalChance = 0;
     constexpr float kBadPistolAttackOffsetDegrees = 5.0F;
     constexpr float kBadPistolAttackMoveSpeedMultiplier = 0.9F;
-    constexpr float kBadPistolKnockbackStrength = 0.1F;
 
     glm::vec2 ApplyBadPistolAttackOffset(const glm::vec2 &direction) {
         static std::random_device randomDevice;
@@ -64,18 +62,7 @@ protected:
             this->GetBulletDamage(),
             this->GetProjectileFaction()
         );
-        this->ConfigureBullet(bullet);
         return bullet;
-    }
-
-    void ConfigureBullet(const std::shared_ptr<Bullet> &bullet) const override {
-        if (bullet == nullptr) {
-            return;
-        }
-
-        bullet->AddHitEffect(
-            std::make_shared<KnockbackHitEffect>(kBadPistolKnockbackStrength)
-        );
     }
 };
 

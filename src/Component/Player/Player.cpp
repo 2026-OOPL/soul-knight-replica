@@ -266,6 +266,18 @@ bool Player::IsMeleeAttacking() const {
     return Util::Time::GetElapsedTimeMs() < this->m_MeleeAttackVisualEndTime;
 }
 
+bool Player::GetMeleeAttackDebugBox(Collision::AxisAlignedBox &box) const {
+    if (!this->IsMeleeAttacking()) {
+        return false;
+    }
+
+    const glm::vec2 facingDirection = NormalizeOrRight(this->GetFaceDirection());
+    const float attackRadius = MAP_PIXEL_PER_BLOCK * 2.4F;
+    box.center = this->GetAbsoluteTranslation() + facingDirection * (attackRadius * 0.5F);
+    box.size = {attackRadius, attackRadius};
+    return true;
+}
+
 void Player::StartMeleeAttackVisual() {
     if (this->m_MeleeAttackVisual == nullptr ||
         this->m_MeleeAttackAnimation == nullptr) {

@@ -14,7 +14,8 @@ enum class RoomPurpose;
 enum MobType {
     GOBLIN_GUARD,
     RUINS_GUARD,
-    BOW_RUINS_GUARD
+    BOW_RUINS_GUARD,
+    RUINS_SEARCHER
 };
 
 enum ObstacleType {

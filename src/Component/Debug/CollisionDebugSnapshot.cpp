@@ -9,6 +9,7 @@
 #include "Component/Map/BaseRoom.hpp"
 #include "Component/Map/Door.hpp"
 #include "Component/Map/Gangway.hpp"
+#include "Component/Mobs/Mob.hpp"
 #include "Component/Player/Player.hpp"
 #include "Component/Prop/BlockingProp.hpp"
 #include "Component/Prop/Prop.hpp"
@@ -125,6 +126,19 @@ CollisionDebugEntry BuildStaticCollisionDebugEntry(
     return entry;
 }
 
+CollisionDebugEntry BuildAttackCollisionDebugEntry(
+    const Collision::AxisAlignedBox &box,
+    const std::string &ownerLabel
+) {
+    CollisionDebugEntry entry;
+    entry.worldCenter = box.center;
+    entry.worldSize = box.size;
+    entry.worldRotation = 0.0F;
+    entry.color = Util::Color(255, 64, 64, 230);
+    entry.label = ownerLabel + " | Hitbox | Debug";
+    return entry;
+}
+
 template <typename TObject>
 void AppendDebugVisualEntry(
     const std::shared_ptr<TObject> &object,
@@ -161,6 +175,34 @@ void AppendDynamicCollisionEntries(
         Collision::CollisionSystem::BuildCollisionPrimitives(*object);
     for (const auto &primitive : primitives) {
         entries.push_back(BuildCollisionDebugEntry(primitive));
+    }
+}
+
+void AppendPlayerAttackDebugEntries(
+    const std::shared_ptr<Player> &player,
+    std::vector<CollisionDebugEntry> &entries
+) {
+    if (player == nullptr) {
+        return;
+    }
+
+    Collision::AxisAlignedBox box;
+    if (player->GetMeleeAttackDebugBox(box)) {
+        entries.push_back(BuildAttackCollisionDebugEntry(box, "Player Melee"));
+    }
+}
+
+void AppendMobAttackDebugEntries(
+    const std::shared_ptr<Mob> &mob,
+    std::vector<CollisionDebugEntry> &entries
+) {
+    if (mob == nullptr) {
+        return;
+    }
+
+    Collision::AxisAlignedBox box;
+    if (mob->GetMeleeAttackDebugBox(box)) {
+        entries.push_back(BuildAttackCollisionDebugEntry(box, "Mob Contact"));
     }
 }
 
@@ -342,10 +384,12 @@ CollisionDebugSnapshot BuildCollisionDebugSnapshot(
 
     for (const auto &player : players) {
         AppendDynamicCollisionEntries(player, snapshot.entries);
+        AppendPlayerAttackDebugEntries(player, snapshot.entries);
     }
 
     for (const auto &mob : mobs) {
         AppendDynamicCollisionEntries(mob, snapshot.entries);
+        AppendMobAttackDebugEntries(mob, snapshot.entries);
     }
 
     for (const auto &bullet : bullets) {

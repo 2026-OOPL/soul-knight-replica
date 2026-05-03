@@ -45,6 +45,7 @@ public:
     
 protected:
     void StartNextMonsterWave();
+    void PushPlayersInsideClosedDoors();
 
     WaveStatus m_WaveStatus = WaveStatus::IDLE;
 

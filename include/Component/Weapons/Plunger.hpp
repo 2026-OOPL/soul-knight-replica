@@ -10,7 +10,6 @@
 #include <glm/geometric.hpp>
 #include <glm/vec2.hpp>
 
-#include "Component/BulletHitEffect.hpp"
 #include "Component/Bullets/SpinningBullet.hpp"
 #include "Component/Weapon.hpp"
 
@@ -27,7 +26,6 @@ namespace {
     constexpr float kPlungerAttackOffsetDegrees = 10.0F;
     constexpr float kPlungerBulletSpeed = 0.9F;
     constexpr float kPlungerAttackMoveSpeedMultiplier = 1.1F;
-    constexpr float kPlungerKnockbackStrength = 0.08F;
 
     glm::vec2 ApplyPlungerAttackOffset(const glm::vec2 &direction) {
         static std::random_device randomDevice;
@@ -87,18 +85,7 @@ protected:
             this->GetProjectileFaction()
         );
         bullet->SetColliderSize({16.0F, 16.0F});
-        this->ConfigureBullet(bullet);
         return bullet;
-    }
-
-    void ConfigureBullet(const std::shared_ptr<Bullet> &bullet) const override {
-        if (bullet == nullptr) {
-            return;
-        }
-
-        bullet->AddHitEffect(
-            std::make_shared<KnockbackHitEffect>(kPlungerKnockbackStrength)
-        );
     }
 };
 

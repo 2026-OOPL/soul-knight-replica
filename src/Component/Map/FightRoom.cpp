@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <memory>
 
 #include "Generator/RoomInfo.hpp"
@@ -6,8 +7,35 @@
 #include "Component/Map/FightRoom.hpp"
 #include "Component/Map/BaseRoom.hpp"
 #include "Component/Map/MapSystem.hpp"
+#include "Component/Collision/CollisionSystem.hpp"
 #include "Component/Mobs/BowRuinsGuard.hpp"
+#include "Component/Mobs/RuinsSearcher.hpp"
 #include "Component/Mobs/ShearRuinsGuard.hpp"
+
+namespace {
+
+constexpr float kDoorPlayerPushPadding = 2.0F;
+
+glm::vec2 GetDoorInwardNormal(DoorSide side) {
+    switch (side) {
+    case DoorSide::Top:
+        return {0.0F, -1.0F};
+    case DoorSide::Right:
+        return {-1.0F, 0.0F};
+    case DoorSide::Bottom:
+        return {0.0F, 1.0F};
+    case DoorSide::Left:
+        return {1.0F, 0.0F};
+    }
+
+    return {0.0F, 0.0F};
+}
+
+float GetAxisExtent(const glm::vec2 &size, const glm::vec2 &axis) {
+    return std::abs(axis.x) > 0.0F ? size.x * 0.5F : size.y * 0.5F;
+}
+
+} // namespace
 
 FightRoom::FightRoom(
     const glm::vec2 &absolutePosition,
@@ -41,9 +69,11 @@ void FightRoom::OnPlayerEnter() {
 
     if (m_WaveStatus == WaveStatus::IDLE) {
         this->CloseAllDoors();
+        this->PushPlayersInsideClosedDoors();
         m_WaveStatus = WaveStatus::FIGHTING;
 
         for (auto const& i : this->GetMobs()) {
+            i->SetDamageEnabled(true);
             i->m_AI->UnFreeze();
         }
 
@@ -91,6 +121,57 @@ void FightRoom::Update() {
     BaseRoom::Update();
 }
 
+void FightRoom::PushPlayersInsideClosedDoors() {
+    if (this->m_MapSystem == nullptr) {
+        return;
+    }
+
+    Collision::CollisionSystem collisionSystem;
+
+    for (const auto &player : this->m_MapSystem->GetPlayers()) {
+        if (player == nullptr || player->IsDead()) {
+            continue;
+        }
+
+        glm::vec2 playerPosition = player->GetAbsoluteTranslation();
+        Collision::AxisAlignedBox playerBox = player->GetCollisionBoxAt(playerPosition);
+
+        for (const auto &door : this->GetDoors()) {
+            if (door == nullptr || door->IsOpen()) {
+                continue;
+            }
+
+            const std::vector<Collision::CollisionPrimitive> doorPrimitives =
+                door->CollectBlockingPrimitives();
+            for (const auto &primitive : doorPrimitives) {
+                if (!collisionSystem.IsOverlapping(playerBox, primitive.box)) {
+                    continue;
+                }
+
+                const glm::vec2 inwardNormal = GetDoorInwardNormal(door->GetSide());
+                const float playerHalfExtent =
+                    GetAxisExtent(playerBox.size, inwardNormal);
+                const float doorHalfExtent =
+                    GetAxisExtent(primitive.box.size, inwardNormal);
+                const float requiredDepth =
+                    playerHalfExtent + doorHalfExtent + kDoorPlayerPushPadding;
+                const float currentDepth =
+                    glm::dot(playerPosition - primitive.box.center, inwardNormal);
+                const float pushDistance =
+                    std::max(0.0F, requiredDepth - currentDepth);
+
+                if (pushDistance <= 0.0F) {
+                    continue;
+                }
+
+                playerPosition += inwardNormal * pushDistance;
+                player->SetAbsoluteTranslation(playerPosition);
+                playerBox = player->GetCollisionBoxAt(playerPosition);
+            }
+        }
+    }
+}
+
 bool FightRoom::IsRoomCleared() {
     return m_CompletedWave >= m_MaxMobWave;
 }
@@ -110,6 +191,7 @@ void FightRoom::DebugClearRoom() {
             continue;
         }
 
+        mob->SetDamageEnabled(true);
         mob->ApplyDamage(mob->GetCurrentHealth());
     }
 
@@ -155,6 +237,10 @@ void FightRoom::StartNextMonsterWave() {
             case MobType::BOW_RUINS_GUARD:
                 mob = std::make_shared<BowRuinsGuard>(target, m_MapSystem->GetCollisionSystem());
                 break;
+
+            case MobType::RUINS_SEARCHER:
+                mob = std::make_shared<RuinsSearcher>(target, m_MapSystem->GetCollisionSystem());
+                break;
                 
             default:
                 LOG_WARN("Failed to add mob, unknown monster type.");
@@ -162,6 +248,7 @@ void FightRoom::StartNextMonsterWave() {
         }
 
         if (mob != nullptr) {
+            mob->SetDamageEnabled(m_PlayerInside);
             mob->SetAbsoluteTranslation(this->GetAbsoluteTranslation() + i.localPosition); // 加上房間絕對座標
             this->AddMob(mob);              // 讓 BaseRoom 記錄這隻怪，用來判斷房間是否清空
             this->m_MapSystem->AddMob(mob); // 將怪物註冊到 MapSystem，確保碰撞和更新正常運作
@@ -177,6 +264,7 @@ void FightRoom::Initialize(MapSystem* system) {
 
     // Freeze the mob in the first place 
     for (auto const& i : this->GetMobs()) {
+        i->SetDamageEnabled(false);
         i->m_AI->Freeze();
     }
 }

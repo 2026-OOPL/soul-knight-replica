@@ -9,6 +9,7 @@
 #include <glm/vec2.hpp>
 
 #include "Component/Character/Character.hpp"
+#include "Component/Collision/CollisionTypes.hpp"
 
 struct PlayerHudState {
     int hp;
@@ -52,6 +53,7 @@ public:
     void RecoverAmmo(int amount);
     
     PlayerHudState GetHudState() const;
+    bool GetMeleeAttackDebugBox(Collision::AxisAlignedBox &box) const;
     
     void Update() override;
     
