@@ -91,6 +91,7 @@ void MapSystem::Update() {
     Scene::Update();
     this->m_IsUpdatingScene = false;
     this->FlushPendingBullets();
+    this->FlushPendingMobs();
 
     this->m_CollisionSystem.DispatchCollisions();
     this->PruneDestroyedBullets();
@@ -294,6 +295,7 @@ Collision::MovementResult MapSystem::ResolvePlayerMovement(
 
 bool MapSystem::ResolvePlayerMeleeAttack(Player &player) {
     constexpr int kPlayerMeleeDamage = 4;
+    constexpr float kPlayerMeleeKnockbackStrength = 0.13F;
     constexpr float kTriggerDistance =
         static_cast<float>(MAP_PIXEL_PER_BLOCK);
     constexpr float kAttackRadius =
@@ -357,6 +359,15 @@ bool MapSystem::ResolvePlayerMeleeAttack(Player &player) {
         }
 
         mob->ApplyDamage(kPlayerMeleeDamage);
+        glm::vec2 knockbackDirection = toMob;
+        if (glm::length(knockbackDirection) <= 0.0001F) {
+            knockbackDirection = facingDirection;
+        }
+        if (glm::length(knockbackDirection) > 0.0001F) {
+            mob->ApplyImpulse(
+                glm::normalize(knockbackDirection) * kPlayerMeleeKnockbackStrength
+            );
+        }
         hitAnyMob = true;
     }
 
@@ -611,6 +622,19 @@ void MapSystem::AddMob(std::shared_ptr<Mob> mob) {
         throw std::runtime_error("Trying to add a null mob is not allowed");
     }
 
+    if (this->m_IsUpdatingScene) {
+        this->m_PendingMobs.push_back(std::move(mob));
+        return;
+    }
+
+    this->AddMobImmediately(mob);
+}
+
+void MapSystem::AddMobImmediately(const std::shared_ptr<Mob> &mob) {
+    if (mob == nullptr) {
+        throw std::runtime_error("Trying to add a null mob is not allowed");
+    }
+
     mob->SetCollisionResolver(
         [this](const ICollidable &body, const glm::vec2 &intendedDelta) {
             return this->ResolveMapMovement(body, intendedDelta);
@@ -620,6 +644,19 @@ void MapSystem::AddMob(std::shared_ptr<Mob> mob) {
     mob->Initialize(this);
 
     this->m_World.AddMob(mob);
+}
+
+void MapSystem::FlushPendingMobs() {
+    if (this->m_PendingMobs.empty()) {
+        return;
+    }
+
+    std::vector<std::shared_ptr<Mob>> pending;
+    pending.swap(this->m_PendingMobs);
+
+    for (const auto &mob : pending) {
+        this->AddMobImmediately(mob);
+    }
 }
 
 void MapSystem::RemoveMob(std::shared_ptr<Mob> mob) {

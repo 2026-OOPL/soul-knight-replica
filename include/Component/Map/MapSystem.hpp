@@ -110,6 +110,8 @@ private:
     bool ResolvePlayerMeleeAttack(Player &player);
     void AddBulletImmediately(const std::shared_ptr<Bullet> &bullet);
     void FlushPendingBullets();
+    void AddMobImmediately(const std::shared_ptr<Mob> &mob);
+    void FlushPendingMobs();
     void PruneDestroyedBullets();
     void PruneDestroyedProps();
     void PruneDefeatedMobs();
@@ -117,6 +119,7 @@ private:
 
     std::shared_ptr<CollisionDebugOverlay> m_CollisionDebugOverlay;
     std::vector<std::shared_ptr<Bullet>> m_PendingBullets;
+    std::vector<std::shared_ptr<Mob>> m_PendingMobs;
     bool m_IsUpdatingScene = false;
     bool m_ShowCollisionDebug = false;
 };

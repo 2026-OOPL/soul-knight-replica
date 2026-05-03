@@ -10,8 +10,10 @@
 #include "Component/Collision/CollisionSystem.hpp"
 #include "Component/Mobs/AncientGearSet.hpp"
 #include "Component/Mobs/BowRuinsGuard.hpp"
+#include "Component/Mobs/PortalMob.hpp"
 #include "Component/Mobs/RuinsGuard.hpp"
 #include "Component/Mobs/RuinsSearcher.hpp"
+#include "Component/Mobs/RuinsTurret.hpp"
 #include "Component/Mobs/ShearRuinsGuard.hpp"
 
 namespace {
@@ -250,6 +252,14 @@ void FightRoom::StartNextMonsterWave() {
 
             case MobType::ANCIENT_GEAR_SET:
                 mob = std::make_shared<AncientGearSet>(target, m_MapSystem->GetCollisionSystem());
+                break;
+
+            case MobType::RUINS_TURRET:
+                mob = std::make_shared<RuinsTurret>(target, m_MapSystem->GetCollisionSystem());
+                break;
+
+            case MobType::PORTAL_MOB:
+                mob = std::make_shared<PortalMob>(target, m_MapSystem->GetCollisionSystem());
                 break;
                 
             default:
