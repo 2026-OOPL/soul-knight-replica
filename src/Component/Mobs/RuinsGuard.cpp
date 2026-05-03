@@ -37,6 +37,7 @@ constexpr float kChargeWindupMs = 360.0F;
 constexpr float kChargeRecoverMs = 420.0F;
 constexpr float kChargeSpeed = 0.34F;
 constexpr float kChargeDamage = 5.0F;
+constexpr float kChargeKnockbackStrength = 0.18F;
 constexpr float kChargeContactCooldownMs = 450.0F;
 constexpr int kMaxChargeBounces = 3;
 constexpr float kRadialShotDurationMs = 420.0F;
@@ -457,11 +458,17 @@ void RuinsGuard::DamagePlayerOnChargeContact() {
         }
 
         player->ApplyDamage(static_cast<int>(kChargeDamage));
-        const glm::vec2 knockbackDirection =
-            this->NormalizeOrFallback(player->GetAbsoluteTranslation() - this->GetAbsoluteTranslation());
-        player->ApplyImpulse(knockbackDirection * 0.18F);
+        this->KnockbackPlayerFromGuard(*player, kChargeKnockbackStrength);
         this->m_LastContactDamageTime = Util::Time::GetElapsedTimeMs();
     }
+}
+
+void RuinsGuard::KnockbackPlayerFromGuard(Player &player, float strength) const {
+    player.ApplyImpulse(
+        this->NormalizeOrFallback(
+            player.GetAbsoluteTranslation() - this->GetAbsoluteTranslation()
+        ) * strength
+    );
 }
 
 void RuinsGuard::UpdateEquipmentPresentation() {

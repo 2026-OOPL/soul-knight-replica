@@ -16,7 +16,8 @@ enum MobType {
     RUINS_GUARD,
     SHEAR_RUINS_GUARD,
     BOW_RUINS_GUARD,
-    RUINS_SEARCHER
+    RUINS_SEARCHER,
+    ANCIENT_GEAR_SET
 };
 
 enum ObstacleType {

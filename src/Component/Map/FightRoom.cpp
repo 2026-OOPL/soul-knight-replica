@@ -8,6 +8,7 @@
 #include "Component/Map/BaseRoom.hpp"
 #include "Component/Map/MapSystem.hpp"
 #include "Component/Collision/CollisionSystem.hpp"
+#include "Component/Mobs/AncientGearSet.hpp"
 #include "Component/Mobs/BowRuinsGuard.hpp"
 #include "Component/Mobs/RuinsGuard.hpp"
 #include "Component/Mobs/RuinsSearcher.hpp"
@@ -245,6 +246,10 @@ void FightRoom::StartNextMonsterWave() {
 
             case MobType::RUINS_SEARCHER:
                 mob = std::make_shared<RuinsSearcher>(target, m_MapSystem->GetCollisionSystem());
+                break;
+
+            case MobType::ANCIENT_GEAR_SET:
+                mob = std::make_shared<AncientGearSet>(target, m_MapSystem->GetCollisionSystem());
                 break;
                 
             default:

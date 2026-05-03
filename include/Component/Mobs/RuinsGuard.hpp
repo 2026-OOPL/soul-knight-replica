@@ -17,6 +17,8 @@ namespace Core {
 class Drawable;
 }
 
+class Player;
+
 class RuinsGuardEquipmentVisual : public Util::GameObject, public MapObject {
 public:
     RuinsGuardEquipmentVisual(
@@ -101,6 +103,7 @@ private:
     void FirePikeHitbox();
     void FireRadialBullets();
     void DamagePlayerOnChargeContact();
+    void KnockbackPlayerFromGuard(Player &player, float strength) const;
     std::shared_ptr<Character> GetTarget() const;
     glm::vec2 NormalizeOrFallback(const glm::vec2 &direction) const;
 
