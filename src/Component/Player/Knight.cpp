@@ -13,7 +13,7 @@
 #include "Util/Transform.hpp"
 
 Knight::Knight(
-    std::function<std::weak_ptr<Character>()> GetNearestMob
+    std::function<std::shared_ptr<Character>()> GetNearestMob
 ) : Player(
     KnightPlayer::STAND_SPRITES,
     KnightPlayer::WALK_SPRITES,
@@ -26,7 +26,7 @@ Knight::Knight(
 }
 
 glm::vec2 Knight::GetFaceDirection() const {
-    std::shared_ptr<Character> mob = m_GetNearestMob().lock();
+    std::shared_ptr<Character> mob = m_GetNearestMob();
 
     if (mob == nullptr) {
         return m_LastMomentum;
