@@ -1,15 +1,12 @@
 #include <cmath>
 
-#include <glm/ext/vector_float2.hpp>
-#include <glm/geometric.hpp>
 #include <glm/vec2.hpp>
+#include <glm/geometric.hpp>
 
 #include "Component/AI/AI.hpp"
 #include "Component/Character/Character.hpp"
 #include "Component/Collision/CollisionSystem.hpp"
 #include "Component/Collision/CollisionTypes.hpp"
-#include "Util/Logger.hpp"
-#include "Util/Time.hpp"
 
 AI::AI(
     Character* owner,
