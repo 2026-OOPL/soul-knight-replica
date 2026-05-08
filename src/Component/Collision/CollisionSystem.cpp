@@ -2,6 +2,8 @@
 #include <cmath>
 #include <utility>
 
+#include "Component/Collision/CollisionDispatcher.hpp"
+#include "Component/Collision/CollisionPrimitiveBuilder.hpp"
 #include "Component/Collision/CollisionSystem.hpp"
 #include "Component/Collision/ICollidable.hpp"
 
@@ -88,88 +90,63 @@ void OffsetPrimitives(
     }
 }
 
-std::pair<glm::vec2, glm::vec2> ComputeSeparation(
-    const Collision::AxisAlignedBox &lhs,
-    const Collision::AxisAlignedBox &rhs
+Collision::MovementResult ResolvePrimitivesMovement(
+    std::vector<Collision::CollisionPrimitive> primitives,
+    const glm::vec2 &intendedDelta,
+    const std::vector<Collision::CollisionPrimitive> &blockingPrimitives,
+    const Collision::CollisionQueryOptions &options,
+    const Collision::CollisionSystem &collisionSystem
 ) {
-    const glm::vec2 lhsHalf = lhs.size / 2.0F;
-    const glm::vec2 rhsHalf = rhs.size / 2.0F;
-    const glm::vec2 delta = lhs.center - rhs.center;
+    Collision::MovementResult result;
+    const float maxComponentDelta = std::max(
+        std::abs(intendedDelta.x),
+        std::abs(intendedDelta.y)
+    );
+    const int stepCount = std::max(
+        1,
+        static_cast<int>(std::ceil(maxComponentDelta / kMaxCollisionSubstepDistance))
+    );
+    const glm::vec2 stepDelta = intendedDelta / static_cast<float>(stepCount);
 
-    const float overlapX = lhsHalf.x + rhsHalf.x - std::abs(delta.x);
-    const float overlapY = lhsHalf.y + rhsHalf.y - std::abs(delta.y);
+    for (int step = 0; step < stepCount; ++step) {
+        if (stepDelta.x != 0.0F) {
+            std::vector<Collision::CollisionPrimitive> horizontalCandidate = primitives;
+            OffsetPrimitives(horizontalCandidate, {stepDelta.x, 0.0F});
 
-    if (overlapX <= 0.0F || overlapY <= 0.0F) {
-        return {
-            {0.0F, 0.0F},
-            {0.0F, 0.0F}
-        };
+            if (ArePrimitivesBlocked(
+                    horizontalCandidate,
+                    blockingPrimitives,
+                    options,
+                    collisionSystem,
+                    &result.blockingOwnerX
+                )) {
+                result.blockedX = true;
+            } else {
+                result.resolvedDelta.x += stepDelta.x;
+                primitives = std::move(horizontalCandidate);
+            }
+        }
+
+        if (stepDelta.y != 0.0F) {
+            std::vector<Collision::CollisionPrimitive> verticalCandidate = primitives;
+            OffsetPrimitives(verticalCandidate, {0.0F, stepDelta.y});
+
+            if (ArePrimitivesBlocked(
+                    verticalCandidate,
+                    blockingPrimitives,
+                    options,
+                    collisionSystem,
+                    &result.blockingOwnerY
+                )) {
+                result.blockedY = true;
+            } else {
+                result.resolvedDelta.y += stepDelta.y;
+                primitives = std::move(verticalCandidate);
+            }
+        }
     }
 
-    if (overlapX < overlapY) {
-        const float sign = delta.x < 0.0F ? -1.0F : 1.0F;
-        return {
-            {sign, 0.0F},
-            {sign * overlapX, 0.0F}
-        };
-    }
-
-    const float sign = delta.y < 0.0F ? -1.0F : 1.0F;
-    return {
-        {0.0F, sign},
-        {0.0F, sign * overlapY}
-    };
-}
-
-Collision::CollisionSituationKind ResolveSituationKind(
-    const Collision::CollisionPrimitive &lhs,
-    const Collision::CollisionPrimitive &rhs
-) {
-    const bool isTrigger =
-        lhs.filter.trigger ||
-        rhs.filter.trigger ||
-        lhs.type == Collision::CollisionBoxType::Trigger ||
-        rhs.type == Collision::CollisionBoxType::Trigger;
-
-    if (isTrigger) {
-        return Collision::CollisionSituationKind::Trigger;
-    }
-
-    if (lhs.filter.blocking || rhs.filter.blocking) {
-        return Collision::CollisionSituationKind::Blocked;
-    }
-
-    return Collision::CollisionSituationKind::Overlap;
-}
-
-void DispatchSituation(
-    ICollidable *target,
-    const Collision::CollisionPrimitive &selfPrimitive,
-    const Collision::CollisionPrimitive &otherPrimitive,
-    Collision::CollisionSituationKind kind,
-    bool againstStaticWorld
-) {
-    if (target == nullptr) {
-        return;
-    }
-
-    const auto [normal, penetration] =
-        ComputeSeparation(selfPrimitive.box, otherPrimitive.box);
-
-    Collision::CollisionSituation situation;
-    situation.kind = kind;
-    situation.self = target;
-    situation.other = otherPrimitive.owner;
-    situation.selfBox = selfPrimitive.box;
-    situation.otherBox = otherPrimitive.box;
-    situation.selfColliderId = selfPrimitive.colliderId;
-    situation.otherColliderId = otherPrimitive.colliderId;
-    situation.selfFilter = selfPrimitive.filter;
-    situation.otherFilter = otherPrimitive.filter;
-    situation.normal = normal;
-    situation.penetration = penetration;
-    situation.againstStaticWorld = againstStaticWorld;
-    target->OnCollision(situation);
+    return result;
 }
 
 } // namespace
@@ -177,10 +154,7 @@ void DispatchSituation(
 namespace Collision {
 
 AxisAlignedBox CollisionSystem::BuildBox(const glm::vec2 &center, const glm::vec2 &size) {
-    return {
-        center,
-        size
-    };
+    return CollisionPrimitiveBuilder::BuildBox(center, size);
 }
 
 CollisionPrimitive CollisionSystem::BuildPrimitive(
@@ -188,53 +162,27 @@ CollisionPrimitive CollisionSystem::BuildPrimitive(
     const CollisionBox &box,
     ICollidable *owner
 ) {
-    return {
-        BuildBox(origin + box.offset, box.size),
-        box.filter,
-        owner,
-        box.id,
-        box.type
-    };
+    return CollisionPrimitiveBuilder::BuildPrimitive(origin, box, owner);
 }
 
 CollisionPrimitive CollisionSystem::BuildStaticPrimitive(
     const AxisAlignedBox &box,
     const CollisionFilter &filter
 ) {
-    return {
-        box,
-        filter,
-        nullptr,
-        -1,
-        CollisionBoxType::Body
-    };
+    return CollisionPrimitiveBuilder::BuildStaticPrimitive(box, filter);
 }
 
 std::vector<CollisionPrimitive> CollisionSystem::BuildCollisionPrimitives(
     const ICollidable &body
 ) {
-    return BuildCollisionPrimitives(body, body.GetCollisionOrigin());
+    return CollisionPrimitiveBuilder::BuildCollisionPrimitives(body);
 }
 
 std::vector<CollisionPrimitive> CollisionSystem::BuildCollisionPrimitives(
     const ICollidable &body,
     const glm::vec2 &origin
 ) {
-    std::vector<CollisionPrimitive> primitives;
-
-    for (const CollisionBox &box : body.GetCollisionBoxes()) {
-        if (!box.enabled || box.size.x <= 0.0F || box.size.y <= 0.0F) {
-            continue;
-        }
-
-        primitives.push_back(BuildPrimitive(
-            origin,
-            box,
-            const_cast<ICollidable *>(&body)
-        ));
-    }
-
-    return primitives;
+    return CollisionPrimitiveBuilder::BuildCollisionPrimitives(body, origin);
 }
 
 void CollisionSystem::AddStaticBlockingBoxes(const std::vector<AxisAlignedBox> &blockingBoxes) {
@@ -407,57 +355,13 @@ MovementResult CollisionSystem::ResolveMovement(
     primitive.filter.layer = CollisionLayer::Prop;
     primitive.filter.mask = kAllCollisionLayers;
 
-    std::vector<CollisionPrimitive> primitives = {primitive};
-    MovementResult result;
-    const float maxComponentDelta = std::max(
-        std::abs(intendedDelta.x),
-        std::abs(intendedDelta.y)
+    return ResolvePrimitivesMovement(
+        {primitive},
+        intendedDelta,
+        blockingPrimitives,
+        options,
+        *this
     );
-    const int stepCount = std::max(
-        1,
-        static_cast<int>(std::ceil(maxComponentDelta / kMaxCollisionSubstepDistance))
-    );
-    const glm::vec2 stepDelta = intendedDelta / static_cast<float>(stepCount);
-
-    for (int step = 0; step < stepCount; ++step) {
-        if (stepDelta.x != 0.0F) {
-            std::vector<CollisionPrimitive> horizontalCandidate = primitives;
-            OffsetPrimitives(horizontalCandidate, {stepDelta.x, 0.0F});
-
-            if (ArePrimitivesBlocked(
-                    horizontalCandidate,
-                    blockingPrimitives,
-                    options,
-                    *this,
-                    &result.blockingOwnerX
-                )) {
-                result.blockedX = true;
-            } else {
-                result.resolvedDelta.x += stepDelta.x;
-                primitives = std::move(horizontalCandidate);
-            }
-        }
-
-        if (stepDelta.y != 0.0F) {
-            std::vector<CollisionPrimitive> verticalCandidate = primitives;
-            OffsetPrimitives(verticalCandidate, {0.0F, stepDelta.y});
-
-            if (ArePrimitivesBlocked(
-                    verticalCandidate,
-                    blockingPrimitives,
-                    options,
-                    *this,
-                    &result.blockingOwnerY
-                )) {
-                result.blockedY = true;
-            } else {
-                result.resolvedDelta.y += stepDelta.y;
-                primitives = std::move(verticalCandidate);
-            }
-        }
-    }
-
-    return result;
 }
 
 MovementResult CollisionSystem::ResolveMovement(
@@ -479,56 +383,13 @@ MovementResult CollisionSystem::ResolveMovement(
         return {};
     }
 
-    MovementResult result;
-    const float maxComponentDelta = std::max(
-        std::abs(intendedDelta.x),
-        std::abs(intendedDelta.y)
+    return ResolvePrimitivesMovement(
+        std::move(primitives),
+        intendedDelta,
+        blockingPrimitives,
+        options,
+        *this
     );
-    const int stepCount = std::max(
-        1,
-        static_cast<int>(std::ceil(maxComponentDelta / kMaxCollisionSubstepDistance))
-    );
-    const glm::vec2 stepDelta = intendedDelta / static_cast<float>(stepCount);
-
-    for (int step = 0; step < stepCount; ++step) {
-        if (stepDelta.x != 0.0F) {
-            std::vector<CollisionPrimitive> horizontalCandidate = primitives;
-            OffsetPrimitives(horizontalCandidate, {stepDelta.x, 0.0F});
-
-            if (ArePrimitivesBlocked(
-                    horizontalCandidate,
-                    blockingPrimitives,
-                    options,
-                    *this,
-                    &result.blockingOwnerX
-                )) {
-                result.blockedX = true;
-            } else {
-                result.resolvedDelta.x += stepDelta.x;
-                primitives = std::move(horizontalCandidate);
-            }
-        }
-
-        if (stepDelta.y != 0.0F) {
-            std::vector<CollisionPrimitive> verticalCandidate = primitives;
-            OffsetPrimitives(verticalCandidate, {0.0F, stepDelta.y});
-
-            if (ArePrimitivesBlocked(
-                    verticalCandidate,
-                    blockingPrimitives,
-                    options,
-                    *this,
-                    &result.blockingOwnerY
-                )) {
-                result.blockedY = true;
-            } else {
-                result.resolvedDelta.y += stepDelta.y;
-                primitives = std::move(verticalCandidate);
-            }
-        }
-    }
-
-    return result;
 }
 
 MovementResult CollisionSystem::PredictMovement(
@@ -556,217 +417,7 @@ void CollisionSystem::DispatchCollisions(
     const std::vector<CollisionPrimitive> &staticPrimitives,
     const std::vector<ICollidable *> &dynamicBodies
 ) const {
-    std::vector<std::pair<ICollidable *, std::vector<CollisionPrimitive>>> snapshots;
-    snapshots.reserve(dynamicBodies.size());
-
-    for (ICollidable *body : dynamicBodies) {
-        if (body == nullptr) {
-            continue;
-        }
-
-        snapshots.emplace_back(body, BuildCollisionPrimitives(*body));
-    }
-
-    for (const auto &[body, primitives] : snapshots) {
-        for (const CollisionPrimitive &selfPrimitive : primitives) {
-            for (const CollisionPrimitive &staticPrimitive : staticPrimitives) {
-                if (!IsInteractionEnabled(selfPrimitive, staticPrimitive, *this) ||
-                    !this->IsOverlapping(selfPrimitive.box, staticPrimitive.box)) {
-                    continue;
-                }
-
-                const CollisionSituationKind kind =
-                    ResolveSituationKind(selfPrimitive, staticPrimitive);
-                DispatchSituation(body, selfPrimitive, staticPrimitive, kind, true);
-            }
-        }
-    }
-
-    for (std::size_t lhsIndex = 0; lhsIndex < snapshots.size(); ++lhsIndex) {
-        for (std::size_t rhsIndex = lhsIndex + 1; rhsIndex < snapshots.size(); ++rhsIndex) {
-            const auto &[lhsBody, lhsPrimitives] = snapshots[lhsIndex];
-            const auto &[rhsBody, rhsPrimitives] = snapshots[rhsIndex];
-
-            for (const CollisionPrimitive &lhsPrimitive : lhsPrimitives) {
-                for (const CollisionPrimitive &rhsPrimitive : rhsPrimitives) {
-                    if (!IsInteractionEnabled(lhsPrimitive, rhsPrimitive, *this) ||
-                        !this->IsOverlapping(lhsPrimitive.box, rhsPrimitive.box)) {
-                        continue;
-                    }
-
-                    const CollisionSituationKind kind =
-                        ResolveSituationKind(lhsPrimitive, rhsPrimitive);
-                    DispatchSituation(lhsBody, lhsPrimitive, rhsPrimitive, kind, false);
-                    DispatchSituation(rhsBody, rhsPrimitive, lhsPrimitive, kind, false);
-                }
-            }
-        }
-    }
-}
-
-std::vector<AxisAlignedBox> BuildRoomBoundaryBoxes(
-    const glm::vec2 &roomCenter,
-    const glm::vec2 &roomSize,
-    float wallThickness
-) {
-    return BuildRoomBoundaryBoxes(
-        roomCenter,
-        roomSize,
-        wallThickness,
-        RoomBoundaryOpenings{}
-    );
-}
-
-std::vector<AxisAlignedBox> BuildRoomBoundaryBoxes(
-    const glm::vec2 &roomCenter,
-    const glm::vec2 &roomSize,
-    float wallThickness,
-    const RoomBoundaryOpenings &openings
-) {
-    const float safeWallThickness = std::max(0.0F, wallThickness);
-    const glm::vec2 roomHalfSize = roomSize / 2.0F;
-    const float halfWallThickness = safeWallThickness / 2.0F;
-    std::vector<AxisAlignedBox> boundaryBoxes;
-
-    const auto buildHorizontalWallSegments =
-        [](const glm::vec2 &areaCenter,
-           float wallY,
-           float wallWidth,
-           float thickness,
-           const WallOpening &opening) {
-            if (wallWidth <= 0.0F || thickness <= 0.0F) {
-                return std::vector<AxisAlignedBox>{};
-            }
-
-            const float openingWidth = std::clamp(opening.size, 0.0F, wallWidth);
-            if (openingWidth <= 0.0F) {
-                return std::vector<AxisAlignedBox>{
-                    CollisionSystem::BuildBox(
-                        {areaCenter.x, wallY},
-                        {wallWidth, thickness}
-                    )
-                };
-            }
-
-            const float wallLeft = areaCenter.x - wallWidth / 2.0F;
-            const float wallRight = areaCenter.x + wallWidth / 2.0F;
-            const float openingHalfWidth = openingWidth / 2.0F;
-            const float openingCenterX = std::clamp(
-                areaCenter.x + opening.offset,
-                wallLeft + openingHalfWidth,
-                wallRight - openingHalfWidth
-            );
-            const float leftWidth =
-                std::max(0.0F, openingCenterX - openingHalfWidth - wallLeft);
-            const float rightWidth =
-                std::max(0.0F, wallRight - openingCenterX - openingHalfWidth);
-            std::vector<AxisAlignedBox> segments;
-
-            if (leftWidth > 0.0F) {
-                segments.push_back(CollisionSystem::BuildBox(
-                    {wallLeft + leftWidth / 2.0F, wallY},
-                    {leftWidth, thickness}
-                ));
-            }
-
-            if (rightWidth > 0.0F) {
-                segments.push_back(CollisionSystem::BuildBox(
-                    {wallRight - rightWidth / 2.0F, wallY},
-                    {rightWidth, thickness}
-                ));
-            }
-
-            return segments;
-        };
-
-    const auto buildVerticalWallSegments =
-        [](const glm::vec2 &areaCenter,
-           float wallX,
-           float wallHeight,
-           float thickness,
-           const WallOpening &opening) {
-            if (wallHeight <= 0.0F || thickness <= 0.0F) {
-                return std::vector<AxisAlignedBox>{};
-            }
-
-            const float openingHeight = std::clamp(opening.size, 0.0F, wallHeight);
-            if (openingHeight <= 0.0F) {
-                return std::vector<AxisAlignedBox>{
-                    CollisionSystem::BuildBox(
-                        {wallX, areaCenter.y},
-                        {thickness, wallHeight}
-                    )
-                };
-            }
-
-            const float wallBottom = areaCenter.y - wallHeight / 2.0F;
-            const float wallTop = areaCenter.y + wallHeight / 2.0F;
-            const float openingHalfHeight = openingHeight / 2.0F;
-            const float openingCenterY = std::clamp(
-                areaCenter.y + opening.offset,
-                wallBottom + openingHalfHeight,
-                wallTop - openingHalfHeight
-            );
-            const float bottomHeight =
-                std::max(0.0F, openingCenterY - openingHalfHeight - wallBottom);
-            const float topHeight =
-                std::max(0.0F, wallTop - openingCenterY - openingHalfHeight);
-            std::vector<AxisAlignedBox> segments;
-
-            if (bottomHeight > 0.0F) {
-                segments.push_back(CollisionSystem::BuildBox(
-                    {wallX, wallBottom + bottomHeight / 2.0F},
-                    {thickness, bottomHeight}
-                ));
-            }
-
-            if (topHeight > 0.0F) {
-                segments.push_back(CollisionSystem::BuildBox(
-                    {wallX, wallTop - topHeight / 2.0F},
-                    {thickness, topHeight}
-                ));
-            }
-
-            return segments;
-        };
-
-    const std::vector<AxisAlignedBox> topWalls = buildHorizontalWallSegments(
-        roomCenter,
-        roomCenter.y + roomHalfSize.y - halfWallThickness,
-        roomSize.x,
-        safeWallThickness,
-        openings.top
-    );
-    boundaryBoxes.insert(boundaryBoxes.end(), topWalls.begin(), topWalls.end());
-
-    const std::vector<AxisAlignedBox> bottomWalls = buildHorizontalWallSegments(
-        roomCenter,
-        roomCenter.y - roomHalfSize.y + halfWallThickness + 20.0F,
-        roomSize.x,
-        safeWallThickness,
-        openings.bottom
-    );
-    boundaryBoxes.insert(boundaryBoxes.end(), bottomWalls.begin(), bottomWalls.end());
-
-    const std::vector<AxisAlignedBox> leftWalls = buildVerticalWallSegments(
-        roomCenter,
-        roomCenter.x - roomHalfSize.x + halfWallThickness,
-        roomSize.y,
-        safeWallThickness,
-        openings.left
-    );
-    boundaryBoxes.insert(boundaryBoxes.end(), leftWalls.begin(), leftWalls.end());
-
-    const std::vector<AxisAlignedBox> rightWalls = buildVerticalWallSegments(
-        roomCenter,
-        roomCenter.x + roomHalfSize.x - halfWallThickness,
-        roomSize.y,
-        safeWallThickness,
-        openings.right
-    );
-    boundaryBoxes.insert(boundaryBoxes.end(), rightWalls.begin(), rightWalls.end());
-
-    return boundaryBoxes;
+    CollisionDispatcher::Dispatch(*this, staticPrimitives, dynamicBodies);
 }
 
 } // namespace Collision

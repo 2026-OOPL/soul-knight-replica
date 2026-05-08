@@ -15,9 +15,9 @@
 #include "Common/Random.hpp"
 #include "Component/Map/FightRoom.hpp"
 #include "Component/Map/Gangway.hpp"
-#include "Component/Map/GangwayLayoutConfig.hpp"
 #include "Component/Map/MapColliderConfig.hpp"
 #include "Component/Map/PortalRoom.hpp"
+#include "Component/Map/RewardRoom.hpp"
 #include "Component/Map/StarterRoom.hpp"
 #include "Generator/GenFightChamber.hpp"
 #include "Generator/GenPortalChamber.hpp"
@@ -78,17 +78,11 @@ std::shared_ptr<BaseRoom> BuildRoom(
         );
 
     case RoomPurpose::REWARD:
-        return std::make_shared<BaseRoom>(
+        return std::make_shared<RewardRoom>(
             absolutePosition,
-            info->GetRoomType(),
-            info->GetRoomPurpose(),
             doorConfig,
-            BaseRoom::BuildWallConfigFromDoorConfig(
-                doorConfig,
-                MapColliderConfig::kDefaultWallThickness,
-                info->GetRoomType(),
-                info->GetRoomPurpose()
-            )
+            info,
+            MapColliderConfig::kDefaultWallThickness
         );
     }
 
@@ -101,51 +95,35 @@ std::string MakeCoordinateKey(const glm::ivec2 &coordinate) {
 
 std::shared_ptr<Gangway> BuildGangway(
     const std::shared_ptr<BaseRoom> &firstRoom,
-    const std::shared_ptr<BaseRoom> &secondRoom
+    DoorSide firstSide,
+    const std::shared_ptr<BaseRoom> &secondRoom,
+    DoorSide secondSide
 ) {
     if (firstRoom == nullptr || secondRoom == nullptr) {
         return nullptr;
     }
 
-    Gangway::Config config;
-    const glm::vec2 delta =
-        secondRoom->GetAbsoluteTranslation() - firstRoom->GetAbsoluteTranslation();
+    if (!firstRoom->HasPassageOnSide(firstSide) || !secondRoom->HasPassageOnSide(secondSide)) {
+        return nullptr;
+    }
 
-    if (std::abs(delta.x) >= std::abs(delta.y)) {
+    const BaseRoom::PassageSocket firstSocket = firstRoom->GetPassageSocket(firstSide);
+    const BaseRoom::PassageSocket secondSocket = secondRoom->GetPassageSocket(secondSide);
+    Gangway::Config config;
+    config.width = std::max(
+        0.0F,
+        std::min(firstSocket.openingSize, secondSocket.openingSize)
+    );
+
+    if (firstSide == DoorSide::Left || firstSide == DoorSide::Right) {
         config.orientation = GangwayOrientation::Horizontal;
-        config.width = MapColliderConfig::kHorizontalDoorOpeningWidth;
-        config.positionOffset = GangwayLayoutConfig::kHorizontalPositionOffset;
-        config.topWallOffset = GangwayLayoutConfig::kHorizontalTopWallOffset;
-        config.rightWallOffset = GangwayLayoutConfig::kHorizontalRightWallOffset;
-        config.bottomWallOffset = GangwayLayoutConfig::kHorizontalBottomWallOffset;
-        config.leftWallOffset = GangwayLayoutConfig::kHorizontalLeftWallOffset;
-        const float gap = std::max(
-            0.0F,
-            std::abs(delta.x) -
-                firstRoom->GetRoomSize().x / 2.0F -
-                secondRoom->GetRoomSize().x / 2.0F
-        );
-        config.length = gap + MapColliderConfig::kDefaultWallThickness;
+        config.length = std::abs(secondSocket.worldCenter.x - firstSocket.worldCenter.x);
     } else {
         config.orientation = GangwayOrientation::Vertical;
-        config.width = MapColliderConfig::kVerticalDoorOpeningHeight;
-        config.positionOffset = GangwayLayoutConfig::kVerticalPositionOffset;
-        config.topWallOffset = GangwayLayoutConfig::kVerticalTopWallOffset;
-        config.rightWallOffset = GangwayLayoutConfig::kVerticalRightWallOffset;
-        config.bottomWallOffset = GangwayLayoutConfig::kVerticalBottomWallOffset;
-        config.leftWallOffset = GangwayLayoutConfig::kVerticalLeftWallOffset;
-        const float gap = std::max(
-            0.0F,
-            std::abs(delta.y) -
-                firstRoom->GetRoomSize().y / 2.0F -
-                secondRoom->GetRoomSize().y / 2.0F  
-        );
-        config.length = gap + MapColliderConfig::kDefaultWallThickness;
+        config.length = std::abs(secondSocket.worldCenter.y - firstSocket.worldCenter.y);
     }
-    
-    config.wallThickness = MapColliderConfig::kDefaultWallThickness;
-    const glm::vec2 center =
-        (firstRoom->GetAbsoluteTranslation() + secondRoom->GetAbsoluteTranslation()) / 2.0F;
+
+    const glm::vec2 center = (firstSocket.worldCenter + secondSocket.worldCenter) / 2.0F;
     const std::shared_ptr<Gangway> gangway = std::make_shared<Gangway>(center, config);
     gangway->ConnectRooms(firstRoom, secondRoom);
     return gangway;
@@ -362,7 +340,7 @@ void MapGenerator::BuildRuntimeMap() {
             if (rightIt != roomsByCoordinate.end()) {
                 const std::shared_ptr<BaseRoom> targetRoom = rightIt->second;
                 const std::shared_ptr<Gangway> gangway =
-                    BuildGangway(sourceRoom, targetRoom);
+                    BuildGangway(sourceRoom, DoorSide::Right, targetRoom, DoorSide::Left);
                 if (gangway != nullptr) {
                     this->m_GangwayInstances.push_back(gangway);
                 }
@@ -373,7 +351,7 @@ void MapGenerator::BuildRuntimeMap() {
             if (topIt != roomsByCoordinate.end()) {
                 const std::shared_ptr<BaseRoom> targetRoom = topIt->second;
                 const std::shared_ptr<Gangway> gangway =
-                    BuildGangway(sourceRoom, targetRoom);
+                    BuildGangway(sourceRoom, DoorSide::Top, targetRoom, DoorSide::Bottom);
                 if (gangway != nullptr) {
                     this->m_GangwayInstances.push_back(gangway);
                 }

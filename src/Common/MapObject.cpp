@@ -40,3 +40,7 @@ float MapObject::GetAbsoluteRotation() const {
 Util::Transform MapObject::GetAbsoluteTransform() const {
     return this->m_AbsoluteTransform;
 }
+
+Util::Transform MapObject::GetRenderTransform() const {
+    return this->GetAbsoluteTransform();
+}

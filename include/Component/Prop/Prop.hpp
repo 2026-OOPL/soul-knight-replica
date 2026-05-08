@@ -7,22 +7,31 @@
 #include "Util/GameObject.hpp"
 #include <memory>
 
+class MapSystem;
+
 class Prop : public MapObject,
              public IStateful,
              public Util::GameObject {
 public:
     Prop();
+    ~Prop() override = default;
 
-    bool IsDebugVisible() {
+    virtual void Initialize(MapSystem *mapSystem);
+    bool IsDestroyRequested() const;
+    void RequestDestroy();
+
+    virtual bool IsDebugVisible() const {
         return false;
     }
 
-    std::shared_ptr<Core::Drawable> GetDebugDrawable() {
+    virtual std::shared_ptr<Core::Drawable> GetDebugDrawable() const {
         return this->m_Drawable;
     }
 
-
     virtual Util::Transform GetObjectTransform() const override;
+
+private:
+    bool m_DestroyRequested = false;
 };
 
 #endif

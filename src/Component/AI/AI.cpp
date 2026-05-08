@@ -133,6 +133,10 @@ bool AI::IsArriveDestinaton() {
     return false;
 }
 
+bool AI::GetAttackTrigger() {
+    return !m_Freezed && m_StateMachine.GetState() == Status::STOPANDATTACK;
+}
+
 glm::vec2 AI::ApplyRandomAngle(glm::vec2 vector, float angle) {    
     if (glm::length(vector) < 0.01f) {
         vector = glm::vec2(1.0f, 0.0f);
@@ -156,4 +160,8 @@ void AI::Freeze() {
 
 void AI::UnFreeze() {
     m_Freezed = false;
+}
+
+bool AI::IsFrozen() const {
+    return m_Freezed;
 }

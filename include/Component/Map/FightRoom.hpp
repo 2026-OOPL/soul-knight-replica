@@ -38,12 +38,14 @@ public:
     // Determine whether all wave in room were cleared
     bool IsRoomCleared(); 
     bool IsWaveCleared();
+    void DebugClearRoom();
     
     // IStateful override
     void Update() override;
     
 protected:
     void StartNextMonsterWave();
+    void PushPlayersInsideClosedDoors();
 
     WaveStatus m_WaveStatus = WaveStatus::IDLE;
 

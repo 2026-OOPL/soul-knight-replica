@@ -8,14 +8,41 @@
 
 #include "Component/Debug/CollisionDebugOverlay.hpp"
 #include "Component/Debug/CollisionDebugSnapshot.hpp"
+#include "Common/Constants.hpp"
 #include "Component/Map/MapSystem.hpp"
 #include "Component/Character/Character.hpp"
 #include "Component/IStateful.hpp"
 #include "Component/Map/FightRoom.hpp"
+#include "Component/Prop/AmmoOrb.hpp"
+#include "Component/Prop/BlockingProp.hpp"
 #include "Util/Input.hpp"
 #include "Util/Keycode.hpp"
 
 namespace {
+
+constexpr int kAmmoOrbsPerMob = 3;
+constexpr int kAmmoRecoveredPerOrb = 5;
+constexpr float kAmmoOrbSpawnRadius = 12.0F;
+
+glm::vec2 BuildAmmoOrbSpawnOffset(
+    const glm::vec2 &origin,
+    int index,
+    int count
+) {
+    if (count <= 1) {
+        return {0.0F, 0.0F};
+    }
+
+    constexpr float kTau = 6.28318530718F;
+    const float baseAngle = origin.x * 0.013F + origin.y * 0.021F;
+    const float angle =
+        baseAngle +
+        kTau * static_cast<float>(index) / static_cast<float>(count);
+    return {
+        std::cos(angle) * kAmmoOrbSpawnRadius,
+        std::sin(angle) * kAmmoOrbSpawnRadius
+    };
+}
 
 Collision::AxisAlignedBox BuildPrimaryBodyBox(const ICollidable &body) {
     const std::vector<Collision::CollisionPrimitive> primitives =
@@ -56,12 +83,20 @@ void MapSystem::Update() {
     if (Util::Input::IsKeyDown(Util::Keycode::R)) {
         this->m_ShowCollisionDebug = !this->m_ShowCollisionDebug;
     }
+    if (Util::Input::IsKeyDown(Util::Keycode::E)) {
+        this->DebugClearCurrentFightRoom();
+    }
 
+    this->m_IsUpdatingScene = true;
     Scene::Update();
+    this->m_IsUpdatingScene = false;
+    this->FlushPendingBullets();
+    this->FlushPendingMobs();
 
     this->m_CollisionSystem.DispatchCollisions();
     this->PruneDestroyedBullets();
     this->PruneDefeatedMobs();
+    this->PruneDestroyedProps();
 
     if (this->m_AttachCamera != nullptr) {
         const std::shared_ptr<IStateful> statefulCamera =
@@ -98,6 +133,7 @@ void MapSystem::Update() {
                 this->m_RoomTransitions.GetCurrentRoom(),
                 this->m_RoomTransitions.GetDoorPassage(),
                 this->m_World.GetGangways(),
+                this->m_World.GetProps(),
                 this->m_World.GetPlayers(),
                 this->m_World.GetMobs(),
                 this->m_World.GetBullets(),
@@ -105,6 +141,21 @@ void MapSystem::Update() {
             ));
         }
     }
+}
+
+void MapSystem::DebugClearCurrentFightRoom() {
+    const std::shared_ptr<BaseRoom> currentRoom = this->GetCurrentRoom();
+    if (currentRoom == nullptr) {
+        return;
+    }
+
+    const std::shared_ptr<FightRoom> fightRoom =
+        std::dynamic_pointer_cast<FightRoom>(currentRoom);
+    if (fightRoom == nullptr) {
+        return;
+    }
+
+    fightRoom->DebugClearRoom();
 }
 
 void MapSystem::ApplyCameraRecursive(const std::shared_ptr<Util::GameObject> &object) {
@@ -182,6 +233,12 @@ void MapSystem::AddPlayer(const std::shared_ptr<Player> &player) {
         return;
     }
 
+    player->SetMeleeAttackResolver(
+        [this](Player &attacker) {
+            return this->ResolvePlayerMeleeAttack(attacker);
+        }
+    );
+
     player->SetCollisionResolver(
         [this](const ICollidable &body, const glm::vec2 &intendedDelta) {
             return this->ResolvePlayerMovement(body, intendedDelta);
@@ -234,6 +291,87 @@ Collision::MovementResult MapSystem::ResolvePlayerMovement(
         this->m_World.GetRooms()
     );
     return result;
+}
+
+bool MapSystem::ResolvePlayerMeleeAttack(Player &player) {
+    constexpr int kPlayerMeleeDamage = 4;
+    constexpr float kPlayerMeleeKnockbackStrength = 0.13F;
+    constexpr float kTriggerDistance =
+        static_cast<float>(MAP_PIXEL_PER_BLOCK);
+    constexpr float kAttackRadius =
+        static_cast<float>(MAP_PIXEL_PER_BLOCK) * 2.4F;
+
+    const glm::vec2 playerPosition = player.GetAbsoluteTranslation();
+    glm::vec2 facingDirection = player.GetFaceDirection();
+    if (glm::length(facingDirection) <= 0.0001F) {
+        facingDirection = {1.0F, 0.0F};
+    } else {
+        facingDirection = glm::normalize(facingDirection);
+    }
+
+    const float playerRadius =
+        std::max(player.GetColliderSize().x, player.GetColliderSize().y) * 0.5F;
+
+    bool canTriggerMelee = false;
+    for (const auto &mob : this->m_World.GetMobs()) {
+        if (mob == nullptr || mob->IsDead()) {
+            continue;
+        }
+
+        const glm::vec2 toMob = mob->GetAbsoluteTranslation() - playerPosition;
+        const float distance = glm::length(toMob);
+        if (distance <= 0.0001F) {
+            canTriggerMelee = true;
+            break;
+        }
+
+        const float mobRadius =
+            std::max(mob->GetColliderSize().x, mob->GetColliderSize().y) * 0.5F;
+        if (glm::dot(glm::normalize(toMob), facingDirection) >= 0.0F &&
+            distance <= kTriggerDistance + playerRadius + mobRadius) {
+            canTriggerMelee = true;
+            break;
+        }
+    }
+
+    if (!canTriggerMelee) {
+        return false;
+    }
+
+    bool hitAnyMob = false;
+    for (const auto &mob : this->m_World.GetMobs()) {
+        if (mob == nullptr || mob->IsDead()) {
+            continue;
+        }
+
+        const glm::vec2 toMob = mob->GetAbsoluteTranslation() - playerPosition;
+        const float distance = glm::length(toMob);
+        const float mobRadius =
+            std::max(mob->GetColliderSize().x, mob->GetColliderSize().y) * 0.5F;
+
+        if (distance > kAttackRadius + mobRadius) {
+            continue;
+        }
+
+        if (distance > 0.0001F &&
+            glm::dot(glm::normalize(toMob), facingDirection) < 0.0F) {
+            continue;
+        }
+
+        mob->ApplyDamage(kPlayerMeleeDamage);
+        glm::vec2 knockbackDirection = toMob;
+        if (glm::length(knockbackDirection) <= 0.0001F) {
+            knockbackDirection = facingDirection;
+        }
+        if (glm::length(knockbackDirection) > 0.0001F) {
+            mob->ApplyImpulse(
+                glm::normalize(knockbackDirection) * kPlayerMeleeKnockbackStrength
+            );
+        }
+        hitAnyMob = true;
+    }
+
+    return hitAnyMob;
 }
 
 Collision::MovementResult MapSystem::ResolveMapMovement(
@@ -302,6 +440,13 @@ std::vector<Collision::CollisionPrimitive> MapSystem::CollectCurrentRoomCollisio
         currentRoomColliders.begin(),
         currentRoomColliders.end()
     );
+    const std::vector<Collision::CollisionPrimitive> currentRoomPropColliders =
+        this->CollectPropCollisionPrimitives(currentRoom, ignoreBody);
+    colliders.insert(
+        colliders.end(),
+        currentRoomPropColliders.begin(),
+        currentRoomPropColliders.end()
+    );
 
     if (currentRoom != nullptr) {
         for (const auto &gangway : this->m_World.GetGangways()) {
@@ -331,6 +476,13 @@ std::vector<Collision::CollisionPrimitive> MapSystem::CollectCurrentRoomCollisio
             targetRoomColliders.begin(),
             targetRoomColliders.end()
         );
+        const std::vector<Collision::CollisionPrimitive> targetRoomPropColliders =
+            this->CollectPropCollisionPrimitives(doorPassage.targetRoom, ignoreBody);
+        colliders.insert(
+            colliders.end(),
+            targetRoomPropColliders.begin(),
+            targetRoomPropColliders.end()
+        );
 
         for (const auto &gangway : this->m_World.GetGangways()) {
             if (gangway == nullptr ||
@@ -350,6 +502,43 @@ std::vector<Collision::CollisionPrimitive> MapSystem::CollectCurrentRoomCollisio
     }
 
     return colliders;
+}
+
+std::vector<Collision::CollisionPrimitive> MapSystem::CollectPropCollisionPrimitives(
+    const std::shared_ptr<BaseRoom> &room,
+    const ICollidable *ignoreBody
+) const {
+    if (room == nullptr) {
+        return {};
+    }
+
+    const Collision::AxisAlignedBox ignoreBox = ignoreBody == nullptr ?
+        Collision::AxisAlignedBox{} :
+        BuildPrimaryBodyBox(*ignoreBody);
+    const Collision::AxisAlignedBox *ignoreOverlapBox =
+        ignoreBody == nullptr ? nullptr : &ignoreBox;
+    std::vector<Collision::CollisionPrimitive> primitives;
+
+    for (const auto &prop : this->m_World.GetProps()) {
+        if (prop == nullptr) {
+            continue;
+        }
+
+        const BlockingProp *blockingProp = dynamic_cast<const BlockingProp *>(prop.get());
+        if (blockingProp == nullptr || !blockingProp->BelongsToRoom(room)) {
+            continue;
+        }
+
+        const std::vector<Collision::CollisionPrimitive> propPrimitives =
+            blockingProp->CollectBlockingPrimitives(ignoreOverlapBox);
+        primitives.insert(
+            primitives.end(),
+            propPrimitives.begin(),
+            propPrimitives.end()
+        );
+    }
+
+    return primitives;
 }
 
 std::vector<ICollidable *> MapSystem::CollectDynamicCollisionBodies() const {
@@ -399,7 +588,29 @@ void MapSystem::AddBullet(std::shared_ptr<Bullet> bullet) {
         );
     }
 
+    if (this->m_IsUpdatingScene) {
+        this->m_PendingBullets.push_back(std::move(bullet));
+        return;
+    }
+
+    this->AddBulletImmediately(bullet);
+}
+
+void MapSystem::AddBulletImmediately(const std::shared_ptr<Bullet> &bullet) {
     this->m_World.AddBullet(bullet);
+}
+
+void MapSystem::FlushPendingBullets() {
+    if (this->m_PendingBullets.empty()) {
+        return;
+    }
+
+    std::vector<std::shared_ptr<Bullet>> pending;
+    pending.swap(this->m_PendingBullets);
+
+    for (const auto &bullet : pending) {
+        this->AddBulletImmediately(bullet);
+    }
 }
 
 void MapSystem::RemoveBullet(std::shared_ptr<Bullet> bullet) {
@@ -407,6 +618,19 @@ void MapSystem::RemoveBullet(std::shared_ptr<Bullet> bullet) {
 }
 
 void MapSystem::AddMob(std::shared_ptr<Mob> mob) {
+    if (mob == nullptr) {
+        throw std::runtime_error("Trying to add a null mob is not allowed");
+    }
+
+    if (this->m_IsUpdatingScene) {
+        this->m_PendingMobs.push_back(std::move(mob));
+        return;
+    }
+
+    this->AddMobImmediately(mob);
+}
+
+void MapSystem::AddMobImmediately(const std::shared_ptr<Mob> &mob) {
     if (mob == nullptr) {
         throw std::runtime_error("Trying to add a null mob is not allowed");
     }
@@ -422,6 +646,19 @@ void MapSystem::AddMob(std::shared_ptr<Mob> mob) {
     this->m_World.AddMob(mob);
 }
 
+void MapSystem::FlushPendingMobs() {
+    if (this->m_PendingMobs.empty()) {
+        return;
+    }
+
+    std::vector<std::shared_ptr<Mob>> pending;
+    pending.swap(this->m_PendingMobs);
+
+    for (const auto &mob : pending) {
+        this->AddMobImmediately(mob);
+    }
+}
+
 void MapSystem::RemoveMob(std::shared_ptr<Mob> mob) {
     this->m_World.RemoveMob(mob);
 }
@@ -431,7 +668,11 @@ const std::vector<std::shared_ptr<Mob>>& MapSystem::GetMob() const {
 }
 
 void MapSystem::AddProp(const std::shared_ptr<Prop> &prop) {
-    // Implement custom collider for each prop here
+    if (prop == nullptr) {
+        return;
+    }
+
+    prop->Initialize(this);
     this->m_World.AddProp(prop);
 }
 
@@ -457,17 +698,44 @@ void MapSystem::PruneDestroyedBullets() {
     }
 }
 
-void MapSystem::PruneDefeatedMobs() {
-    std::vector<std::shared_ptr<Mob>> defeatedMobs;
+void MapSystem::PruneDestroyedProps() {
+    std::vector<std::shared_ptr<Prop>> destroyedProps;
 
-    for (const auto &mob : this->m_World.GetMobs()) {
-        if (mob != nullptr && mob->IsDead()) {
-            defeatedMobs.push_back(mob);
+    for (const auto &prop : this->m_World.GetProps()) {
+        if (prop != nullptr && prop->IsDestroyRequested()) {
+            destroyedProps.push_back(prop);
         }
     }
 
-    for (const auto &mob : defeatedMobs) {
-        this->RemoveMob(mob);
+    for (const auto &prop : destroyedProps) {
+        this->RemoveProp(prop);
+    }
+}
+
+void MapSystem::PruneDefeatedMobs() {
+    for (const auto &mob : this->m_World.GetMobs()) {
+        if (mob != nullptr && mob->ConsumeDeathEvent()) {
+            this->SpawnDropsForMob(mob);
+        }
+    }
+}
+
+void MapSystem::SpawnDropsForMob(const std::shared_ptr<Mob> &mob) {
+    if (mob == nullptr) {
+        return;
+    }
+
+    const glm::vec2 deathPosition = mob->GetAbsoluteTranslation();
+
+    for (int i = 0; i < kAmmoOrbsPerMob; ++i) {
+        AmmoOrb::Config config;
+        config.ammoAmount = kAmmoRecoveredPerOrb;
+        config.lingerDurationMs = 250.0F + static_cast<float>(i) * 35.0F;
+
+        this->AddProp(std::make_shared<AmmoOrb>(
+            deathPosition + BuildAmmoOrbSpawnOffset(deathPosition, i, kAmmoOrbsPerMob),
+            config
+        ));
     }
 }
 
@@ -482,7 +750,7 @@ std::shared_ptr<Character> MapSystem::GetNearestMonster() {
     std::shared_ptr<Character> nearestMonster = nullptr;
 
     for (const auto &i : this->m_World.GetMobs()) {
-        if (i == nullptr) {
+        if (i == nullptr || i->IsDead()) {
             continue;
         }
 

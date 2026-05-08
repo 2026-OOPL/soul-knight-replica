@@ -9,7 +9,10 @@
 #include "Component/Map/BaseRoom.hpp"
 #include "Component/Map/Door.hpp"
 #include "Component/Map/Gangway.hpp"
+#include "Component/Mobs/Mob.hpp"
 #include "Component/Player/Player.hpp"
+#include "Component/Prop/BlockingProp.hpp"
+#include "Component/Prop/Prop.hpp"
 #include "Core/Drawable.hpp"
 
 namespace {
@@ -123,6 +126,19 @@ CollisionDebugEntry BuildStaticCollisionDebugEntry(
     return entry;
 }
 
+CollisionDebugEntry BuildAttackCollisionDebugEntry(
+    const Collision::AxisAlignedBox &box,
+    const std::string &ownerLabel
+) {
+    CollisionDebugEntry entry;
+    entry.worldCenter = box.center;
+    entry.worldSize = box.size;
+    entry.worldRotation = 0.0F;
+    entry.color = Util::Color(255, 64, 64, 230);
+    entry.label = ownerLabel + " | Hitbox | Debug";
+    return entry;
+}
+
 template <typename TObject>
 void AppendDebugVisualEntry(
     const std::shared_ptr<TObject> &object,
@@ -162,6 +178,34 @@ void AppendDynamicCollisionEntries(
     }
 }
 
+void AppendPlayerAttackDebugEntries(
+    const std::shared_ptr<Player> &player,
+    std::vector<CollisionDebugEntry> &entries
+) {
+    if (player == nullptr) {
+        return;
+    }
+
+    Collision::AxisAlignedBox box;
+    if (player->GetMeleeAttackDebugBox(box)) {
+        entries.push_back(BuildAttackCollisionDebugEntry(box, "Player Melee"));
+    }
+}
+
+void AppendMobAttackDebugEntries(
+    const std::shared_ptr<Mob> &mob,
+    std::vector<CollisionDebugEntry> &entries
+) {
+    if (mob == nullptr) {
+        return;
+    }
+
+    Collision::AxisAlignedBox box;
+    if (mob->GetMeleeAttackDebugBox(box)) {
+        entries.push_back(BuildAttackCollisionDebugEntry(box, "Mob Contact"));
+    }
+}
+
 void AppendStaticCollisionEntries(
     const std::vector<Collision::AxisAlignedBox> &boxes,
     const std::string &ownerLabel,
@@ -176,6 +220,7 @@ void AppendStaticCollisionEntries(
 void AppendRoomVisuals(
     const std::shared_ptr<BaseRoom> &room,
     const std::vector<std::shared_ptr<Gangway>> &gangways,
+    const std::vector<std::shared_ptr<Prop>> &props,
     std::vector<CollisionDebugVisualEntry> &entries,
     std::unordered_set<const void *> &seenOwners
 ) {
@@ -195,11 +240,22 @@ void AppendRoomVisuals(
 
         AppendDebugVisualEntry(gangway, entries, seenOwners);
     }
+
+    for (const auto &prop : props) {
+        const BlockingProp *blockingProp =
+            prop == nullptr ? nullptr : dynamic_cast<const BlockingProp *>(prop.get());
+        if (blockingProp == nullptr || !blockingProp->BelongsToRoom(room)) {
+            continue;
+        }
+
+        AppendDebugVisualEntry(prop, entries, seenOwners);
+    }
 }
 
 void AppendRoomColliders(
     const std::shared_ptr<BaseRoom> &room,
     const std::vector<std::shared_ptr<Gangway>> &gangways,
+    const std::vector<std::shared_ptr<Prop>> &props,
     std::vector<CollisionDebugEntry> &entries,
     std::unordered_set<const Gangway *> &collectedGangways
 ) {
@@ -240,6 +296,20 @@ void AppendRoomColliders(
             entries
         );
     }
+
+    for (const auto &prop : props) {
+        const BlockingProp *blockingProp =
+            prop == nullptr ? nullptr : dynamic_cast<const BlockingProp *>(prop.get());
+        if (blockingProp == nullptr || !blockingProp->BelongsToRoom(room)) {
+            continue;
+        }
+
+        const std::vector<Collision::CollisionPrimitive> primitives =
+            blockingProp->CollectBlockingPrimitives();
+        for (const auto &primitive : primitives) {
+            entries.push_back(BuildCollisionDebugEntry(primitive));
+        }
+    }
 }
 
 CollisionDebugCameraState CaptureCollisionDebugCameraState(Camera *camera) {
@@ -260,6 +330,7 @@ CollisionDebugSnapshot BuildCollisionDebugSnapshot(
     const std::shared_ptr<BaseRoom> &currentRoom,
     const RoomTransitionSystem::DoorPassageContext &doorPassage,
     const std::vector<std::shared_ptr<Gangway>> &gangways,
+    const std::vector<std::shared_ptr<Prop>> &props,
     const std::vector<std::shared_ptr<Player>> &players,
     const std::vector<std::shared_ptr<Mob>> &mobs,
     const std::vector<std::shared_ptr<Bullet>> &bullets,
@@ -271,12 +342,18 @@ CollisionDebugSnapshot BuildCollisionDebugSnapshot(
     std::unordered_set<const void *> seenOwners;
     std::unordered_set<const Gangway *> collectedGangways;
 
-    AppendRoomVisuals(currentRoom, gangways, snapshot.visualEntries, seenOwners);
+    AppendRoomVisuals(currentRoom, gangways, props, snapshot.visualEntries, seenOwners);
 
     if (doorPassage.state == RoomTransitionSystem::DoorPassageState::Traversing &&
         doorPassage.targetRoom != nullptr &&
         doorPassage.targetRoom != currentRoom) {
-        AppendRoomVisuals(doorPassage.targetRoom, gangways, snapshot.visualEntries, seenOwners);
+        AppendRoomVisuals(
+            doorPassage.targetRoom,
+            gangways,
+            props,
+            snapshot.visualEntries,
+            seenOwners
+        );
     }
 
     for (const auto &player : players) {
@@ -291,20 +368,28 @@ CollisionDebugSnapshot BuildCollisionDebugSnapshot(
         AppendDebugVisualEntry(bullet, snapshot.visualEntries, seenOwners);
     }
 
-    AppendRoomColliders(currentRoom, gangways, snapshot.entries, collectedGangways);
+    AppendRoomColliders(currentRoom, gangways, props, snapshot.entries, collectedGangways);
 
     if (doorPassage.state == RoomTransitionSystem::DoorPassageState::Traversing &&
         doorPassage.targetRoom != nullptr &&
         doorPassage.targetRoom != currentRoom) {
-        AppendRoomColliders(doorPassage.targetRoom, gangways, snapshot.entries, collectedGangways);
+        AppendRoomColliders(
+            doorPassage.targetRoom,
+            gangways,
+            props,
+            snapshot.entries,
+            collectedGangways
+        );
     }
 
     for (const auto &player : players) {
         AppendDynamicCollisionEntries(player, snapshot.entries);
+        AppendPlayerAttackDebugEntries(player, snapshot.entries);
     }
 
     for (const auto &mob : mobs) {
         AppendDynamicCollisionEntries(mob, snapshot.entries);
+        AppendMobAttackDebugEntries(mob, snapshot.entries);
     }
 
     for (const auto &bullet : bullets) {

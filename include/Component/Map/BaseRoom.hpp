@@ -17,8 +17,17 @@
 
 class MapSystem;
 
-class BaseRoom : public RectMapArea, public IStateful {
+class BaseRoom : public RectMapArea,
+                 public IStateful,
+                 public std::enable_shared_from_this<BaseRoom> {
 public:
+    struct PassageSocket {
+        DoorSide side = DoorSide::Bottom;
+        glm::vec2 worldCenter = {0.0F, 0.0F};
+        float openingSize = 0.0F;
+        float wallThickness = 0.0F;
+    };
+
     BaseRoom(
         const glm::vec2 &absolutePosition,
         RoomType roomType,
@@ -52,6 +61,7 @@ public:
     RoomType GetRoomType() const;
     RoomPurpose GetPurpose() const;
     bool HasPassageOnSide(DoorSide side) const;
+    PassageSocket GetPassageSocket(DoorSide side) const;
 
     static WallConfig BuildWallConfigFromDoorConfig(
         const DoorConfig &doorConfig,

@@ -20,6 +20,7 @@ class Camera;
 class Character;
 class Gangway;
 class Player;
+class Prop;
 
 struct CollisionDebugEntry {
     glm::vec2 worldCenter = {0.0F, 0.0F};
@@ -52,6 +53,7 @@ CollisionDebugSnapshot BuildCollisionDebugSnapshot(
     const std::shared_ptr<BaseRoom> &currentRoom,
     const RoomTransitionSystem::DoorPassageContext &doorPassage,
     const std::vector<std::shared_ptr<Gangway>> &gangways,
+    const std::vector<std::shared_ptr<Prop>> &props,
     const std::vector<std::shared_ptr<Player>> &players,
     const std::vector<std::shared_ptr<Mob>> &mobs,
     const std::vector<std::shared_ptr<Bullet>> &bullets,

@@ -8,6 +8,8 @@
 #include "Util/Time.hpp"
 
 #include "Component/Bullet.hpp"
+#include "Component/BulletHitEffect.hpp"
+#include "Component/Character/Character.hpp"
 
 namespace {
 
@@ -143,6 +145,11 @@ void Bullet::OnCollision(const Collision::CollisionSituation &situation) {
         return;
     }
 
+    Character *character = dynamic_cast<Character *>(situation.other);
+    if (character != nullptr && character->IsDead()) {
+        return;
+    }
+
     this->TryRegisterImpact();
 }
 
@@ -182,6 +189,10 @@ void Bullet::SetDamage(int damage) {
     this->m_Damage = std::max(0, damage);
 }
 
+glm::vec2 Bullet::GetMomentum() const {
+    return this->m_Momentum;
+}
+
 CombatFaction Bullet::GetFaction() const {
     return this->m_Faction;
 }
@@ -189,6 +200,22 @@ CombatFaction Bullet::GetFaction() const {
 void Bullet::SetFaction(CombatFaction faction) {
     this->m_Faction = faction;
     this->SetCollisionFilter(BuildBulletFilterForFaction(this->m_Faction));
+}
+
+void Bullet::AddHitEffect(const std::shared_ptr<IBulletHitEffect> &effect) {
+    if (effect == nullptr) {
+        return;
+    }
+
+    this->m_HitEffects.push_back(effect);
+}
+
+void Bullet::ApplyHitEffects(Character &target) const {
+    for (const auto &effect : this->m_HitEffects) {
+        if (effect != nullptr) {
+            effect->Apply(target, *this);
+        }
+    }
 }
 
 bool Bullet::HasRegisteredImpact() const {

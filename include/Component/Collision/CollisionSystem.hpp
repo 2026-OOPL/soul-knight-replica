@@ -6,23 +6,12 @@
 
 #include <glm/vec2.hpp>
 
+#include "Component/Collision/RoomBoundaryBuilder.hpp"
 #include "Component/Collision/CollisionTypes.hpp"
 
 class ICollidable;
 
 namespace Collision {
-
-struct WallOpening {
-    float size = 0.0F;
-    float offset = 0.0F;
-};
-
-struct RoomBoundaryOpenings {
-    WallOpening top;
-    WallOpening right;
-    WallOpening bottom;
-    WallOpening left;
-};
 
 class CollisionSystem {
 public:
@@ -120,19 +109,6 @@ private:
     BlockingPrimitiveProvider m_BlockingPrimitiveProvider;
     DynamicBodyProvider m_DynamicBodyProvider;
 };
-
-std::vector<AxisAlignedBox> BuildRoomBoundaryBoxes(
-    const glm::vec2 &roomCenter,
-    const glm::vec2 &roomSize,
-    float wallThickness
-);
-
-std::vector<AxisAlignedBox> BuildRoomBoundaryBoxes(
-    const glm::vec2 &roomCenter,
-    const glm::vec2 &roomSize,
-    float wallThickness,
-    const RoomBoundaryOpenings &openings
-);
 
 } // namespace Collision
 

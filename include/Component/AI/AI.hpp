@@ -64,6 +64,7 @@ public:
 
     void Freeze();
     void UnFreeze();
+    bool IsFrozen() const;
 
 protected:
     /// The mob which AI control to

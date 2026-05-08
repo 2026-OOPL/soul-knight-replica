@@ -1,3 +1,4 @@
+#include <array>
 #include <vector>
 #include <memory>
 #include <stdexcept>
@@ -160,8 +161,23 @@ void GenFightChamber::PopulateRoomContents(glm::ivec2 position) {
                 }
             }
 
+            constexpr std::array<MobType, 8> kFightRoomMobTypes = {
+                MobType::GOBLIN_GUARD,
+                MobType::RUINS_GUARD,
+                MobType::SHEAR_RUINS_GUARD,
+                MobType::BOW_RUINS_GUARD,
+                MobType::RUINS_SEARCHER,
+                MobType::ANCIENT_GEAR_SET,
+                MobType::RUINS_TURRET,
+                MobType::PORTAL_MOB
+            };
+            const MobType mobType =
+                kFightRoomMobTypes[this->m_RandomChoose->GetInteger(
+                    static_cast<int>(kFightRoomMobTypes.size())
+                )];
+
             SpawnInfo<MobType> spawn (
-                MobType::GOBLIN_GUARD, spawnPos
+                mobType, spawnPos
             );
             
             wave.push_back(spawn);

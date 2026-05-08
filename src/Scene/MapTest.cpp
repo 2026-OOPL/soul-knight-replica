@@ -3,9 +3,6 @@
 #include <glm/fwd.hpp>
 
 #include "Component/Mobs/GoblinGuard.hpp"
-#include "Util/Input.hpp"
-#include "Util/Keycode.hpp"
-
 #include "Component/Camera/Curve.hpp"
 #include "Component/Camera/TraceCamera.hpp"
 #include "Component/Player/Knight.hpp"
@@ -23,13 +20,11 @@ MapTest::MapTest() : MapSystem() {
         this->m_MainPlayer->SetAbsoluteTranslation(glm::vec2(0.0F, 0.0F));
     }
 
-    if (this->m_MainPlayer->GetWeapon() != nullptr) {
-        this->m_MainPlayer->GetWeapon()->SetOnBulletFired(
-            [this](std::shared_ptr<Bullet> bullet) {
-                this->AddBullet(bullet);
-            }
-        );
-    }
+    this->m_MainPlayer->SetOnWeaponBulletFired(
+        [this](std::shared_ptr<Bullet> bullet) {
+            this->AddBullet(bullet);
+        }
+    );
 
     this->m_MainPlayer->SetAbsoluteScale({0.75F, 0.75F});
     this->AddPlayer(this->m_MainPlayer);
@@ -77,10 +72,5 @@ MapTest::MapTest() : MapSystem() {
 MapTest::~MapTest() = default;
 
 void MapTest::Update() {
-    const std::shared_ptr<BaseRoom> currentRoom = this->GetCurrentRoom();
-    if (Util::Input::IsKeyDown(Util::Keycode::E) && currentRoom != nullptr) {
-        currentRoom->OpenAllDoors();
-    }
-
     MapSystem::Update();
 }

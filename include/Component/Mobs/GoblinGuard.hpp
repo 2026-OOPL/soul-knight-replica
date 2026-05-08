@@ -47,6 +47,8 @@ public:
             0,
             false
         ));
+        this->SetMaxHealth(5);
+        this->SetCurrentHealth(this->GetMaxHealth());
     };
 
 };

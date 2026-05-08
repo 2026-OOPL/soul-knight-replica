@@ -28,3 +28,13 @@ MapPiece::MapPiece(glm::vec2 cooridinate, std::string resource)
 Util::Transform MapPiece::GetObjectTransform() const {
     return this->m_Transform;
 }
+
+Util::Transform MapPiece::GetRenderTransform() const {
+    Util::Transform renderTransform = this->GetAbsoluteTransform();
+    renderTransform.translation += this->m_RenderTranslationOffset;
+    return renderTransform;
+}
+
+void MapPiece::SetRenderTranslationOffset(const glm::vec2 &renderTranslationOffset) {
+    this->m_RenderTranslationOffset = renderTranslationOffset;
+}

@@ -9,47 +9,27 @@ namespace {
 constexpr char kHorizontalGangwaySprite[] = RESOURCE_DIR "/Map/Gangway/Gangway_15x5.png";
 constexpr char kVerticalGangwaySprite[] = RESOURCE_DIR "/Map/Gangway/Gangway_5x15.png";
 
-float ClampThickness(float thickness) {
-    return std::max(0.0F, thickness);
-}
-
-WallConfig BuildGangwayWallConfig(const Gangway::Config &config) {
-    WallConfig wallConfig;
-    wallConfig.top.thickness = 0.0F;
-    wallConfig.right.thickness = 0.0F;
-    wallConfig.bottom.thickness = 0.0F;
-    wallConfig.left.thickness = 0.0F;
-
-    if (config.orientation == GangwayOrientation::Horizontal) {
-        wallConfig.top.thickness = ClampThickness(config.wallThickness);
-        wallConfig.bottom.thickness = ClampThickness(config.wallThickness);
-        wallConfig.top.centerOffset = config.topWallOffset;
-        wallConfig.bottom.centerOffset = config.bottomWallOffset;
-        return wallConfig;
-    }
-
-    wallConfig.right.thickness = ClampThickness(config.wallThickness);
-    wallConfig.left.thickness = ClampThickness(config.wallThickness);
-    wallConfig.right.centerOffset = config.rightWallOffset;
-    wallConfig.left.centerOffset = config.leftWallOffset;
-    return wallConfig;
+const GangwayLayoutConfig::LayoutProfile &ResolveLayout(const Gangway::Config &config) {
+    return GangwayLayoutConfig::ResolveLayout(config.orientation);
 }
 
 glm::vec2 BuildGangwayAreaSize(const Gangway::Config &config) {
-    const WallConfig wallConfig = BuildGangwayWallConfig(config);
-    const float corridorLength = std::max(config.length, config.width);
+    const GangwayLayoutConfig::LayoutProfile &layout = ResolveLayout(config);
+    const WallConfig &wallConfig = layout.wallConfig;
+    const float corridorWidth = std::max(config.width, 0.0F);
+    const float corridorLength = std::max(config.length, corridorWidth);
 
     // `width` models the clear walkable corridor width. Wall thickness is
     // added outside that corridor so the playable passage stays unchanged.
     if (config.orientation == GangwayOrientation::Horizontal) {
         return {
             corridorLength,
-            config.width + wallConfig.top.thickness + wallConfig.bottom.thickness
+            corridorWidth + wallConfig.top.thickness + wallConfig.bottom.thickness
         };
     }
 
     return {
-        config.width + wallConfig.left.thickness + wallConfig.right.thickness,
+        corridorWidth + wallConfig.left.thickness + wallConfig.right.thickness,
         corridorLength
     };
 }
@@ -58,8 +38,10 @@ glm::vec2 ResolveRenderSize(
     const Gangway::Config &config,
     const std::shared_ptr<Core::Drawable> &drawable
 ) {
-    if (config.renderSize.x > 0.0F && config.renderSize.y > 0.0F) {
-        return config.renderSize;
+    const GangwayLayoutConfig::LayoutProfile &layout = ResolveLayout(config);
+
+    if (layout.renderSize.x > 0.0F && layout.renderSize.y > 0.0F) {
+        return layout.renderSize;
     }
 
     if (drawable != nullptr) {
@@ -73,12 +55,13 @@ glm::vec2 ResolveRenderSize(
 
 Gangway::Gangway(const glm::vec2 &absolutePosition, Config config)
     : RectMapArea(
-          absolutePosition + config.positionOffset,
+          absolutePosition,
           Gangway::ResolveGangwaySprite(config.orientation),
           Gangway::BuildAreaSize(config),
           Gangway::BuildWallConfig(config)
       ),
       m_Orientation(config.orientation) {
+    this->SetRenderTranslationOffset(ResolveLayout(config).renderOffset);
     this->SetRenderSize(ResolveRenderSize(config, this->m_Drawable));
     this->SetZIndex(-1.0F);
 }
@@ -137,5 +120,5 @@ std::string Gangway::ResolveGangwaySprite(GangwayOrientation orientation) {
 }
 
 WallConfig Gangway::BuildWallConfig(const Config &config) {
-    return BuildGangwayWallConfig(config);
+    return ResolveLayout(config).wallConfig;
 }

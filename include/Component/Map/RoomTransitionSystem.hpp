@@ -5,6 +5,7 @@
 #include <memory>
 #include <vector>
 
+#include <glm/geometric.hpp>
 #include <glm/vec2.hpp>
 
 #include "Component/Map/BaseRoom.hpp"
@@ -117,6 +118,69 @@ public:
     }
 
 private:
+    static DoorSide GetOppositeSide(DoorSide side) {
+        switch (side) {
+        case DoorSide::Top:
+            return DoorSide::Bottom;
+        case DoorSide::Right:
+            return DoorSide::Left;
+        case DoorSide::Bottom:
+            return DoorSide::Top;
+        case DoorSide::Left:
+            return DoorSide::Right;
+        }
+
+        return DoorSide::Bottom;
+    }
+
+    static glm::vec2 GetInwardNormal(DoorSide side) {
+        switch (side) {
+        case DoorSide::Top:
+            return {0.0F, -1.0F};
+        case DoorSide::Right:
+            return {-1.0F, 0.0F};
+        case DoorSide::Bottom:
+            return {0.0F, 1.0F};
+        case DoorSide::Left:
+            return {1.0F, 0.0F};
+        }
+
+        return {0.0F, 0.0F};
+    }
+
+    bool AreFacingSocketsAligned(
+        const BaseRoom::PassageSocket &sourceSocket,
+        const BaseRoom::PassageSocket &targetSocket
+    ) const {
+        if (targetSocket.side != GetOppositeSide(sourceSocket.side)) {
+            return false;
+        }
+
+        switch (sourceSocket.side) {
+        case DoorSide::Top:
+            return std::abs(sourceSocket.worldCenter.x - targetSocket.worldCenter.x) <=
+                       kPassageAlignmentTolerance &&
+                   targetSocket.worldCenter.y > sourceSocket.worldCenter.y;
+
+        case DoorSide::Right:
+            return std::abs(sourceSocket.worldCenter.y - targetSocket.worldCenter.y) <=
+                       kPassageAlignmentTolerance &&
+                   targetSocket.worldCenter.x > sourceSocket.worldCenter.x;
+
+        case DoorSide::Bottom:
+            return std::abs(sourceSocket.worldCenter.x - targetSocket.worldCenter.x) <=
+                       kPassageAlignmentTolerance &&
+                   sourceSocket.worldCenter.y > targetSocket.worldCenter.y;
+
+        case DoorSide::Left:
+            return std::abs(sourceSocket.worldCenter.y - targetSocket.worldCenter.y) <=
+                       kPassageAlignmentTolerance &&
+                   sourceSocket.worldCenter.x > targetSocket.worldCenter.x;
+        }
+
+        return false;
+    }
+
     bool HasRoomPassageBetween(
         const std::shared_ptr<BaseRoom> &sourceRoom,
         const std::shared_ptr<BaseRoom> &targetRoom,
@@ -126,40 +190,37 @@ private:
             return false;
         }
 
-        const glm::vec2 delta =
-            targetRoom->GetAbsoluteTranslation() - sourceRoom->GetAbsoluteTranslation();
-        DoorSide sourceExitSide = DoorSide::Bottom;
+        const DoorSide candidateSides[] = {
+            DoorSide::Top,
+            DoorSide::Right,
+            DoorSide::Bottom,
+            DoorSide::Left
+        };
 
-        if (std::abs(delta.x) > std::abs(delta.y)) {
-            if (std::abs(delta.y) > kRoomAlignmentTolerance ||
-                std::abs(delta.x) <= kRoomAlignmentTolerance) {
-                return false;
-            }
-
-            if (delta.x > 0.0F) {
-                sourceExitSide = DoorSide::Right;
-                targetEntrySide = DoorSide::Left;
-            } else {
-                sourceExitSide = DoorSide::Left;
-                targetEntrySide = DoorSide::Right;
-            }
-        } else {
-            if (std::abs(delta.x) > kRoomAlignmentTolerance ||
-                std::abs(delta.y) <= kRoomAlignmentTolerance) {
-                return false;
+        for (DoorSide sourceExitSide : candidateSides) {
+            if (!sourceRoom->HasPassageOnSide(sourceExitSide)) {
+                continue;
             }
 
-            if (delta.y > 0.0F) {
-                sourceExitSide = DoorSide::Top;
-                targetEntrySide = DoorSide::Bottom;
-            } else {
-                sourceExitSide = DoorSide::Bottom;
-                targetEntrySide = DoorSide::Top;
+            const DoorSide candidateTargetEntrySide = GetOppositeSide(sourceExitSide);
+            if (!targetRoom->HasPassageOnSide(candidateTargetEntrySide)) {
+                continue;
             }
+
+            const BaseRoom::PassageSocket sourceSocket =
+                sourceRoom->GetPassageSocket(sourceExitSide);
+            const BaseRoom::PassageSocket targetSocket =
+                targetRoom->GetPassageSocket(candidateTargetEntrySide);
+
+            if (!this->AreFacingSocketsAligned(sourceSocket, targetSocket)) {
+                continue;
+            }
+
+            targetEntrySide = candidateTargetEntrySide;
+            return true;
         }
 
-        return sourceRoom->HasPassageOnSide(sourceExitSide) &&
-               targetRoom->HasPassageOnSide(targetEntrySide);
+        return false;
     }
 
     bool TryStartDoorPassage(const std::shared_ptr<BaseRoom> &targetRoom) {
@@ -188,24 +249,17 @@ private:
             return false;
         }
 
-        const glm::vec2 roomCenter = this->m_DoorPassage.targetRoom->GetAbsoluteTranslation();
-        const glm::vec2 roomHalfSize = this->m_DoorPassage.targetRoom->GetRoomSize() / 2.0F;
-
-        switch (this->m_DoorPassage.targetEntrySide) {
-        case DoorSide::Top:
-            return playerPos.y <= roomCenter.y + roomHalfSize.y - kDoorPassageCommitDepth;
-
-        case DoorSide::Right:
-            return playerPos.x <= roomCenter.x + roomHalfSize.x - kDoorPassageCommitDepth;
-
-        case DoorSide::Bottom:
-            return playerPos.y >= roomCenter.y - roomHalfSize.y + kDoorPassageCommitDepth;
-
-        case DoorSide::Left:
-            return playerPos.x >= roomCenter.x - roomHalfSize.x + kDoorPassageCommitDepth;
-        }
-
-        return false;
+        const BaseRoom::PassageSocket targetEntrySocket =
+            this->m_DoorPassage.targetRoom->GetPassageSocket(this->m_DoorPassage.targetEntrySide);
+        const float commitThreshold = std::max(
+            0.0F,
+            kDoorPassageCommitDepth - targetEntrySocket.wallThickness / 2.0F
+        );
+        const float entryDepth = glm::dot(
+            playerPos - targetEntrySocket.worldCenter,
+            GetInwardNormal(this->m_DoorPassage.targetEntrySide)
+        );
+        return entryDepth >= commitThreshold;
     }
 
     void CommitDoorPassage() {
@@ -228,7 +282,7 @@ private:
     }
 
     static constexpr float kDoorPassageCommitDepth = 32.0F;
-    static constexpr float kRoomAlignmentTolerance = 1.0F;
+    static constexpr float kPassageAlignmentTolerance = 1.0F;
 
     std::shared_ptr<BaseRoom> m_CurrentRoom = nullptr;
     DoorPassageContext m_DoorPassage;

@@ -59,6 +59,10 @@ public:
 
     std::shared_ptr<Weapon> GetWeapon();
     virtual void SetWeapon(std::shared_ptr<Weapon> weapon);
+    glm::vec2 GetWeaponOffset() const;
+    void SetWeaponOffset(glm::vec2 offset);
+    glm::vec2 GetWeaponSocketOffset() const;
+    void SetWeaponSocketOffset(glm::vec2 offset);
 
     int GetCurrentHealth() const;
     int GetMaxHealth() const;
@@ -67,8 +71,10 @@ public:
     CombatFaction GetFaction() const;
     void SetFaction(CombatFaction faction);
     virtual void ApplyDamage(int damage);
+    void ApplyImpulse(const glm::vec2 &impulse);
     void Heal(int amount);
     bool IsDead() const;
+    bool ConsumeDeathEvent();
 
     void Update() override;
 
@@ -91,6 +97,8 @@ public:
     
 protected:
     virtual bool CanBeDamagedBy(const Bullet &bullet) const;
+    virtual float GetMoveSpeedMultiplier() const;
+    virtual void UpdateWeaponPresentation();
     void SetAttackAnimation(std::shared_ptr<Util::Animation> attackAnimation);
     void TriggerAttackVisual(float durationMs = 120.0F);
     bool IsAttackVisualActive() const;
@@ -102,6 +110,7 @@ protected:
     float m_PlayerSpeed = 0.15F;
 
     std::shared_ptr<Weapon> m_Weapon;
+    glm::vec2 m_WeaponSocketOffset = glm::vec2(0, 0);
  
     std::shared_ptr<Util::Animation> m_DieAnimation;
     std::shared_ptr<Util::Animation> m_StandAnimation;
@@ -110,9 +119,15 @@ protected:
     std::vector<Collision::CollisionBox> m_CollisionBoxes;
     CollisionResolver m_CollisionResolver = nullptr;
     Util::ms_t m_AttackVisualEndTime = 0;
+    Util::ms_t m_DeathVisualStartTime = 0;
+    glm::vec2 m_ImpulseVelocity = {0.0F, 0.0F};
+    bool m_DeathVisualStarted = false;
+    bool m_DeathEventConsumed = false;
 
 private:
 
+    void StartDeathVisual();
+    glm::vec2 BuildImpulseDelta(float deltaTimeMs);
     void UpdateFaceDirection();
     void SetSpriteTypeByMoveIntent(glm::vec2 moveIntent);
 };

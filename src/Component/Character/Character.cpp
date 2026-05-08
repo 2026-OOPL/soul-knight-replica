@@ -12,11 +12,11 @@
 #include "Component/Bullet.hpp"
 #include "Component/Character/Character.hpp"
 #include "Component/Collision/CollisionSystem.hpp"
-#include "Component/Weapons/BadPistol.hpp"
 
 namespace {
 
 constexpr float kMaxCharacterMovementDeltaTimeMs = 50.0F;
+constexpr float kCharacterImpulseDecayPerMs = 0.0012F;
 
 Collision::CollisionFilter BuildCharacterFilter(CombatFaction faction) {
     Collision::CollisionFilter filter;
@@ -78,7 +78,6 @@ Character::Character(
     this->m_StandAnimation = StandAnimation;
 
     this->m_CollisionBoxes.push_back(BuildDefaultCharacterBodyBox(this->m_Faction));
-    this->SetWeapon(std::make_shared<BadPistol>());
     this->SetDrawable(this->m_StandAnimation);
 };
 
@@ -103,7 +102,6 @@ Character::Character(
     );
 
     this->m_CollisionBoxes.push_back(BuildDefaultCharacterBodyBox(this->m_Faction));
-    this->SetWeapon(std::make_shared<BadPistol>());
     this->SetDrawable(this->m_StandAnimation);
 };
 
@@ -170,7 +168,28 @@ void Character::SetWeapon(std::shared_ptr<Weapon> weapon) {
 
     if (this->m_Weapon != nullptr) {
         this->m_Weapon->SetProjectileFaction(this->m_Faction);
+        this->m_Weapon->SetSocketOffset(this->m_WeaponSocketOffset);
         this->AddChild(this->m_Weapon);
+    }
+}
+
+glm::vec2 Character::GetWeaponOffset() const {
+    return this->GetWeaponSocketOffset();
+}
+
+void Character::SetWeaponOffset(glm::vec2 offset) {
+    this->SetWeaponSocketOffset(offset);
+}
+
+glm::vec2 Character::GetWeaponSocketOffset() const {
+    return this->m_WeaponSocketOffset;
+}
+
+void Character::SetWeaponSocketOffset(glm::vec2 offset) {
+    this->m_WeaponSocketOffset = offset;
+
+    if (this->m_Weapon != nullptr) {
+        this->m_Weapon->SetSocketOffset(this->m_WeaponSocketOffset);
     }
 }
 
@@ -220,8 +239,52 @@ void Character::Heal(int amount) {
     this->SetCurrentHealth(this->m_CurrentHealth + amount);
 }
 
+void Character::ApplyImpulse(const glm::vec2 &impulse) {
+    if (glm::length(impulse) <= 0.0001F) {
+        return;
+    }
+
+    this->m_ImpulseVelocity += impulse;
+}
+
 bool Character::IsDead() const {
     return this->m_CurrentHealth <= 0;
+}
+
+bool Character::ConsumeDeathEvent() {
+    if (!this->IsDead()) {
+        return false;
+    }
+
+    this->StartDeathVisual();
+
+    if (this->m_DeathEventConsumed) {
+        return false;
+    }
+
+    this->m_DeathEventConsumed = true;
+    return true;
+}
+
+void Character::StartDeathVisual() {
+    if (this->m_DeathVisualStarted) {
+        return;
+    }
+
+    this->m_DeathVisualStarted = true;
+    this->m_DeathVisualStartTime = Util::Time::GetElapsedTimeMs();
+    this->m_ImpulseVelocity = {0.0F, 0.0F};
+
+    if (this->m_Weapon != nullptr) {
+        this->RemoveChild(this->m_Weapon);
+        this->m_Weapon = nullptr;
+    }
+
+    if (this->m_DieAnimation != nullptr) {
+        this->m_DieAnimation->SetCurrentFrame(0);
+        this->m_DieAnimation->Play();
+        this->SetDrawable(this->m_DieAnimation);
+    }
 }
 
 bool Character::CanBeDamagedBy(const Bullet &bullet) const {
@@ -232,13 +295,31 @@ bool Character::CanBeDamagedBy(const Bullet &bullet) const {
     return bullet.GetFaction() != this->m_Faction;
 }
 
-void Character::Update() {
-    const glm::vec2 moveIntent = this->GetMoveIntent();
+float Character::GetMoveSpeedMultiplier() const {
+    return 1.0F;
+}
 
-    if (this->m_Weapon != nullptr) {
-        this->m_Weapon->SetAnchorPoint(this->GetAbsoluteTranslation());
-        this->m_Weapon->SetFacingDirection(this->GetFaceDirection());
+void Character::UpdateWeaponPresentation() {
+    if (this->m_Weapon == nullptr) {
+        return;
     }
+
+    this->m_Weapon->SetAnchorPoint(this->GetAbsoluteTranslation());
+    this->m_Weapon->SetSocketOffset(this->m_WeaponSocketOffset);
+    this->m_Weapon->SetFacingDirection(this->GetFaceDirection());
+}
+
+void Character::Update() {
+    if (this->IsDead()) {
+        this->StartDeathVisual();
+        return;
+    }
+
+    const glm::vec2 moveIntent = this->GetMoveIntent();
+    const float movementDeltaTimeMs =
+        std::min(Util::Time::GetDeltaTimeMs(), kMaxCharacterMovementDeltaTimeMs);
+
+    this->UpdateWeaponPresentation();
 
     this->SetSpriteTypeByMoveIntent(moveIntent);
     this->UpdateFaceDirection();
@@ -247,19 +328,26 @@ void Character::Update() {
         m_LastMomentum = moveIntent;
     }
 
-    if (moveIntent == glm::vec2(0.0F, 0.0F)) {
+    const glm::vec2 frameDelta =
+        moveIntent * this->m_PlayerSpeed * this->GetMoveSpeedMultiplier() *
+            movementDeltaTimeMs +
+        this->BuildImpulseDelta(movementDeltaTimeMs);
+
+    if (glm::length(frameDelta) <= 0.0001F) {
         return;
     }
-
-    const float movementDeltaTimeMs =
-        std::min(Util::Time::GetDeltaTimeMs(), kMaxCharacterMovementDeltaTimeMs);
-    const glm::vec2 frameDelta =
-        moveIntent * this->m_PlayerSpeed * movementDeltaTimeMs;
 
     if (this->m_CollisionResolver) {
         const Collision::MovementResult movementResult =
             this->m_CollisionResolver(*this, frameDelta);
         this->m_AbsoluteTransform.translation += movementResult.resolvedDelta;
+
+        if (movementResult.blockedX) {
+            this->m_ImpulseVelocity.x = 0.0F;
+        }
+        if (movementResult.blockedY) {
+            this->m_ImpulseVelocity.y = 0.0F;
+        }
         return;
     }
 
@@ -289,6 +377,7 @@ void Character::OnCollision(const Collision::CollisionSituation &situation) {
     }
 
     this->ApplyDamage(bullet->GetDamage());
+    bullet->ApplyHitEffects(*this);
 }
 
 glm::vec2 Character::GetColliderSize() const {
@@ -341,4 +430,26 @@ Collision::AxisAlignedBox Character::GetCollisionBoxAt(const glm::vec2 &coordina
 
 void Character::SetCollisionResolver(CollisionResolver collisionResolver) {
     this->m_CollisionResolver = std::move(collisionResolver);
+}
+
+glm::vec2 Character::BuildImpulseDelta(float deltaTimeMs) {
+    if (glm::length(this->m_ImpulseVelocity) <= 0.0001F || deltaTimeMs <= 0.0F) {
+        this->m_ImpulseVelocity = {0.0F, 0.0F};
+        return {0.0F, 0.0F};
+    }
+
+    const glm::vec2 frameDelta = this->m_ImpulseVelocity * deltaTimeMs;
+    const float nextSpeed = std::max(
+        0.0F,
+        glm::length(this->m_ImpulseVelocity) - kCharacterImpulseDecayPerMs * deltaTimeMs
+    );
+
+    if (nextSpeed <= 0.0001F) {
+        this->m_ImpulseVelocity = {0.0F, 0.0F};
+        return frameDelta;
+    }
+
+    this->m_ImpulseVelocity =
+        glm::normalize(this->m_ImpulseVelocity) * nextSpeed;
+    return frameDelta;
 }

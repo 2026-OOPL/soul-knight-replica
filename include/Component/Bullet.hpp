@@ -16,7 +16,9 @@
 #include "Common/MapObject.hpp"
 #include "Component/Collision/ICollidable.hpp"
 #include "Component/IStateful.hpp"
-#include "Component/Weapon.hpp"
+
+class Character;
+class IBulletHitEffect;
 
 class Bullet : public MapObject,
                public IStateful,
@@ -66,8 +68,11 @@ public:
     void SetCollisionResolver(CollisionResolver collisionResolver);
     int GetDamage() const;
     void SetDamage(int damage);
+    glm::vec2 GetMomentum() const;
     CombatFaction GetFaction() const;
     void SetFaction(CombatFaction faction);
+    void AddHitEffect(const std::shared_ptr<IBulletHitEffect> &effect);
+    void ApplyHitEffects(Character &target) const;
     bool HasRegisteredImpact() const;
     bool TryRegisterImpact();
     bool IsDestroyRequested() const;
@@ -80,6 +85,7 @@ protected:
 
     std::shared_ptr<Util::Animation> m_Animation;
     std::vector<Collision::CollisionBox> m_CollisionBoxes;
+    std::vector<std::shared_ptr<IBulletHitEffect>> m_HitEffects;
     CollisionResolver m_CollisionResolver = nullptr;
     bool m_DestroyRequested = false;
     bool m_ImpactRegistered = false;

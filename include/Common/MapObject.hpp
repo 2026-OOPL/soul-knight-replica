@@ -25,6 +25,7 @@ public:
 
     virtual Util::Transform GetObjectTransform() const = 0; // Return the transformation of the object
     virtual Util::Transform GetAbsoluteTransform() const; // Return the absolute transformation of the object
+    virtual Util::Transform GetRenderTransform() const; // Return the transformation used for rendering
 
 protected:
     Util::Transform m_AbsoluteTransform;

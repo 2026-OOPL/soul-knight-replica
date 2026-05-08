@@ -72,7 +72,9 @@ T RandomChoose::ChooseFromVector(std::vector<T>& vector) {
     return vector[index];
 }
 
+enum class MobType;
+
 template RoomType RandomChoose::GetEnum<RoomType>();
 template Direction RandomChoose::GetEnum<Direction>();
-
+template MobType RandomChoose::GetEnum<MobType>();
 template glm::ivec2 RandomChoose::ChooseFromVector<glm::ivec2>(std::vector<glm::ivec2>&);
