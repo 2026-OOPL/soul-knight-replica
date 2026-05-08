@@ -5,7 +5,7 @@
 #include <vector>
 
 #include "Common/CombatFaction.hpp"
-#include "Component/AI.hpp"
+#include "Component/AI/AI.hpp"
 #include "Component/Character/Character.hpp"
 
 class MapSystem;
@@ -18,20 +18,7 @@ public:
         const std::vector<std::string>& DieAnimation,
         std::weak_ptr<Character> tracePlayer,
         Collision::CollisionSystem* collisionSystem
-    ) : Character(
-        StandAnimation,
-        WalkAnimation,
-        DieAnimation,
-        4,
-        CombatFaction::Enemy
-    ) {
-        m_TracePlayerTemp = tracePlayer;
-        m_CollisionSystemTemp = collisionSystem;
-
-        this->m_AI = std::make_shared<AI>(this, m_TracePlayerTemp, m_CollisionSystemTemp);
-
-        this->m_PlayerSpeed = 0.05F;
-    };
+    );
 
     glm::vec2 GetMoveIntent() const override;
     glm::vec2 GetFaceDirection() const override;

@@ -2,10 +2,34 @@
 #include <glm/vec2.hpp>
 #include <glm/geometric.hpp>
 
+#include "Util/Logger.hpp"
+
 #include "Component/Mobs/Mob.hpp"
 #include "Component/Map/MapSystem.hpp"
 #include "Component/Character/Character.hpp"
-#include "Util/Logger.hpp"
+#include "Component/AI/RangedAI.hpp"
+
+Mob::Mob(
+    const std::vector<std::string>& StandAnimation,
+    const std::vector<std::string>& WalkAnimation,
+    const std::vector<std::string>& DieAnimation,
+    std::weak_ptr<Character> tracePlayer,
+    Collision::CollisionSystem* collisionSystem
+) : Character(
+    StandAnimation,
+    WalkAnimation,
+    DieAnimation,
+    4,
+    CombatFaction::Enemy
+) {
+    m_TracePlayerTemp = tracePlayer;
+    m_CollisionSystemTemp = collisionSystem;
+
+    this->m_AI = std::make_shared<RangedAI>(this, tracePlayer.lock(), m_CollisionSystemTemp);
+
+    this->m_PlayerSpeed = 0.05F;
+
+}
 
 namespace {
 
@@ -22,9 +46,11 @@ void Mob::Update() {
     m_AI->Update();
     Character::Update();
 
-    if (m_AI->GetAttackTrigger()) {
+    const glm::vec2 attackDirection = m_AI->GetAttackDirection();
+    if (glm::length(attackDirection) > 0.0001F) {
         bool result = false;
         if (m_Weapon != nullptr) {
+            m_Weapon->SetFacingDirection(attackDirection);
             result = m_Weapon->ShotBullet();
         } else {
             result = this->TryMeleeAttack();
@@ -32,7 +58,6 @@ void Mob::Update() {
 
         if (result) {
             this->TriggerAttackVisual();
-            LOG_INFO(result);
         }
     }
 }

@@ -30,7 +30,6 @@ set(INCLUDE_DIR ${CMAKE_SOURCE_DIR}/include)
 
 file(GLOB_RECURSE SRC_FILES "src/*.cpp")
 file(GLOB_RECURSE INCLUDE_FILES "include/*.hpp")
-list(FILTER SRC_FILES EXCLUDE REGEX "src/Component/AI/AI\\.cpp$")
 
 add_executable(${PROJECT_NAME}
     ${SRC_DIR}/main.cpp
