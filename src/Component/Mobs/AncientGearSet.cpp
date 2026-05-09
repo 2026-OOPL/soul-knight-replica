@@ -22,7 +22,7 @@ const std::vector<std::string> kAncientGearSetDieSprite = {
     RESOURCE_DIR"/Mob/AncientGearSet/AncientGearSet_die.png"
 };
 
-const std::string kLaserSprite = RESOURCE_DIR"/Bullet/48px-laser-enemy_processed.png";
+const std::string kLaserSprite = RESOURCE_DIR"/Bullet/EnemyLaserBullet.png";
 
 constexpr float kAggroDistance = 300.0F;
 constexpr float kNormalLaserMaxLength = MAP_PIXEL_PER_BLOCK * 5.5F;

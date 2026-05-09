@@ -33,10 +33,10 @@ const std::vector<std::string> kRuinsTurretDieSprite = {
 };
 
 const std::vector<std::string> kLaserSprite = {
-    RESOURCE_DIR"/Bullet/48px-laser-enemy_processed.png"
+    RESOURCE_DIR"/Bullet/EnemyLaserBullet.png"
 };
 
-const std::string kLaserResource = RESOURCE_DIR"/Bullet/48px-laser-enemy_processed.png";
+const std::string kLaserResource = RESOURCE_DIR"/Bullet/EnemyLaserBullet.png";
 
 constexpr float kAggroDistance = 320.0F;
 constexpr float kWarningLength = 280.0F;

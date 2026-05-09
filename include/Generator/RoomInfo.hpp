@@ -19,7 +19,8 @@ enum MobType {
     RUINS_SEARCHER,
     ANCIENT_GEAR_SET,
     RUINS_TURRET,
-    PORTAL_MOB
+    PORTAL_MOB,
+    ZULAN_IN_RUINS
 };
 
 enum ObstacleType {

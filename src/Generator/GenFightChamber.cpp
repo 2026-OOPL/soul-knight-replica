@@ -120,6 +120,12 @@ std::vector<glm::ivec2> GenFightChamber::GetAvailableCooridinate() {
 void GenFightChamber::PopulateRoomContents(glm::ivec2 position) {
     std::shared_ptr<RoomInfo> info = m_Blueprint->GetElementByCooridinate(position);
 
+    std::vector<SpawnInfo<MobType>> bossWave;
+    bossWave.emplace_back(MobType::ZULAN_IN_RUINS, glm::vec2(0.0F, 0.0F));
+    info->AddMonsterWave(bossWave);
+
+    return;
+
     int boxCount = this->m_RandomChoose->GetInteger(0, 4);
             
     for (int i = 0; i < boxCount; ++i) {

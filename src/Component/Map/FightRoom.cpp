@@ -15,6 +15,7 @@
 #include "Component/Mobs/RuinsSearcher.hpp"
 #include "Component/Mobs/RuinsTurret.hpp"
 #include "Component/Mobs/ShearRuinsGuard.hpp"
+#include "Component/Mobs/ZulanInRuins.hpp"
 
 namespace {
 
@@ -260,6 +261,10 @@ void FightRoom::StartNextMonsterWave() {
 
             case MobType::PORTAL_MOB:
                 mob = std::make_shared<PortalMob>(target, m_MapSystem->GetCollisionSystem());
+                break;
+
+            case MobType::ZULAN_IN_RUINS:
+                mob = std::make_shared<ZulanInRuins>(target, m_MapSystem->GetCollisionSystem());
                 break;
                 
             default:
