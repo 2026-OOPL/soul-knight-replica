@@ -31,6 +31,8 @@ public:
 
     bool ConnectsRoom(const std::shared_ptr<BaseRoom> &room) const;
     std::shared_ptr<BaseRoom> GetOtherRoom(const std::shared_ptr<BaseRoom> &room) const;
+    std::shared_ptr<BaseRoom> GetFirstRoom() const;
+    std::shared_ptr<BaseRoom> GetSecondRoom() const;
     GangwayOrientation GetOrientation() const;
 
 private:

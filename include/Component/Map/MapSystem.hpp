@@ -79,6 +79,10 @@ public:
     Collision::CollisionSystem* GetCollisionSystem() { return &this->m_CollisionSystem; }
 
 protected:
+    std::vector<Collision::CollisionPrimitive> CollectCollisionPrimitivesForQuery(
+        const Collision::AxisAlignedBox &queryBox,
+        const ICollidable *ignoreBody = nullptr
+    ) const;
     std::vector<Collision::CollisionPrimitive> CollectCurrentRoomCollisionPrimitives(
         const ICollidable *ignoreBody = nullptr
     ) const;

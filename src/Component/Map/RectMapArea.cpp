@@ -178,6 +178,13 @@ std::vector<Collision::CollisionPrimitive> RectMapArea::CollectBlockingPrimitive
     return Collision::BuildStaticWorldPrimitives(this->m_StaticColliders);
 }
 
+Collision::AxisAlignedBox RectMapArea::GetAreaBounds() const {
+    return Collision::CollisionSystem::BuildBox(
+        this->GetAbsoluteTranslation(),
+        this->m_AreaSize
+    );
+}
+
 const std::vector<Collision::AxisAlignedBox> &RectMapArea::GetStaticColliders() const {
     return this->m_StaticColliders;
 }

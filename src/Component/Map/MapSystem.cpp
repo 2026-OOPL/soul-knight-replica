@@ -54,6 +54,34 @@ Collision::AxisAlignedBox BuildPrimaryBodyBox(const ICollidable &body) {
     return primitives.front().box;
 }
 
+bool AreBoxesOverlapping(
+    const Collision::AxisAlignedBox &lhs,
+    const Collision::AxisAlignedBox &rhs
+) {
+    const glm::vec2 lhsHalfSize = lhs.size / 2.0F;
+    const glm::vec2 rhsHalfSize = rhs.size / 2.0F;
+
+    const float lhsLeft = lhs.center.x - lhsHalfSize.x;
+    const float lhsRight = lhs.center.x + lhsHalfSize.x;
+    const float lhsBottom = lhs.center.y - lhsHalfSize.y;
+    const float lhsTop = lhs.center.y + lhsHalfSize.y;
+
+    const float rhsLeft = rhs.center.x - rhsHalfSize.x;
+    const float rhsRight = rhs.center.x + rhsHalfSize.x;
+    const float rhsBottom = rhs.center.y - rhsHalfSize.y;
+    const float rhsTop = rhs.center.y + rhsHalfSize.y;
+
+    return !(lhsRight <= rhsLeft || lhsLeft >= rhsRight ||
+             lhsTop <= rhsBottom || lhsBottom >= rhsTop);
+}
+
+void AppendPrimitives(
+    std::vector<Collision::CollisionPrimitive> &destination,
+    const std::vector<Collision::CollisionPrimitive> &source
+) {
+    destination.insert(destination.end(), source.begin(), source.end());
+}
+
 } // namespace
 
 MapSystem::MapSystem()
@@ -61,8 +89,11 @@ MapSystem::MapSystem()
       m_CollisionQueries(&this->m_CollisionSystem) {
     this->m_World.SetRoot(this);
     this->m_CollisionQueries.SetBlockingPrimitiveProvider(
-        [this](const ICollidable *ignoreBody) {
-            return this->CollectCurrentRoomCollisionPrimitives(ignoreBody);
+        [this](const CollisionQueryService::BlockingPrimitiveQuery &query) {
+            return this->CollectCollisionPrimitivesForQuery(
+                query.queryBox,
+                query.ignoreBody
+            );
         }
     );
     this->m_CollisionSystem.SetBlockingPrimitiveProvider(
@@ -400,6 +431,70 @@ bool MapSystem::CanOccupy(
     const glm::vec2 &targetOrigin
 ) const {
     return this->m_CollisionQueries.CanOccupy(body, targetOrigin);
+}
+
+std::vector<Collision::CollisionPrimitive> MapSystem::CollectCollisionPrimitivesForQuery(
+    const Collision::AxisAlignedBox &queryBox,
+    const ICollidable *ignoreBody
+) const {
+    std::vector<Collision::CollisionPrimitive> colliders;
+    std::unordered_set<const BaseRoom *> collectedRooms;
+    std::unordered_set<const Gangway *> collectedGangways;
+
+    auto collectRoom = [this, ignoreBody, &colliders, &collectedRooms](
+        const std::shared_ptr<BaseRoom> &room
+    ) {
+        if (room == nullptr || !collectedRooms.insert(room.get()).second) {
+            return;
+        }
+
+        AppendPrimitives(
+            colliders,
+            this->CollectRoomCollisionPrimitives(room, ignoreBody)
+        );
+        AppendPrimitives(
+            colliders,
+            this->CollectPropCollisionPrimitives(room, ignoreBody)
+        );
+    };
+
+    auto collectGangway = [&colliders, &collectedGangways, &collectRoom](
+        const std::shared_ptr<Gangway> &gangway
+    ) {
+        if (gangway == nullptr || !collectedGangways.insert(gangway.get()).second) {
+            return;
+        }
+
+        AppendPrimitives(colliders, gangway->CollectBlockingPrimitives());
+        collectRoom(gangway->GetFirstRoom());
+        collectRoom(gangway->GetSecondRoom());
+    };
+
+    for (const auto &room : this->m_World.GetRooms()) {
+        if (room != nullptr && AreBoxesOverlapping(queryBox, room->GetAreaBounds())) {
+            collectRoom(room);
+        }
+    }
+
+    for (const auto &gangway : this->m_World.GetGangways()) {
+        if (gangway != nullptr && AreBoxesOverlapping(queryBox, gangway->GetAreaBounds())) {
+            collectGangway(gangway);
+        }
+    }
+
+    collectRoom(this->m_RoomTransitions.GetCurrentRoom());
+
+    const RoomTransitionSystem::DoorPassageContext &doorPassage =
+        this->m_RoomTransitions.GetDoorPassage();
+    if (doorPassage.state == RoomTransitionSystem::DoorPassageState::Traversing) {
+        collectRoom(doorPassage.targetRoom);
+    }
+
+    if (colliders.empty()) {
+        return this->CollectCurrentRoomCollisionPrimitives(ignoreBody);
+    }
+
+    return colliders;
 }
 
 std::vector<Collision::CollisionPrimitive> MapSystem::CollectRoomCollisionPrimitives(

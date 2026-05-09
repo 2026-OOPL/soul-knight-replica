@@ -31,6 +31,7 @@ public:
     std::vector<Collision::CollisionPrimitive> CollectBlockingPrimitives(
         const Collision::AxisAlignedBox *ignoreOverlapBox = nullptr
     ) const override;
+    Collision::AxisAlignedBox GetAreaBounds() const;
     const std::vector<Collision::AxisAlignedBox> &GetStaticColliders() const;
     glm::vec2 GetAreaSize() const;
     glm::vec2 GetRenderSize() const;

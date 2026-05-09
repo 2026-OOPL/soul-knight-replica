@@ -103,6 +103,14 @@ std::shared_ptr<BaseRoom> Gangway::GetOtherRoom(const std::shared_ptr<BaseRoom> 
     return nullptr;
 }
 
+std::shared_ptr<BaseRoom> Gangway::GetFirstRoom() const {
+    return this->m_FirstRoom.lock();
+}
+
+std::shared_ptr<BaseRoom> Gangway::GetSecondRoom() const {
+    return this->m_SecondRoom.lock();
+}
+
 GangwayOrientation Gangway::GetOrientation() const {
     return this->m_Orientation;
 }
