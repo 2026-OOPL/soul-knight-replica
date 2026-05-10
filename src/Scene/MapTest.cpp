@@ -29,7 +29,7 @@ MapTest::MapTest() : MapSystem() {
     this->m_MainPlayer->SetAbsoluteScale({0.75F, 0.75F});
     this->AddPlayer(this->m_MainPlayer);
     
-    std::shared_ptr<MapGenerator> generator = std::make_shared<MapGenerator>("I Love OOP");
+    std::shared_ptr<MapGenerator> generator = std::make_shared<MapGenerator>("I Love OOP", GeneratorType::EASY);
 
     generator->Generate();
 

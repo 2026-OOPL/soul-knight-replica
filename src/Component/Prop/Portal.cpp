@@ -16,3 +16,9 @@ Portal::Portal(glm::vec2 cooridinate) {
 void Portal::Update() {
     // TODO: Implement player collision detection and callback function
 }
+
+void Portal::Initialize(MapSystem *mapSystem) {
+    (void)mapSystem;
+
+    this->SetZIndex(10);
+}

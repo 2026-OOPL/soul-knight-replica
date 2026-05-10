@@ -88,6 +88,7 @@ Bullet::Bullet(
     }
 
     this->SetAbsoluteRotation(rotation);
+    
 }
 
 Bullet::Bullet(
