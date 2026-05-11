@@ -18,10 +18,15 @@ class RandomChoose;
 enum class Direction;
 enum class GeneratePolicy;
 
+enum class GeneratorType {
+    EASY,
+    MEDIUM,
+    HARD
+};
 
 class MapGenerator {
 public:
-    MapGenerator(std::string seed) ;
+    MapGenerator(std::string seed, GeneratorType type);
     
     void Generate();
 
@@ -54,6 +59,11 @@ private:
     bool m_RuntimeMapBuilt = false;
     std::vector<std::shared_ptr<BaseRoom>> m_RoomInstances;
     std::vector<std::shared_ptr<Gangway>> m_GangwayInstances;
+
+    int m_MinimumFightRoomCount;
+    int m_MaximumFightRoomCount;
+    int m_MinimumRewardRoomCount;
+    int m_MaximumRewardRoomCount;
 };
 
 #endif

@@ -1,17 +1,18 @@
-#include "Component/Mobs/RuinsTurret.hpp"
 
 #include <algorithm>
 #include <cmath>
 #include <memory>
-
 #include <glm/geometric.hpp>
+#include "Util/Image.hpp"
+
 
 #include "Component/Bullet.hpp"
 #include "Component/BulletHitEffect.hpp"
 #include "Component/Map/BaseRoom.hpp"
 #include "Component/Map/MapSystem.hpp"
-#include "Util/Image.hpp"
+#include "Component/Mobs/RuinsTurret.hpp"
 #include "Util/Time.hpp"
+#include "Util/Image.hpp"
 
 namespace {
 
@@ -155,8 +156,13 @@ RuinsTurret::RuinsTurret(
 
     this->m_PositiveWarningVisual =
         std::make_shared<RuinsTurretBeamVisual>(kLaserResource, 3.8F);
+
+    this->m_PositiveWarningVisual->SetAbsoluteScale({0.5, 0.5});
+
     this->m_NegativeWarningVisual =
         std::make_shared<RuinsTurretBeamVisual>(kLaserResource, 3.8F);
+    this->m_NegativeWarningVisual->SetAbsoluteScale({0.5, 0.5});    
+
     this->m_PositiveWarningVisual->SetVisible(false);
     this->m_NegativeWarningVisual->SetVisible(false);
 }

@@ -1,10 +1,11 @@
 #ifndef PORTAL_HPP
 #define PORTAL_HPP
 
+#include <memory>
+#include <glm/vec2.hpp>
+
 #include "Component/Prop/Prop.hpp"
 #include "Util/Image.hpp"
-#include <glm/ext/vector_float2.hpp>
-#include <memory>
 
 class Portal : public Prop {
 public:
@@ -13,6 +14,7 @@ public:
     );
 
     void Update() override;
+    void Initialize(MapSystem *mapSystem) override;
 
 private:
     std::shared_ptr<Util::Image> m_PortalImage;

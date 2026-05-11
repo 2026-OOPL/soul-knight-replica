@@ -62,6 +62,8 @@ protected:
             this->GetBulletDamage(),
             this->GetProjectileFaction()
         );
+
+        bullet->SetAbsoluteScale({0.5F, 0.5F});
         return bullet;
     }
 };

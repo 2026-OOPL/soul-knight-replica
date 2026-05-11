@@ -7,7 +7,6 @@
 
 #include <glm/vec2.hpp>
 
-#include "Common/Enums.hpp"
 #include "GenChamber.hpp"
 #include "Generator/MapGenerator.hpp"
 
