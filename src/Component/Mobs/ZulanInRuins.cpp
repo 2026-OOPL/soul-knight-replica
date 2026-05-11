@@ -62,6 +62,14 @@ const std::vector<std::string> kLightArtilleryBulletSprite = {
     RESOURCE_DIR"/Bullet/EnemyMagicBullet.png"
 };
 
+const std::vector<std::string> kBombTrapConeBulletSprite = {
+    RESOURCE_DIR"/Bullet/EnemyConeBullet.png"
+};
+
+const std::vector<std::string> kBombTrapBubbleBulletSprite = {
+    RESOURCE_DIR"/Bullet/EnemyBubbleBullet.png"
+};
+
 const std::vector<std::string> kPowerfulMotherBulletSprite = {
     RESOURCE_DIR"/Bullet/EnemyLightOrbBullet.png"
 };
@@ -84,7 +92,8 @@ constexpr float kInitialSkillDelayMs = 700.0F;
 constexpr float kSkillCooldownMs = 1300.0F;
 constexpr bool kDebugForceInterceptLaserOnly = false;
 constexpr bool kDebugForceArtilleryOnly = false;
-constexpr bool kDebugForceFloatingSatelliteOnly = true;
+constexpr bool kDebugForceBombTrapOnly = true;
+constexpr bool kDebugForceFloatingSatelliteOnly = false;
 constexpr bool kDebugForcePowerfulMotherBulletOnly = false;
 
 constexpr float kCannonMoveSpeed = 0.46F;
@@ -117,31 +126,42 @@ constexpr int kInterceptSecondRoundFrontCount = 2;
 constexpr int kAutoChaseDamage = 2;
 constexpr int kHeavyArtilleryDamage = 3;
 constexpr int kLightArtilleryDamage = 2;
+constexpr int kBombTrapConeDamage = 3;
+constexpr int kBombTrapBubbleDamage = 2;
 constexpr int kFloatingSatelliteOrbDamage = 1;
 constexpr int kFloatingSatelliteBarDamage = 2;
 constexpr int kPowerfulMotherBulletDamage = 3;
 constexpr int kPowerfulChildBulletDamage = 3;
 constexpr int kBarBurstCount = 5;
 constexpr int kHeavyArtilleryBulletCount = 9;
+constexpr int kBombTrapConeBulletCount = 9;
 constexpr int kPowerfulChildBulletCount = 4;
 constexpr float kBarBulletSpeed = 0.54F;
 constexpr float kBarBulletSpreadRadians = 0.36F;
 constexpr float kBarBulletLifetimeMs = 2600.0F;
 constexpr float kHeavyArtilleryBulletSpeed = 0.44F;
 constexpr float kHeavyArtilleryBulletLifetimeMs = 3200.0F;
-constexpr float kHeavyArtilleryBulletVisualScale = 1.25F;
 constexpr float kLightArtilleryBulletSpeed = 0.66F;
 constexpr float kLightArtilleryBulletLifetimeMs = 2400.0F;
 constexpr float kLightArtilleryDurationMs = 2300.0F;
 constexpr float kLightArtilleryShotIntervalMs = 145.0F;
 constexpr float kChestFireForwardOffset = 22.0F;
+constexpr float kBombTrapConeFanRadians = 2.1F;
+constexpr float kBombTrapConeBulletSpeed = 0.48F;
+constexpr float kBombTrapConeBulletLifetimeMs = 3000.0F;
+constexpr float kBombTrapConeEmitInitialDistance = 42.0F;
+constexpr float kBombTrapConeEmitIntervalDistance = 58.0F;
+constexpr float kBombTrapBubbleInitialSpeed = 0.54F;
+constexpr float kBombTrapBubbleFinalSpeed = 0.08F;
+constexpr float kBombTrapBubbleLifetimeMs = 3800.0F;
+constexpr float kBombTrapBubbleSpawnOffset = 14.0F;
 constexpr float kFloatingSatelliteLifetimeMs = 4200.0F;
 constexpr float kFloatingSatelliteCannonDriftMs = 360.0F;
 constexpr float kFloatingSatelliteRotationSpeedRadiansPerMs = 0.002992F;
 constexpr float kFloatingSatelliteStartDistance = 40.0F;
-constexpr float kFloatingSatelliteSpacing = 24.0F;
-constexpr float kFloatingSatelliteOrbVisualScale = 1.08F;
-constexpr float kFloatingSatelliteOrbColliderSize = 24.0F;
+constexpr float kFloatingSatelliteSpacing = 48.0F;
+constexpr int kFloatingSatelliteOrbZIndex = 6;
+constexpr float kFloatingSatelliteOrbContactDamageIntervalMs = 450.0F;
 constexpr float kFloatingSatelliteBarBulletSpeed = 0.28F;
 constexpr float kFloatingSatelliteBarBulletLifetimeMs = 2600.0F;
 constexpr float kFloatingSatelliteBarEmitIntervalMs = 420.0F;
@@ -149,13 +169,24 @@ constexpr float kFloatingSatelliteBarEmitInitialDelayMs = 150.0F;
 constexpr float kFloatingSatelliteBarSpawnOffset = 18.0F;
 constexpr float kPowerfulMotherBulletSpeed = 0.36F;
 constexpr float kPowerfulMotherBulletLifetimeMs = 3300.0F;
-constexpr float kPowerfulMotherBulletVisualScale = 1.45F;
 constexpr float kPowerfulChildBulletSpeed = 0.58F;
 constexpr float kPowerfulChildBulletLifetimeMs = 1800.0F;
 constexpr float kPowerfulChildBulletEmitIntervalMs = 150.0F;
 constexpr float kPowerfulChildBulletEmitInitialDelayMs = 90.0F;
 constexpr float kPowerfulChildBulletVortexRadiansPerMs = 0.0062F;
 constexpr float kPowerfulChildBulletSpawnOffset = 22.0F;
+constexpr float kZulanBarBulletVisualScale = 1.0F;
+const glm::vec2 kZulanBarBulletColliderSize = {16.0F, 8.0F};
+constexpr float kZulanRoundBulletVisualScale = 0.68F;
+const glm::vec2 kZulanRoundBulletColliderSize = {26.0F, 26.0F};
+constexpr float kZulanMagicBulletVisualScale = 0.45F;
+const glm::vec2 kZulanMagicBulletColliderSize = {17.0F, 17.0F};
+constexpr float kZulanConeBulletVisualScale = 0.75F;
+const glm::vec2 kZulanConeBulletColliderSize = {26.0F, 19.0F};
+constexpr float kZulanBubbleBulletVisualScale = 0.85F;
+const glm::vec2 kZulanBubbleBulletColliderSize = {26.0F, 26.0F};
+constexpr float kZulanLightOrbBulletVisualScale = 0.55F;
+const glm::vec2 kZulanLightOrbBulletColliderSize = {23.0F, 23.0F};
 constexpr float kLaserFallbackLength = MAP_PIXEL_PER_BLOCK * 6.0F;
 constexpr float kWarningThicknessScale = 0.07F;
 constexpr float kLaserThicknessScale = 0.30F;
@@ -189,6 +220,32 @@ glm::vec2 RotateVector(const glm::vec2 &vector, float radians) {
         vector.x * cosine - vector.y * sine,
         vector.x * sine + vector.y * cosine
     };
+}
+
+void ConfigureBulletSize(
+    Bullet &bullet,
+    float visualScale,
+    const glm::vec2 &colliderSize
+) {
+    const glm::vec2 currentScale = bullet.GetAbsoluteScale();
+    const glm::vec2 scaleSign = {
+        currentScale.x < 0.0F ? -1.0F : 1.0F,
+        currentScale.y < 0.0F ? -1.0F : 1.0F
+    };
+    bullet.SetAbsoluteScale(scaleSign * visualScale);
+    bullet.SetColliderSize(colliderSize);
+}
+
+void ConfigureBulletSize(
+    const std::shared_ptr<Bullet> &bullet,
+    float visualScale,
+    const glm::vec2 &colliderSize
+) {
+    if (bullet == nullptr) {
+        return;
+    }
+
+    ConfigureBulletSize(*bullet, visualScale, colliderSize);
 }
 
 float GetFloatingSatelliteAngle(
@@ -255,6 +312,173 @@ private:
     float m_LifetimeMs = 0.0F;
 };
 
+class ZulanDeceleratingBullet : public Bullet {
+public:
+    ZulanDeceleratingBullet(
+        const std::vector<std::string> &sprite,
+        const glm::vec2 &coordinate,
+        const glm::vec2 &direction,
+        float initialSpeed,
+        float finalSpeed,
+        int damage,
+        CombatFaction faction,
+        float lifetimeMs
+    ) : Bullet(
+            sprite,
+            coordinate,
+            NormalizeDirection(direction) * initialSpeed,
+            4,
+            damage,
+            faction
+        ),
+        m_Direction(NormalizeDirection(direction)),
+        m_InitialSpeed(std::max(0.0F, initialSpeed)),
+        m_FinalSpeed(std::max(0.0F, finalSpeed)),
+        m_SpawnTime(Util::Time::GetElapsedTimeMs()),
+        m_LifetimeMs(std::max(1.0F, lifetimeMs)) {
+    }
+
+    void Update() override {
+        const Util::ms_t now = Util::Time::GetElapsedTimeMs();
+        const float elapsedMs = now - this->m_SpawnTime;
+        if (elapsedMs >= this->m_LifetimeMs) {
+            this->RequestDestroy();
+            return;
+        }
+
+        const float t = std::clamp(elapsedMs / this->m_LifetimeMs, 0.0F, 1.0F);
+        const float speed =
+            this->m_InitialSpeed +
+                (this->m_FinalSpeed - this->m_InitialSpeed) * t;
+        this->m_Momentum = this->m_Direction * speed;
+        Bullet::Update();
+    }
+
+private:
+    static glm::vec2 NormalizeDirection(const glm::vec2 &direction) {
+        if (glm::length(direction) <= 0.0001F) {
+            return {1.0F, 0.0F};
+        }
+
+        return glm::normalize(direction);
+    }
+
+    glm::vec2 m_Direction = {1.0F, 0.0F};
+    float m_InitialSpeed = 0.0F;
+    float m_FinalSpeed = 0.0F;
+    Util::ms_t m_SpawnTime = 0;
+    float m_LifetimeMs = 0.0F;
+};
+
+class ZulanBombTrapConeBullet : public Bullet {
+public:
+    ZulanBombTrapConeBullet(
+        const glm::vec2 &coordinate,
+        const glm::vec2 &direction,
+        CombatFaction faction,
+        MapSystem* mapSystem
+    ) : Bullet(
+            kBombTrapConeBulletSprite,
+            coordinate,
+            NormalizeDirection(direction) * kBombTrapConeBulletSpeed,
+            4,
+            kBombTrapConeDamage,
+            faction
+        ),
+        m_MapSystem(mapSystem),
+        m_Direction(NormalizeDirection(direction)),
+        m_SpawnTime(Util::Time::GetElapsedTimeMs()) {
+        ConfigureBulletSize(
+            *this,
+            kZulanConeBulletVisualScale,
+            kZulanConeBulletColliderSize
+        );
+    }
+
+    void Update() override {
+        const Util::ms_t now = Util::Time::GetElapsedTimeMs();
+        if (now - this->m_SpawnTime >= kBombTrapConeBulletLifetimeMs) {
+            this->RequestDestroy();
+            return;
+        }
+
+        if (this->HasRegisteredImpact() || this->IsDestroyRequested()) {
+            return;
+        }
+
+        const glm::vec2 previousPosition = this->GetAbsoluteTranslation();
+        const float previousTravelDistance = this->m_TravelDistance;
+
+        Bullet::Update();
+
+        if (this->HasRegisteredImpact() || this->IsDestroyRequested()) {
+            return;
+        }
+
+        const glm::vec2 currentPosition = this->GetAbsoluteTranslation();
+        const glm::vec2 segment = currentPosition - previousPosition;
+        const float segmentLength = glm::length(segment);
+        this->m_TravelDistance += segmentLength;
+
+        while (this->m_NextEmitDistance <= this->m_TravelDistance) {
+            const float segmentT =
+                segmentLength <= 0.0001F ?
+                    1.0F :
+                    std::clamp(
+                        (this->m_NextEmitDistance - previousTravelDistance) /
+                            segmentLength,
+                        0.0F,
+                        1.0F
+                    );
+            this->EmitBubblePair(previousPosition + segment * segmentT);
+            this->m_NextEmitDistance += kBombTrapConeEmitIntervalDistance;
+        }
+    }
+
+private:
+    static glm::vec2 NormalizeDirection(const glm::vec2 &direction) {
+        if (glm::length(direction) <= 0.0001F) {
+            return {1.0F, 0.0F};
+        }
+
+        return glm::normalize(direction);
+    }
+
+    void EmitBubblePair(const glm::vec2 &origin) {
+        if (this->m_MapSystem == nullptr) {
+            return;
+        }
+
+        const glm::vec2 side = {-this->m_Direction.y, this->m_Direction.x};
+        for (float sign : {-1.0F, 1.0F}) {
+            const glm::vec2 bubbleDirection = side * sign;
+            std::shared_ptr<Bullet> bullet =
+                std::make_shared<ZulanDeceleratingBullet>(
+                    kBombTrapBubbleBulletSprite,
+                    origin + bubbleDirection * kBombTrapBubbleSpawnOffset,
+                    bubbleDirection,
+                    kBombTrapBubbleInitialSpeed,
+                    kBombTrapBubbleFinalSpeed,
+                    kBombTrapBubbleDamage,
+                    this->GetFaction(),
+                    kBombTrapBubbleLifetimeMs
+                );
+            ConfigureBulletSize(
+                bullet,
+                kZulanBubbleBulletVisualScale,
+                kZulanBubbleBulletColliderSize
+            );
+            this->m_MapSystem->AddBullet(bullet);
+        }
+    }
+
+    MapSystem* m_MapSystem = nullptr;
+    glm::vec2 m_Direction = {1.0F, 0.0F};
+    Util::ms_t m_SpawnTime = 0;
+    float m_TravelDistance = 0.0F;
+    float m_NextEmitDistance = kBombTrapConeEmitInitialDistance;
+};
+
 class ZulanFloatingSatelliteOrbBullet : public Bullet {
 public:
     ZulanFloatingSatelliteOrbBullet(
@@ -263,7 +487,8 @@ public:
         float startAngle,
         int rotationDirection,
         CombatFaction faction,
-        MapSystem* mapSystem
+        MapSystem* mapSystem,
+        Util::ms_t orbitStartTime
     ) : Bullet(
             kPowerfulMotherBulletSprite,
             GetFloatingSatellitePosition(
@@ -274,14 +499,14 @@ public:
                 0.0F
             ),
             {0.0F, 0.0F},
-            5,
+            kFloatingSatelliteOrbZIndex,
             kFloatingSatelliteOrbDamage,
             faction
         ),
         m_MapSystem(mapSystem),
         m_Center(center),
         m_SatelliteIndex(satelliteIndex),
-        m_StartTime(Util::Time::GetElapsedTimeMs()),
+        m_StartTime(orbitStartTime),
         m_NextEmitTime(
             this->m_StartTime +
                 kFloatingSatelliteBarEmitInitialDelayMs +
@@ -291,14 +516,16 @@ public:
         ),
         m_StartAngle(startAngle),
         m_RotationDirection(rotationDirection) {
-        this->SetAbsoluteScale({
-            kFloatingSatelliteOrbVisualScale,
-            kFloatingSatelliteOrbVisualScale
-        });
-        this->SetColliderSize({
-            kFloatingSatelliteOrbColliderSize,
-            kFloatingSatelliteOrbColliderSize
-        });
+        ConfigureBulletSize(
+            *this,
+            kZulanLightOrbBulletVisualScale,
+            kZulanLightOrbBulletColliderSize
+        );
+
+        Collision::CollisionFilter filter;
+        filter.layer = Collision::CollisionLayer::None;
+        filter.mask = Collision::ToMask(Collision::CollisionLayer::None);
+        this->SetCollisionFilter(filter);
     }
 
     void Update() override {
@@ -311,6 +538,7 @@ public:
         }
 
         this->UpdateOrbit(elapsedMs);
+        this->ApplyContactDamage(now);
 
         while (now >= this->m_NextEmitTime && !this->IsDestroyRequested()) {
             this->EmitBarBullet(this->m_NextEmitTime);
@@ -333,6 +561,37 @@ private:
             elapsedMs
         ));
         this->SetAbsoluteRotation(std::atan2(direction.y, direction.x));
+    }
+
+    void ApplyContactDamage(Util::ms_t now) {
+        if (this->m_MapSystem == nullptr ||
+            now < this->m_NextContactDamageTime) {
+            return;
+        }
+
+        const glm::vec2 orbPosition = this->GetAbsoluteTranslation();
+        const float orbRadius =
+            std::max(kZulanLightOrbBulletColliderSize.x, kZulanLightOrbBulletColliderSize.y) *
+                0.5F;
+
+        for (const auto &player : this->m_MapSystem->GetPlayers()) {
+            if (player == nullptr || player->IsDead()) {
+                continue;
+            }
+
+            const float playerRadius =
+                std::max(player->GetColliderSize().x, player->GetColliderSize().y) *
+                    0.5F;
+            if (glm::distance(player->GetAbsoluteTranslation(), orbPosition) >
+                playerRadius + orbRadius) {
+                continue;
+            }
+
+            player->ApplyDamage(kFloatingSatelliteOrbDamage);
+            this->m_NextContactDamageTime =
+                now + kFloatingSatelliteOrbContactDamageIntervalMs;
+            return;
+        }
     }
 
     void EmitBarBullet(Util::ms_t emitTime) {
@@ -362,7 +621,11 @@ private:
             this->GetFaction(),
             kFloatingSatelliteBarBulletLifetimeMs
         );
-        bullet->SetColliderSize({18.0F, 8.0F});
+        ConfigureBulletSize(
+            bullet,
+            kZulanBarBulletVisualScale,
+            kZulanBarBulletColliderSize
+        );
         this->m_MapSystem->AddBullet(bullet);
     }
 
@@ -371,6 +634,7 @@ private:
     std::size_t m_SatelliteIndex = 0;
     Util::ms_t m_StartTime = 0;
     Util::ms_t m_NextEmitTime = 0;
+    Util::ms_t m_NextContactDamageTime = 0;
     float m_StartAngle = 0.0F;
     int m_RotationDirection = 1;
 };
@@ -442,7 +706,11 @@ private:
                 this->GetFaction(),
                 kPowerfulChildBulletLifetimeMs
             );
-            bullet->SetColliderSize({18.0F, 18.0F});
+            ConfigureBulletSize(
+                bullet,
+                kZulanRoundBulletVisualScale,
+                kZulanRoundBulletColliderSize
+            );
             this->m_MapSystem->AddBullet(bullet);
         }
     }
@@ -636,6 +904,8 @@ void ZulanInRuins::UpdateState() {
                 this->StartHeavyArtillery();
             } else if (this->m_NextSkill == SkillKind::LightArtillery) {
                 this->StartLightArtillery();
+            } else if (this->m_NextSkill == SkillKind::BombTrap) {
+                this->StartBombTrap();
             } else if (this->m_NextSkill == SkillKind::FloatingSatellite) {
                 this->StartFloatingSatellite();
             } else if (this->m_NextSkill == SkillKind::PowerfulMotherBullet) {
@@ -669,6 +939,10 @@ void ZulanInRuins::UpdateState() {
     case BossState::LightArtillery:
         this->m_MoveIntent = {0.0F, 0.0F};
         this->UpdateLightArtillery();
+        break;
+
+    case BossState::BombTrap:
+        this->m_MoveIntent = {0.0F, 0.0F};
         break;
 
     case BossState::FloatingSatellite:
@@ -871,11 +1145,11 @@ void ZulanInRuins::FireHeavyArtillery() {
             this->GetFaction(),
             kHeavyArtilleryBulletLifetimeMs
         );
-        bullet->SetAbsoluteScale({
-            kHeavyArtilleryBulletVisualScale,
-            kHeavyArtilleryBulletVisualScale
-        });
-        bullet->SetColliderSize({26.0F, 26.0F});
+        ConfigureBulletSize(
+            bullet,
+            kZulanRoundBulletVisualScale,
+            kZulanRoundBulletColliderSize
+        );
         this->m_MapSystem->AddBullet(bullet);
     }
 }
@@ -920,8 +1194,49 @@ void ZulanInRuins::FireLightArtilleryBullet() {
         this->GetFaction(),
         kLightArtilleryBulletLifetimeMs
     );
-    bullet->SetColliderSize({14.0F, 14.0F});
+    ConfigureBulletSize(
+        bullet,
+        kZulanMagicBulletVisualScale,
+        kZulanMagicBulletColliderSize
+    );
     this->m_MapSystem->AddBullet(bullet);
+}
+
+void ZulanInRuins::StartBombTrap() {
+    this->m_MoveIntent = {0.0F, 0.0F};
+    this->SetAllCannonBeamsVisible(false);
+    this->EnterState(BossState::BombTrap);
+    this->FireBombTrap();
+    this->EnterState(BossState::Cooldown);
+}
+
+void ZulanInRuins::FireBombTrap() {
+    if (this->m_MapSystem == nullptr) {
+        return;
+    }
+
+    const glm::vec2 baseDirection = this->NormalizeOrFallback(this->m_FaceDirection);
+    const float baseAngle = std::atan2(baseDirection.y, baseDirection.x);
+    const glm::vec2 origin = this->GetChestFireOrigin();
+    const float step =
+        kBombTrapConeBulletCount <= 1 ?
+            0.0F :
+            kBombTrapConeFanRadians /
+                static_cast<float>(kBombTrapConeBulletCount - 1);
+    const float startAngle = baseAngle - kBombTrapConeFanRadians * 0.5F;
+
+    for (int index = 0; index < kBombTrapConeBulletCount; ++index) {
+        const float angle = startAngle + step * static_cast<float>(index);
+        const glm::vec2 direction = {std::cos(angle), std::sin(angle)};
+        std::shared_ptr<Bullet> bullet =
+            std::make_shared<ZulanBombTrapConeBullet>(
+                origin + direction * 18.0F,
+                direction,
+                this->GetFaction(),
+                this->m_MapSystem
+            );
+        this->m_MapSystem->AddBullet(bullet);
+    }
 }
 
 void ZulanInRuins::StartFloatingSatellite() {
@@ -956,7 +1271,8 @@ void ZulanInRuins::StartFloatingSatellite() {
                     this->m_FloatingSatelliteStartAngle,
                     this->m_FloatingSatelliteRotationDirection,
                     this->GetFaction(),
-                    this->m_MapSystem
+                    this->m_MapSystem,
+                    this->m_FloatingSatelliteStartTime
                 );
             this->m_MapSystem->AddBullet(orb);
         }
@@ -1057,11 +1373,11 @@ void ZulanInRuins::FirePowerfulMotherBullet() {
         this->m_MapSystem,
         this->RandomFloat(0.0F, 2.0F * kPi)
     );
-    bullet->SetAbsoluteScale({
-        kPowerfulMotherBulletVisualScale,
-        kPowerfulMotherBulletVisualScale
-    });
-    bullet->SetColliderSize({30.0F, 30.0F});
+    ConfigureBulletSize(
+        bullet,
+        kZulanLightOrbBulletVisualScale,
+        kZulanLightOrbBulletColliderSize
+    );
     this->m_MapSystem->AddBullet(bullet);
 }
 
@@ -1795,7 +2111,11 @@ void ZulanInRuins::FireCannonBarBurstInDirection(
             this->GetFaction(),
             kBarBulletLifetimeMs
         );
-        bullet->SetColliderSize({18.0F, 8.0F});
+        ConfigureBulletSize(
+            bullet,
+            kZulanBarBulletVisualScale,
+            kZulanBarBulletColliderSize
+        );
         this->m_MapSystem->AddBullet(bullet);
     }
 }
@@ -2035,6 +2355,10 @@ ZulanInRuins::SkillKind ZulanInRuins::RandomSkillKind() {
             SkillKind::LightArtillery;
     }
 
+    if (kDebugForceBombTrapOnly) {
+        return SkillKind::BombTrap;
+    }
+
     if (kDebugForceFloatingSatelliteOnly) {
         return SkillKind::FloatingSatellite;
     }
@@ -2043,7 +2367,8 @@ ZulanInRuins::SkillKind ZulanInRuins::RandomSkillKind() {
         return SkillKind::PowerfulMotherBullet;
     }
 
-    std::uniform_int_distribution<int> distribution(0, 6);
+    const int maxSkillIndex = this->m_Phase == Phase::Angry ? 7 : 6;
+    std::uniform_int_distribution<int> distribution(0, maxSkillIndex);
     switch (distribution(this->m_RandomEngine)) {
     case 0:
         return SkillKind::AutoChase;
@@ -2057,8 +2382,10 @@ ZulanInRuins::SkillKind ZulanInRuins::RandomSkillKind() {
         return SkillKind::LightArtillery;
     case 5:
         return SkillKind::FloatingSatellite;
-    default:
+    case 6:
         return SkillKind::PowerfulMotherBullet;
+    default:
+        return SkillKind::BombTrap;
     }
 }
 

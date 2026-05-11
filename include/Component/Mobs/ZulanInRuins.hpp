@@ -72,6 +72,7 @@ private:
         InterceptLaser,
         HeavyArtillery,
         LightArtillery,
+        BombTrap,
         FloatingSatellite,
         PowerfulMotherBullet,
         Cooldown
@@ -83,6 +84,7 @@ private:
         InterceptLaser,
         HeavyArtillery,
         LightArtillery,
+        BombTrap,
         FloatingSatellite,
         PowerfulMotherBullet
     };
@@ -147,6 +149,8 @@ private:
     void StartLightArtillery();
     void UpdateLightArtillery();
     void FireLightArtilleryBullet();
+    void StartBombTrap();
+    void FireBombTrap();
     void StartFloatingSatellite();
     void UpdateFloatingSatellite();
     glm::vec2 GetFloatingSatellitePosition(std::size_t index, Util::ms_t now) const;
