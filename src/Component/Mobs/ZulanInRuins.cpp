@@ -32,22 +32,42 @@ const std::vector<std::string> kZulanDeathSprite = {
     RESOURCE_DIR"/Mob/Zulan in Ruins/ZulanInRuinsDeath.png"
 };
 
-const std::array<const char *, 4> kCannonSprites = {
+constexpr std::size_t kCannonCount = 5;
+
+const std::array<const char *, kCannonCount> kCannonSprites = {
     RESOURCE_DIR"/Mob/Zulan in Ruins/ZulanInRuinsWeaponTopLeft.png",
     RESOURCE_DIR"/Mob/Zulan in Ruins/ZulanInRuinsWeaponTopRight.png",
     RESOURCE_DIR"/Mob/Zulan in Ruins/ZulanInRuinsWeaponBottomLeft.png",
-    RESOURCE_DIR"/Mob/Zulan in Ruins/ZulanInRuinsWeaponBottomRight.png"
+    RESOURCE_DIR"/Mob/Zulan in Ruins/ZulanInRuinsWeaponBottomRight.png",
+    RESOURCE_DIR"/Mob/Zulan in Ruins/ZulanInRuinsWeaponTopRight.png"
 };
 
-const std::array<glm::vec2, 4> kCannonHomeOffsets = {
-    glm::vec2{-20.0F, 12.0F},
-    glm::vec2{20.0F, 12.0F},
-    glm::vec2{-18.0F, -10.0F},
-    glm::vec2{18.0F, -10.0F}
+const std::array<glm::vec2, kCannonCount> kCannonHomeOffsets = {
+    glm::vec2{-26.0F, 14.0F},
+    glm::vec2{26.0F, 14.0F},
+    glm::vec2{-22.0F, -10.0F},
+    glm::vec2{22.0F, -10.0F},
+    glm::vec2{0.0F, 24.0F}
 };
 
 const std::vector<std::string> kBarBulletSprite = {
     RESOURCE_DIR"/Bullet/EnemyBarBullet.png"
+};
+
+const std::vector<std::string> kHeavyArtilleryBulletSprite = {
+    RESOURCE_DIR"/Bullet/EnemyRoundBullet.png"
+};
+
+const std::vector<std::string> kLightArtilleryBulletSprite = {
+    RESOURCE_DIR"/Bullet/EnemyMagicBullet.png"
+};
+
+const std::vector<std::string> kPowerfulMotherBulletSprite = {
+    RESOURCE_DIR"/Bullet/EnemyLightOrbBullet.png"
+};
+
+const std::vector<std::string> kPowerfulChildBulletSprite = {
+    RESOURCE_DIR"/Bullet/EnemyRoundBullet.png"
 };
 
 const std::string kLaserResource = RESOURCE_DIR"/Bullet/EnemyLaserBullet.png";
@@ -61,7 +81,11 @@ constexpr float kZulanAggroDistance = 520.0F;
 constexpr float kZulanStrafeFlipMinMs = 900.0F;
 constexpr float kZulanStrafeFlipMaxMs = 1800.0F;
 constexpr float kInitialSkillDelayMs = 700.0F;
-constexpr float kAutoChaseCooldownMs = 1300.0F;
+constexpr float kSkillCooldownMs = 1300.0F;
+constexpr bool kDebugForceInterceptLaserOnly = false;
+constexpr bool kDebugForceArtilleryOnly = false;
+constexpr bool kDebugForceFloatingSatelliteOnly = true;
+constexpr bool kDebugForcePowerfulMotherBulletOnly = false;
 
 constexpr float kCannonMoveSpeed = 0.46F;
 constexpr float kCannonStoredZIndex = 3.6F;
@@ -85,12 +109,53 @@ constexpr float kArrayLaserDurationMs = 120.0F;
 constexpr int kBreakthroughArrayRounds = 1;
 constexpr int kRotatingArrayRounds = 5;
 constexpr int kRotatingArrayReturnAfterRounds = 3;
+constexpr float kInterceptLineForwardOffset = 96.0F;
+constexpr float kInterceptLineSpacing = 36.0F;
+constexpr float kInterceptFormationGraceMs = 760.0F;
+constexpr int kInterceptSecondRoundFrontCount = 2;
 
 constexpr int kAutoChaseDamage = 2;
+constexpr int kHeavyArtilleryDamage = 3;
+constexpr int kLightArtilleryDamage = 2;
+constexpr int kFloatingSatelliteOrbDamage = 1;
+constexpr int kFloatingSatelliteBarDamage = 2;
+constexpr int kPowerfulMotherBulletDamage = 3;
+constexpr int kPowerfulChildBulletDamage = 3;
 constexpr int kBarBurstCount = 5;
+constexpr int kHeavyArtilleryBulletCount = 9;
+constexpr int kPowerfulChildBulletCount = 4;
 constexpr float kBarBulletSpeed = 0.54F;
 constexpr float kBarBulletSpreadRadians = 0.36F;
 constexpr float kBarBulletLifetimeMs = 2600.0F;
+constexpr float kHeavyArtilleryBulletSpeed = 0.44F;
+constexpr float kHeavyArtilleryBulletLifetimeMs = 3200.0F;
+constexpr float kHeavyArtilleryBulletVisualScale = 1.25F;
+constexpr float kLightArtilleryBulletSpeed = 0.66F;
+constexpr float kLightArtilleryBulletLifetimeMs = 2400.0F;
+constexpr float kLightArtilleryDurationMs = 2300.0F;
+constexpr float kLightArtilleryShotIntervalMs = 145.0F;
+constexpr float kChestFireForwardOffset = 22.0F;
+constexpr float kFloatingSatelliteLifetimeMs = 4200.0F;
+constexpr float kFloatingSatelliteCannonDriftMs = 360.0F;
+constexpr float kFloatingSatelliteRotationSpeedRadiansPerMs = 0.002992F;
+constexpr float kFloatingSatelliteStartDistance = 40.0F;
+constexpr float kFloatingSatelliteSpacing = 24.0F;
+constexpr float kFloatingSatelliteOrbVisualScale = 1.08F;
+constexpr float kFloatingSatelliteOrbColliderSize = 24.0F;
+constexpr float kFloatingSatelliteBarBulletSpeed = 0.28F;
+constexpr float kFloatingSatelliteBarBulletLifetimeMs = 2600.0F;
+constexpr float kFloatingSatelliteBarEmitIntervalMs = 420.0F;
+constexpr float kFloatingSatelliteBarEmitInitialDelayMs = 150.0F;
+constexpr float kFloatingSatelliteBarSpawnOffset = 18.0F;
+constexpr float kPowerfulMotherBulletSpeed = 0.36F;
+constexpr float kPowerfulMotherBulletLifetimeMs = 3300.0F;
+constexpr float kPowerfulMotherBulletVisualScale = 1.45F;
+constexpr float kPowerfulChildBulletSpeed = 0.58F;
+constexpr float kPowerfulChildBulletLifetimeMs = 1800.0F;
+constexpr float kPowerfulChildBulletEmitIntervalMs = 150.0F;
+constexpr float kPowerfulChildBulletEmitInitialDelayMs = 90.0F;
+constexpr float kPowerfulChildBulletVortexRadiansPerMs = 0.0062F;
+constexpr float kPowerfulChildBulletSpawnOffset = 22.0F;
 constexpr float kLaserFallbackLength = MAP_PIXEL_PER_BLOCK * 6.0F;
 constexpr float kWarningThicknessScale = 0.07F;
 constexpr float kLaserThicknessScale = 0.30F;
@@ -126,6 +191,42 @@ glm::vec2 RotateVector(const glm::vec2 &vector, float radians) {
     };
 }
 
+float GetFloatingSatelliteAngle(
+    float startAngle,
+    int rotationDirection,
+    float elapsedMs
+) {
+    return startAngle +
+        static_cast<float>(rotationDirection) *
+            kFloatingSatelliteRotationSpeedRadiansPerMs *
+            elapsedMs;
+}
+
+glm::vec2 GetFloatingSatelliteDirection(
+    float startAngle,
+    int rotationDirection,
+    float elapsedMs
+) {
+    const float angle =
+        GetFloatingSatelliteAngle(startAngle, rotationDirection, elapsedMs);
+    return {std::cos(angle), std::sin(angle)};
+}
+
+glm::vec2 GetFloatingSatellitePosition(
+    const glm::vec2 &center,
+    std::size_t index,
+    float startAngle,
+    int rotationDirection,
+    float elapsedMs
+) {
+    const glm::vec2 direction =
+        GetFloatingSatelliteDirection(startAngle, rotationDirection, elapsedMs);
+    const float distance =
+        kFloatingSatelliteStartDistance +
+            kFloatingSatelliteSpacing * static_cast<float>(index);
+    return center + direction * distance;
+}
+
 class ZulanTimedBullet : public Bullet {
 public:
     ZulanTimedBullet(
@@ -152,6 +253,204 @@ public:
 private:
     Util::ms_t m_SpawnTime = 0;
     float m_LifetimeMs = 0.0F;
+};
+
+class ZulanFloatingSatelliteOrbBullet : public Bullet {
+public:
+    ZulanFloatingSatelliteOrbBullet(
+        const glm::vec2 &center,
+        std::size_t satelliteIndex,
+        float startAngle,
+        int rotationDirection,
+        CombatFaction faction,
+        MapSystem* mapSystem
+    ) : Bullet(
+            kPowerfulMotherBulletSprite,
+            GetFloatingSatellitePosition(
+                center,
+                satelliteIndex,
+                startAngle,
+                rotationDirection,
+                0.0F
+            ),
+            {0.0F, 0.0F},
+            5,
+            kFloatingSatelliteOrbDamage,
+            faction
+        ),
+        m_MapSystem(mapSystem),
+        m_Center(center),
+        m_SatelliteIndex(satelliteIndex),
+        m_StartTime(Util::Time::GetElapsedTimeMs()),
+        m_NextEmitTime(
+            this->m_StartTime +
+                kFloatingSatelliteBarEmitInitialDelayMs +
+                static_cast<float>(satelliteIndex) *
+                    kFloatingSatelliteBarEmitIntervalMs /
+                    static_cast<float>(kCannonCount)
+        ),
+        m_StartAngle(startAngle),
+        m_RotationDirection(rotationDirection) {
+        this->SetAbsoluteScale({
+            kFloatingSatelliteOrbVisualScale,
+            kFloatingSatelliteOrbVisualScale
+        });
+        this->SetColliderSize({
+            kFloatingSatelliteOrbColliderSize,
+            kFloatingSatelliteOrbColliderSize
+        });
+    }
+
+    void Update() override {
+        const Util::ms_t now = Util::Time::GetElapsedTimeMs();
+        const float elapsedMs = static_cast<float>(now - this->m_StartTime);
+
+        if (elapsedMs >= kFloatingSatelliteLifetimeMs) {
+            this->RequestDestroy();
+            return;
+        }
+
+        this->UpdateOrbit(elapsedMs);
+
+        while (now >= this->m_NextEmitTime && !this->IsDestroyRequested()) {
+            this->EmitBarBullet(this->m_NextEmitTime);
+            this->m_NextEmitTime += kFloatingSatelliteBarEmitIntervalMs;
+        }
+    }
+
+private:
+    void UpdateOrbit(float elapsedMs) {
+        const glm::vec2 direction = GetFloatingSatelliteDirection(
+            this->m_StartAngle,
+            this->m_RotationDirection,
+            elapsedMs
+        );
+        this->SetAbsoluteTranslation(GetFloatingSatellitePosition(
+            this->m_Center,
+            this->m_SatelliteIndex,
+            this->m_StartAngle,
+            this->m_RotationDirection,
+            elapsedMs
+        ));
+        this->SetAbsoluteRotation(std::atan2(direction.y, direction.x));
+    }
+
+    void EmitBarBullet(Util::ms_t emitTime) {
+        if (this->m_MapSystem == nullptr) {
+            return;
+        }
+
+        const float elapsedMs = static_cast<float>(emitTime - this->m_StartTime);
+        const glm::vec2 direction = GetFloatingSatelliteDirection(
+            this->m_StartAngle,
+            this->m_RotationDirection,
+            elapsedMs
+        );
+        const glm::vec2 origin = GetFloatingSatellitePosition(
+            this->m_Center,
+            this->m_SatelliteIndex,
+            this->m_StartAngle,
+            this->m_RotationDirection,
+            elapsedMs
+        );
+
+        std::shared_ptr<Bullet> bullet = std::make_shared<ZulanTimedBullet>(
+            kBarBulletSprite,
+            origin + direction * kFloatingSatelliteBarSpawnOffset,
+            direction * kFloatingSatelliteBarBulletSpeed,
+            kFloatingSatelliteBarDamage,
+            this->GetFaction(),
+            kFloatingSatelliteBarBulletLifetimeMs
+        );
+        bullet->SetColliderSize({18.0F, 8.0F});
+        this->m_MapSystem->AddBullet(bullet);
+    }
+
+    MapSystem* m_MapSystem = nullptr;
+    glm::vec2 m_Center = {0.0F, 0.0F};
+    std::size_t m_SatelliteIndex = 0;
+    Util::ms_t m_StartTime = 0;
+    Util::ms_t m_NextEmitTime = 0;
+    float m_StartAngle = 0.0F;
+    int m_RotationDirection = 1;
+};
+
+class ZulanVortexMotherBullet : public Bullet {
+public:
+    ZulanVortexMotherBullet(
+        const glm::vec2 &coordinate,
+        const glm::vec2 &momentum,
+        CombatFaction faction,
+        MapSystem* mapSystem,
+        float initialVortexAngle
+    ) : Bullet(
+            kPowerfulMotherBulletSprite,
+            coordinate,
+            momentum,
+            4,
+            kPowerfulMotherBulletDamage,
+            faction
+        ),
+        m_MapSystem(mapSystem),
+        m_SpawnTime(Util::Time::GetElapsedTimeMs()),
+        m_NextEmitTime(
+            this->m_SpawnTime + kPowerfulChildBulletEmitInitialDelayMs
+        ),
+        m_InitialVortexAngle(initialVortexAngle) {
+    }
+
+    void Update() override {
+        const Util::ms_t now = Util::Time::GetElapsedTimeMs();
+        if (now - this->m_SpawnTime >= kPowerfulMotherBulletLifetimeMs) {
+            this->RequestDestroy();
+            return;
+        }
+
+        while (now >= this->m_NextEmitTime && !this->IsDestroyRequested()) {
+            this->EmitChildBullets(this->m_NextEmitTime);
+            this->m_NextEmitTime += kPowerfulChildBulletEmitIntervalMs;
+        }
+
+        Bullet::Update();
+    }
+
+private:
+    void EmitChildBullets(Util::ms_t emitTime) {
+        if (this->m_MapSystem == nullptr) {
+            return;
+        }
+
+        const float elapsedMs =
+            static_cast<float>(emitTime - this->m_SpawnTime);
+        const float baseAngle =
+            this->m_InitialVortexAngle +
+            elapsedMs * kPowerfulChildBulletVortexRadiansPerMs;
+
+        for (int index = 0; index < kPowerfulChildBulletCount; ++index) {
+            const float angle =
+                baseAngle +
+                2.0F * kPi * static_cast<float>(index) /
+                    static_cast<float>(kPowerfulChildBulletCount);
+            const glm::vec2 direction = {std::cos(angle), std::sin(angle)};
+
+            std::shared_ptr<Bullet> bullet = std::make_shared<ZulanTimedBullet>(
+                kPowerfulChildBulletSprite,
+                this->GetAbsoluteTranslation() +
+                    direction * kPowerfulChildBulletSpawnOffset,
+                direction * kPowerfulChildBulletSpeed,
+                kPowerfulChildBulletDamage,
+                this->GetFaction(),
+                kPowerfulChildBulletLifetimeMs
+            );
+            bullet->SetColliderSize({18.0F, 18.0F});
+            this->m_MapSystem->AddBullet(bullet);
+        }
+    }
+
+    MapSystem* m_MapSystem = nullptr;
+    Util::ms_t m_SpawnTime = 0;
+    Util::ms_t m_NextEmitTime = 0;
+    float m_InitialVortexAngle = 0.0F;
 };
 
 } // namespace
@@ -237,6 +536,7 @@ ZulanInRuins::ZulanInRuins(
         this->m_Cannons.push_back(cannon);
     }
 
+    this->m_NextSkill = this->RandomSkillKind();
     this->m_NextSkillTime = Util::Time::GetElapsedTimeMs() + kInitialSkillDelayMs;
 }
 
@@ -330,6 +630,16 @@ void ZulanInRuins::UpdateState() {
         if (glm::length(toTarget) <= kZulanAggroDistance && now >= this->m_NextSkillTime) {
             if (this->m_NextSkill == SkillKind::AutoChase) {
                 this->StartAutoChase(target);
+            } else if (this->m_NextSkill == SkillKind::InterceptLaser) {
+                this->StartInterceptLaser(target);
+            } else if (this->m_NextSkill == SkillKind::HeavyArtillery) {
+                this->StartHeavyArtillery();
+            } else if (this->m_NextSkill == SkillKind::LightArtillery) {
+                this->StartLightArtillery();
+            } else if (this->m_NextSkill == SkillKind::FloatingSatellite) {
+                this->StartFloatingSatellite();
+            } else if (this->m_NextSkill == SkillKind::PowerfulMotherBullet) {
+                this->StartPowerfulMotherBullet();
             } else {
                 this->StartArrayShot(target);
             }
@@ -345,6 +655,29 @@ void ZulanInRuins::UpdateState() {
             this->m_MoveIntent = {0.0F, 0.0F};
         }
         this->UpdateArrayShot(target);
+        break;
+
+    case BossState::InterceptLaser:
+        this->m_MoveIntent = {0.0F, 0.0F};
+        this->UpdateInterceptLaser(target);
+        break;
+
+    case BossState::HeavyArtillery:
+        this->m_MoveIntent = {0.0F, 0.0F};
+        break;
+
+    case BossState::LightArtillery:
+        this->m_MoveIntent = {0.0F, 0.0F};
+        this->UpdateLightArtillery();
+        break;
+
+    case BossState::FloatingSatellite:
+        this->m_MoveIntent = {0.0F, 0.0F};
+        this->UpdateFloatingSatellite();
+        break;
+
+    case BossState::PowerfulMotherBullet:
+        this->m_MoveIntent = {0.0F, 0.0F};
         break;
 
     case BossState::Cooldown:
@@ -364,7 +697,8 @@ void ZulanInRuins::EnterState(BossState state) {
     this->m_StateStartTime = Util::Time::GetElapsedTimeMs();
 
     if (state == BossState::Cooldown) {
-        this->m_NextSkillTime = this->m_StateStartTime + kAutoChaseCooldownMs;
+        this->m_NextSkill = this->RandomSkillKind();
+        this->m_NextSkillTime = this->m_StateStartTime + kSkillCooldownMs;
     }
 }
 
@@ -444,7 +778,6 @@ void ZulanInRuins::UpdateAutoChase(const std::shared_ptr<Character> &target) {
     }
 
     if (this->AreCannonsHome()) {
-        this->m_NextSkill = SkillKind::ArrayShot;
         this->EnterState(BossState::Cooldown);
     }
 }
@@ -508,6 +841,500 @@ void ZulanInRuins::UpdateArrayShot(const std::shared_ptr<Character> &target) {
     this->UpdateRotatingArrayShot();
 }
 
+void ZulanInRuins::StartHeavyArtillery() {
+    this->m_MoveIntent = {0.0F, 0.0F};
+    this->SetAllCannonBeamsVisible(false);
+    this->FireHeavyArtillery();
+    this->EnterState(BossState::Cooldown);
+}
+
+void ZulanInRuins::FireHeavyArtillery() {
+    if (this->m_MapSystem == nullptr) {
+        return;
+    }
+
+    const glm::vec2 origin = this->GetChestFireOrigin();
+    const float startAngle = this->RandomFloat(0.0F, 2.0F * kPi);
+
+    for (int index = 0; index < kHeavyArtilleryBulletCount; ++index) {
+        const float angle =
+            startAngle +
+            2.0F * kPi * static_cast<float>(index) /
+                static_cast<float>(kHeavyArtilleryBulletCount);
+        const glm::vec2 direction = {std::cos(angle), std::sin(angle)};
+
+        std::shared_ptr<Bullet> bullet = std::make_shared<ZulanTimedBullet>(
+            kHeavyArtilleryBulletSprite,
+            origin + direction * 20.0F,
+            direction * kHeavyArtilleryBulletSpeed,
+            kHeavyArtilleryDamage,
+            this->GetFaction(),
+            kHeavyArtilleryBulletLifetimeMs
+        );
+        bullet->SetAbsoluteScale({
+            kHeavyArtilleryBulletVisualScale,
+            kHeavyArtilleryBulletVisualScale
+        });
+        bullet->SetColliderSize({26.0F, 26.0F});
+        this->m_MapSystem->AddBullet(bullet);
+    }
+}
+
+void ZulanInRuins::StartLightArtillery() {
+    const Util::ms_t now = Util::Time::GetElapsedTimeMs();
+    this->m_MoveIntent = {0.0F, 0.0F};
+    this->m_LightArtilleryEndTime = now + kLightArtilleryDurationMs;
+    this->m_NextLightArtilleryShotTime = now;
+    this->SetAllCannonBeamsVisible(false);
+    this->EnterState(BossState::LightArtillery);
+}
+
+void ZulanInRuins::UpdateLightArtillery() {
+    const Util::ms_t now = Util::Time::GetElapsedTimeMs();
+    if (now >= this->m_NextLightArtilleryShotTime &&
+        now < this->m_LightArtilleryEndTime) {
+        this->FireLightArtilleryBullet();
+        this->m_NextLightArtilleryShotTime =
+            now + kLightArtilleryShotIntervalMs;
+    }
+
+    if (now >= this->m_LightArtilleryEndTime) {
+        this->EnterState(BossState::Cooldown);
+    }
+}
+
+void ZulanInRuins::FireLightArtilleryBullet() {
+    if (this->m_MapSystem == nullptr) {
+        return;
+    }
+
+    const float angle = this->RandomFloat(0.0F, 2.0F * kPi);
+    const glm::vec2 direction = {std::cos(angle), std::sin(angle)};
+    const glm::vec2 origin = this->GetChestFireOrigin();
+
+    std::shared_ptr<Bullet> bullet = std::make_shared<ZulanTimedBullet>(
+        kLightArtilleryBulletSprite,
+        origin + direction * 16.0F,
+        direction * kLightArtilleryBulletSpeed,
+        kLightArtilleryDamage,
+        this->GetFaction(),
+        kLightArtilleryBulletLifetimeMs
+    );
+    bullet->SetColliderSize({14.0F, 14.0F});
+    this->m_MapSystem->AddBullet(bullet);
+}
+
+void ZulanInRuins::StartFloatingSatellite() {
+    const Util::ms_t now = Util::Time::GetElapsedTimeMs();
+    const glm::vec2 facing = this->NormalizeOrFallback(this->m_FaceDirection);
+
+    this->m_MoveIntent = {0.0F, 0.0F};
+    this->m_FloatingSatelliteStartTime = now;
+    this->m_FloatingSatelliteCenter = this->GetAbsoluteTranslation();
+    this->m_FloatingSatelliteStartAngle = std::atan2(facing.y, facing.x);
+    this->m_FloatingSatelliteRotationDirection = facing.x >= 0.0F ? 1 : -1;
+    this->m_FloatingSatelliteReturning = false;
+    this->SetAllCannonBeamsVisible(false);
+
+    for (std::size_t index = 0; index < this->m_Cannons.size(); ++index) {
+        FloatingCannon &cannon = this->m_Cannons[index];
+        cannon.state = CannonState::Ready;
+        cannon.position = this->GetFloatingSatellitePosition(index, now);
+        cannon.fireDirection = this->GetFloatingSatelliteDirection(now);
+        cannon.laserDamageApplied = false;
+        if (cannon.visual != nullptr) {
+            cannon.visual->SetZIndex(kCannonActiveZIndex);
+        }
+        this->SetBeamVisible(cannon, cannon.warningVisual, cannon.warningAttached, false);
+        this->SetBeamVisible(cannon, cannon.laserVisual, cannon.laserAttached, false);
+
+        if (this->m_MapSystem != nullptr) {
+            std::shared_ptr<Bullet> orb =
+                std::make_shared<ZulanFloatingSatelliteOrbBullet>(
+                    this->m_FloatingSatelliteCenter,
+                    index,
+                    this->m_FloatingSatelliteStartAngle,
+                    this->m_FloatingSatelliteRotationDirection,
+                    this->GetFaction(),
+                    this->m_MapSystem
+                );
+            this->m_MapSystem->AddBullet(orb);
+        }
+    }
+
+    this->EnterState(BossState::FloatingSatellite);
+}
+
+void ZulanInRuins::UpdateFloatingSatellite() {
+    const Util::ms_t now = Util::Time::GetElapsedTimeMs();
+    const float elapsedMs =
+        static_cast<float>(now - this->m_FloatingSatelliteStartTime);
+
+    if (!this->m_FloatingSatelliteReturning &&
+        elapsedMs < kFloatingSatelliteLifetimeMs + kFloatingSatelliteCannonDriftMs) {
+        for (std::size_t index = 0; index < this->m_Cannons.size(); ++index) {
+            FloatingCannon &cannon = this->m_Cannons[index];
+            cannon.state = CannonState::Ready;
+            cannon.position = this->GetFloatingSatellitePosition(index, now);
+            cannon.fireDirection = this->GetFloatingSatelliteDirection(now);
+            if (cannon.visual != nullptr) {
+                cannon.visual->SetZIndex(kCannonActiveZIndex);
+            }
+        }
+        return;
+    }
+
+    if (!this->m_FloatingSatelliteReturning) {
+        this->m_FloatingSatelliteReturning = true;
+        for (FloatingCannon &cannon : this->m_Cannons) {
+            cannon.state = CannonState::Returning;
+            this->SetBeamVisible(cannon, cannon.warningVisual, cannon.warningAttached, false);
+            this->SetBeamVisible(cannon, cannon.laserVisual, cannon.laserAttached, false);
+        }
+    }
+
+    for (FloatingCannon &cannon : this->m_Cannons) {
+        if (cannon.visual != nullptr) {
+            cannon.visual->SetZIndex(kCannonStoredZIndex);
+        }
+        this->MoveCannonToward(
+            cannon,
+            this->GetAbsoluteTranslation() + cannon.homeOffset
+        );
+    }
+
+    if (this->AreCannonsAtHome()) {
+        this->ResetCannonsToHome();
+        this->EnterState(BossState::Cooldown);
+    }
+}
+
+glm::vec2 ZulanInRuins::GetFloatingSatellitePosition(
+    std::size_t index,
+    Util::ms_t now
+) const {
+    const float elapsedMs =
+        static_cast<float>(now - this->m_FloatingSatelliteStartTime);
+    return ::GetFloatingSatellitePosition(
+        this->m_FloatingSatelliteCenter,
+        index,
+        this->m_FloatingSatelliteStartAngle,
+        this->m_FloatingSatelliteRotationDirection,
+        elapsedMs
+    );
+}
+
+glm::vec2 ZulanInRuins::GetFloatingSatelliteDirection(Util::ms_t now) const {
+    const float elapsedMs =
+        static_cast<float>(now - this->m_FloatingSatelliteStartTime);
+    return ::GetFloatingSatelliteDirection(
+        this->m_FloatingSatelliteStartAngle,
+        this->m_FloatingSatelliteRotationDirection,
+        elapsedMs
+    );
+}
+
+void ZulanInRuins::StartPowerfulMotherBullet() {
+    this->m_MoveIntent = {0.0F, 0.0F};
+    this->SetAllCannonBeamsVisible(false);
+    this->EnterState(BossState::PowerfulMotherBullet);
+    this->FirePowerfulMotherBullet();
+    this->EnterState(BossState::Cooldown);
+}
+
+void ZulanInRuins::FirePowerfulMotherBullet() {
+    if (this->m_MapSystem == nullptr) {
+        return;
+    }
+
+    const glm::vec2 direction = this->NormalizeOrFallback(this->m_FaceDirection);
+    const glm::vec2 origin = this->GetChestFireOrigin();
+
+    std::shared_ptr<Bullet> bullet = std::make_shared<ZulanVortexMotherBullet>(
+        origin + direction * 18.0F,
+        direction * kPowerfulMotherBulletSpeed,
+        this->GetFaction(),
+        this->m_MapSystem,
+        this->RandomFloat(0.0F, 2.0F * kPi)
+    );
+    bullet->SetAbsoluteScale({
+        kPowerfulMotherBulletVisualScale,
+        kPowerfulMotherBulletVisualScale
+    });
+    bullet->SetColliderSize({30.0F, 30.0F});
+    this->m_MapSystem->AddBullet(bullet);
+}
+
+void ZulanInRuins::StartInterceptLaser(
+    const std::shared_ptr<Character> &target
+) {
+    const Util::ms_t now = Util::Time::GetElapsedTimeMs();
+    this->m_InterceptState = InterceptState::MovingToLine;
+    this->m_InterceptStepStartTime = now;
+    this->m_InterceptRound = 1;
+    this->m_InterceptCurrentIndex = 0;
+    this->m_InterceptActiveCount = static_cast<int>(this->m_Cannons.size());
+    this->m_InterceptSecondRoundPending = this->RandomBool();
+
+    for (FloatingCannon &cannon : this->m_Cannons) {
+        cannon.state = CannonState::Approaching;
+        cannon.laserDamageApplied = false;
+        if (cannon.visual != nullptr) {
+            cannon.visual->SetZIndex(kCannonActiveZIndex);
+        }
+        if (target != nullptr) {
+            cannon.fireDirection =
+                this->GetInterceptFireDirection(cannon, target);
+        }
+        this->SetBeamVisible(cannon, cannon.warningVisual, cannon.warningAttached, false);
+        this->SetBeamVisible(cannon, cannon.laserVisual, cannon.laserAttached, false);
+    }
+
+    this->EnterState(BossState::InterceptLaser);
+}
+
+void ZulanInRuins::UpdateInterceptLaser(
+    const std::shared_ptr<Character> &target
+) {
+    const Util::ms_t now = Util::Time::GetElapsedTimeMs();
+
+    switch (this->m_InterceptState) {
+    case InterceptState::MovingToLine: {
+        const bool ready = this->MoveCannonsToInterceptLine(target);
+        if (ready ||
+            now - this->m_StateStartTime >=
+                kArrayFormationDelayMs + kInterceptFormationGraceMs) {
+            this->StartNextInterceptCannonWarning(target);
+        }
+        break;
+    }
+
+    case InterceptState::Warning: {
+        if (this->m_InterceptCurrentIndex < 0 ||
+            this->m_InterceptCurrentIndex >= static_cast<int>(this->m_Cannons.size())) {
+            this->StartInterceptReturn();
+            break;
+        }
+
+        FloatingCannon &cannon = this->m_Cannons[this->m_InterceptCurrentIndex];
+        if (cannon.warningVisual != nullptr) {
+            cannon.warningVisual->ConfigureBeam(
+                cannon.position,
+                cannon.fireDirection,
+                cannon.beamLength,
+                kWarningThicknessScale
+            );
+        }
+        if (now - this->m_InterceptStepStartTime >= kCannonLaserWarningMs) {
+            this->FireInterceptCannon();
+        }
+        break;
+    }
+
+    case InterceptState::Firing: {
+        if (this->m_InterceptCurrentIndex < 0 ||
+            this->m_InterceptCurrentIndex >= static_cast<int>(this->m_Cannons.size())) {
+            this->StartInterceptReturn();
+            break;
+        }
+
+        FloatingCannon &cannon = this->m_Cannons[this->m_InterceptCurrentIndex];
+        if (cannon.laserVisual != nullptr) {
+            cannon.laserVisual->ConfigureBeam(
+                cannon.position,
+                cannon.fireDirection,
+                cannon.beamLength,
+                kLaserThicknessScale
+            );
+        }
+        if (now - this->m_InterceptStepStartTime >= kCannonLaserDurationMs) {
+            this->FinishInterceptCannon(target);
+        }
+        break;
+    }
+
+    case InterceptState::Returning:
+        for (FloatingCannon &cannon : this->m_Cannons) {
+            if (cannon.visual != nullptr) {
+                cannon.visual->SetZIndex(kCannonStoredZIndex);
+            }
+            this->MoveCannonToward(
+                cannon,
+                this->GetAbsoluteTranslation() + cannon.homeOffset
+            );
+        }
+        if (this->AreCannonsAtHome()) {
+            this->ResetCannonsToHome();
+            this->EnterState(BossState::Cooldown);
+        }
+        break;
+    }
+}
+
+bool ZulanInRuins::MoveCannonsToInterceptLine(
+    const std::shared_ptr<Character> &target
+) {
+    bool allReady = true;
+    for (std::size_t index = 0; index < this->m_Cannons.size(); ++index) {
+        FloatingCannon &cannon = this->m_Cannons[index];
+        const glm::vec2 targetPosition =
+            this->GetInterceptLinePosition(index, target);
+        this->MoveCannonToward(cannon, targetPosition);
+        cannon.fireDirection = this->GetInterceptFireDirection(cannon, target);
+        if (glm::distance(cannon.position, targetPosition) > kCannonArrivalDistance) {
+            allReady = false;
+        }
+    }
+
+    return allReady;
+}
+
+glm::vec2 ZulanInRuins::GetInterceptLinePosition(
+    std::size_t index,
+    const std::shared_ptr<Character> &target
+) const {
+    const glm::vec2 origin = this->GetAbsoluteTranslation();
+    glm::vec2 forward = this->m_FaceDirection;
+    if (target != nullptr) {
+        const glm::vec2 toTarget = target->GetAbsoluteTranslation() - origin;
+        if (glm::length(toTarget) > 0.0001F) {
+            forward = glm::normalize(toTarget);
+        }
+    }
+    forward = this->NormalizeOrFallback(forward);
+
+    const glm::vec2 side = {-forward.y, forward.x};
+    const float centerIndex =
+        (static_cast<float>(this->m_Cannons.size()) - 1.0F) * 0.5F;
+    const float slot = static_cast<float>(index) - centerIndex;
+    return origin +
+        forward * kInterceptLineForwardOffset +
+        side * slot * kInterceptLineSpacing;
+}
+
+glm::vec2 ZulanInRuins::GetInterceptFireDirection(
+    const FloatingCannon &cannon,
+    const std::shared_ptr<Character> &target
+) const {
+    if (target != nullptr) {
+        return this->NormalizeOrFallback(
+            target->GetAbsoluteTranslation() - cannon.position
+        );
+    }
+
+    return this->NormalizeOrFallback(this->m_FaceDirection);
+}
+
+void ZulanInRuins::StartNextInterceptCannonWarning(
+    const std::shared_ptr<Character> &target
+) {
+    if (this->m_InterceptCurrentIndex >= this->m_InterceptActiveCount ||
+        this->m_InterceptCurrentIndex >= static_cast<int>(this->m_Cannons.size())) {
+        if (this->m_InterceptRound == 1 && this->m_InterceptSecondRoundPending) {
+            this->StartInterceptSecondRound(target);
+            return;
+        }
+
+        this->StartInterceptReturn();
+        return;
+    }
+
+    FloatingCannon &cannon = this->m_Cannons[this->m_InterceptCurrentIndex];
+    cannon.fireDirection = this->GetInterceptFireDirection(cannon, target);
+    cannon.beamLength = this->ComputeRoomClippedBeamLength(
+        cannon.position,
+        cannon.fireDirection,
+        kLaserFallbackLength
+    );
+    cannon.laserDamageApplied = false;
+    cannon.state = CannonState::WarningLaser;
+    cannon.stateStartTime = Util::Time::GetElapsedTimeMs();
+    this->m_InterceptStepStartTime = cannon.stateStartTime;
+    this->m_InterceptState = InterceptState::Warning;
+
+    if (cannon.warningVisual != nullptr) {
+        cannon.warningVisual->ConfigureBeam(
+            cannon.position,
+            cannon.fireDirection,
+            cannon.beamLength,
+            kWarningThicknessScale
+        );
+    }
+    this->SetBeamVisible(cannon, cannon.warningVisual, cannon.warningAttached, true);
+    this->SetBeamVisible(cannon, cannon.laserVisual, cannon.laserAttached, false);
+}
+
+void ZulanInRuins::FireInterceptCannon() {
+    if (this->m_InterceptCurrentIndex < 0 ||
+        this->m_InterceptCurrentIndex >= static_cast<int>(this->m_Cannons.size())) {
+        this->StartInterceptReturn();
+        return;
+    }
+
+    FloatingCannon &cannon = this->m_Cannons[this->m_InterceptCurrentIndex];
+    this->FireCannonLaser(cannon);
+    const glm::vec2 laserEnd =
+        cannon.position + cannon.fireDirection * cannon.beamLength;
+    this->DamagePlayersAlongLaser(cannon.position, laserEnd);
+    cannon.laserDamageApplied = true;
+    this->m_InterceptStepStartTime = Util::Time::GetElapsedTimeMs();
+    this->m_InterceptState = InterceptState::Firing;
+}
+
+void ZulanInRuins::FinishInterceptCannon(
+    const std::shared_ptr<Character> &target
+) {
+    if (this->m_InterceptCurrentIndex < 0 ||
+        this->m_InterceptCurrentIndex >= static_cast<int>(this->m_Cannons.size())) {
+        this->StartInterceptReturn();
+        return;
+    }
+
+    FloatingCannon &cannon = this->m_Cannons[this->m_InterceptCurrentIndex];
+    this->SetBeamVisible(cannon, cannon.warningVisual, cannon.warningAttached, false);
+    this->SetBeamVisible(cannon, cannon.laserVisual, cannon.laserAttached, false);
+    cannon.state = CannonState::Ready;
+    ++this->m_InterceptCurrentIndex;
+    this->StartNextInterceptCannonWarning(target);
+}
+
+void ZulanInRuins::StartInterceptSecondRound(
+    const std::shared_ptr<Character> &target
+) {
+    this->m_InterceptRound = 2;
+    this->m_InterceptCurrentIndex = 0;
+    const int cannonCount = static_cast<int>(this->m_Cannons.size());
+    this->m_InterceptActiveCount =
+        this->RandomBool() ?
+            std::min(kInterceptSecondRoundFrontCount, cannonCount) :
+            cannonCount;
+
+    for (std::size_t index = 0; index < this->m_Cannons.size(); ++index) {
+        FloatingCannon &cannon = this->m_Cannons[index];
+        cannon.position = this->GetInterceptLinePosition(index, target);
+        cannon.fireDirection = this->GetInterceptFireDirection(cannon, target);
+        cannon.state = CannonState::Ready;
+        cannon.laserDamageApplied = false;
+        if (cannon.visual != nullptr) {
+            cannon.visual->SetZIndex(kCannonActiveZIndex);
+        }
+        this->SetBeamVisible(cannon, cannon.warningVisual, cannon.warningAttached, false);
+        this->SetBeamVisible(cannon, cannon.laserVisual, cannon.laserAttached, false);
+    }
+
+    this->StartNextInterceptCannonWarning(target);
+}
+
+void ZulanInRuins::StartInterceptReturn() {
+    this->m_InterceptState = InterceptState::Returning;
+    this->m_InterceptStepStartTime = Util::Time::GetElapsedTimeMs();
+    for (FloatingCannon &cannon : this->m_Cannons) {
+        cannon.state = CannonState::Returning;
+        this->SetBeamVisible(cannon, cannon.warningVisual, cannon.warningAttached, false);
+        this->SetBeamVisible(cannon, cannon.laserVisual, cannon.laserAttached, false);
+    }
+}
+
 void ZulanInRuins::UpdateBreakthroughArrayShot(
     const std::shared_ptr<Character> &target
 ) {
@@ -536,7 +1363,6 @@ void ZulanInRuins::UpdateBreakthroughArrayShot(
     }
     if (this->AreCannonsAtHome()) {
         this->ResetCannonsToHome();
-        this->m_NextSkill = SkillKind::ArrayShot;
         this->EnterState(BossState::Cooldown);
     }
 }
@@ -581,7 +1407,6 @@ void ZulanInRuins::UpdateRotatingArrayShot() {
         !this->IsArrayRoundBusy() &&
         this->AreCannonsAtHome()) {
         this->ResetCannonsToHome();
-        this->m_NextSkill = SkillKind::ArrayShot;
         this->EnterState(BossState::Cooldown);
     }
 }
@@ -1128,6 +1953,16 @@ void ZulanInRuins::DamagePlayersAlongLaser(
     }
 }
 
+glm::vec2 ZulanInRuins::GetChestFireOrigin() const {
+    glm::vec2 fireDirection = this->m_FaceDirection;
+    if (glm::length(fireDirection) <= 0.0001F) {
+        fireDirection = {1.0F, 0.0F};
+    }
+
+    return this->GetAbsoluteTranslation() +
+        glm::normalize(fireDirection) * kChestFireForwardOffset;
+}
+
 float ZulanInRuins::ComputeRoomClippedBeamLength(
     const glm::vec2 &start,
     const glm::vec2 &direction,
@@ -1187,6 +2022,44 @@ glm::vec2 ZulanInRuins::RandomChaseOffset() {
     const float angle = this->RandomFloat(0.0F, 2.0F * kPi);
     const float radius = this->RandomFloat(kCannonChaseOffsetMin, kCannonChaseOffsetMax);
     return {std::cos(angle) * radius, std::sin(angle) * radius};
+}
+
+ZulanInRuins::SkillKind ZulanInRuins::RandomSkillKind() {
+    if (kDebugForceInterceptLaserOnly) {
+        return SkillKind::InterceptLaser;
+    }
+
+    if (kDebugForceArtilleryOnly) {
+        return this->RandomBool() ?
+            SkillKind::HeavyArtillery :
+            SkillKind::LightArtillery;
+    }
+
+    if (kDebugForceFloatingSatelliteOnly) {
+        return SkillKind::FloatingSatellite;
+    }
+
+    if (kDebugForcePowerfulMotherBulletOnly) {
+        return SkillKind::PowerfulMotherBullet;
+    }
+
+    std::uniform_int_distribution<int> distribution(0, 6);
+    switch (distribution(this->m_RandomEngine)) {
+    case 0:
+        return SkillKind::AutoChase;
+    case 1:
+        return SkillKind::ArrayShot;
+    case 2:
+        return SkillKind::InterceptLaser;
+    case 3:
+        return SkillKind::HeavyArtillery;
+    case 4:
+        return SkillKind::LightArtillery;
+    case 5:
+        return SkillKind::FloatingSatellite;
+    default:
+        return SkillKind::PowerfulMotherBullet;
+    }
 }
 
 int ZulanInRuins::RandomAttackCount() {

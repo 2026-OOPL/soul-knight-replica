@@ -69,12 +69,22 @@ private:
         Idle,
         AutoChase,
         ArrayShot,
+        InterceptLaser,
+        HeavyArtillery,
+        LightArtillery,
+        FloatingSatellite,
+        PowerfulMotherBullet,
         Cooldown
     };
 
     enum class SkillKind {
         AutoChase,
-        ArrayShot
+        ArrayShot,
+        InterceptLaser,
+        HeavyArtillery,
+        LightArtillery,
+        FloatingSatellite,
+        PowerfulMotherBullet
     };
 
     enum class ArrayFormation {
@@ -93,6 +103,13 @@ private:
         Ready,
         WarningLaser,
         FiringLaser,
+        Returning
+    };
+
+    enum class InterceptState {
+        MovingToLine,
+        Warning,
+        Firing,
         Returning
     };
 
@@ -123,6 +140,27 @@ private:
     void UpdateAutoChase(const std::shared_ptr<Character> &target);
     void StartArrayShot(const std::shared_ptr<Character> &target);
     void UpdateArrayShot(const std::shared_ptr<Character> &target);
+    void StartInterceptLaser(const std::shared_ptr<Character> &target);
+    void UpdateInterceptLaser(const std::shared_ptr<Character> &target);
+    void StartHeavyArtillery();
+    void FireHeavyArtillery();
+    void StartLightArtillery();
+    void UpdateLightArtillery();
+    void FireLightArtilleryBullet();
+    void StartFloatingSatellite();
+    void UpdateFloatingSatellite();
+    glm::vec2 GetFloatingSatellitePosition(std::size_t index, Util::ms_t now) const;
+    glm::vec2 GetFloatingSatelliteDirection(Util::ms_t now) const;
+    void StartPowerfulMotherBullet();
+    void FirePowerfulMotherBullet();
+    bool MoveCannonsToInterceptLine(const std::shared_ptr<Character> &target);
+    glm::vec2 GetInterceptLinePosition(std::size_t index, const std::shared_ptr<Character> &target) const;
+    glm::vec2 GetInterceptFireDirection(const FloatingCannon &cannon, const std::shared_ptr<Character> &target) const;
+    void StartNextInterceptCannonWarning(const std::shared_ptr<Character> &target);
+    void FireInterceptCannon();
+    void FinishInterceptCannon(const std::shared_ptr<Character> &target);
+    void StartInterceptSecondRound(const std::shared_ptr<Character> &target);
+    void StartInterceptReturn();
     void UpdateBreakthroughArrayShot(const std::shared_ptr<Character> &target);
     void UpdateRotatingArrayShot();
     void StartArrayReturn();
@@ -156,6 +194,7 @@ private:
     void ResetCannonsToHome();
     void CleanupCannonVisuals();
     void DamagePlayersAlongLaser(const glm::vec2 &start, const glm::vec2 &end);
+    glm::vec2 GetChestFireOrigin() const;
     float ComputeRoomClippedBeamLength(
         const glm::vec2 &start,
         const glm::vec2 &direction,
@@ -164,6 +203,7 @@ private:
     std::shared_ptr<Character> GetTarget() const;
     glm::vec2 NormalizeOrFallback(const glm::vec2 &direction) const;
     glm::vec2 RandomChaseOffset();
+    SkillKind RandomSkillKind();
     int RandomAttackCount();
     float RandomFloat(float minValue, float maxValue);
     bool RandomBool();
@@ -173,6 +213,7 @@ private:
     SkillKind m_NextSkill = SkillKind::ArrayShot;
     ArrayFormation m_ArrayFormation = ArrayFormation::Breakthrough;
     ArrayAttackMode m_ArrayAttackMode = ArrayAttackMode::BarBurst;
+    InterceptState m_InterceptState = InterceptState::MovingToLine;
     std::vector<FloatingCannon> m_Cannons;
     std::shared_ptr<Util::Animation> m_NormalAnimation;
     std::shared_ptr<Util::Animation> m_AngryAnimation;
@@ -181,18 +222,30 @@ private:
     Util::ms_t m_NextStrafeFlipTime = 0;
     Util::ms_t m_NextArrayShotTime = 0;
     Util::ms_t m_ArrayRoundStartTime = 0;
+    Util::ms_t m_InterceptStepStartTime = 0;
+    Util::ms_t m_LightArtilleryEndTime = 0;
+    Util::ms_t m_NextLightArtilleryShotTime = 0;
+    Util::ms_t m_FloatingSatelliteStartTime = 0;
     glm::vec2 m_MoveIntent = {0.0F, 0.0F};
     glm::vec2 m_FaceDirection = {1.0F, 0.0F};
+    glm::vec2 m_FloatingSatelliteCenter = {0.0F, 0.0F};
     std::mt19937 m_RandomEngine;
     float m_ArrayRotationAngle = 0.0F;
+    float m_FloatingSatelliteStartAngle = 0.0F;
     float m_ArrayHorizontalDirection = 1.0F;
     int m_StrafeDirection = 1;
     int m_ArrayRotationDirection = 1;
+    int m_FloatingSatelliteRotationDirection = 1;
     int m_ArrayShotsFired = 0;
     int m_ArrayTotalShots = 1;
+    int m_InterceptCurrentIndex = 0;
+    int m_InterceptActiveCount = 0;
+    int m_InterceptRound = 1;
     bool m_ArrayReturning = false;
     bool m_ArrayLaserWarningActive = false;
     bool m_ArrayLaserActive = false;
+    bool m_InterceptSecondRoundPending = false;
+    bool m_FloatingSatelliteReturning = false;
     bool m_CannonVisualsCleaned = false;
 };
 

@@ -19,7 +19,7 @@
 
 namespace KnightPlayer {
 
-constexpr int MAX_HEALTH = 100;
+constexpr int MAX_HEALTH = 1000;
 constexpr int MAX_SHIELD = 5;
 constexpr int MAX_AMMO = 1000;
 
