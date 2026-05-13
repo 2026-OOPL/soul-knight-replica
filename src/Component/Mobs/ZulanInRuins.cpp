@@ -92,7 +92,7 @@ constexpr float kInitialSkillDelayMs = 700.0F;
 constexpr float kSkillCooldownMs = 1300.0F;
 constexpr bool kDebugForceInterceptLaserOnly = false;
 constexpr bool kDebugForceArtilleryOnly = false;
-constexpr bool kDebugForceBombTrapOnly = true;
+constexpr bool kDebugForceBombTrapOnly = false;
 constexpr bool kDebugForceFloatingSatelliteOnly = false;
 constexpr bool kDebugForcePowerfulMotherBulletOnly = false;
 
@@ -2362,26 +2362,22 @@ ZulanInRuins::SkillKind ZulanInRuins::RandomSkillKind() {
         return SkillKind::PowerfulMotherBullet;
     }
 
-    const int maxSkillIndex = this->m_Phase == Phase::Angry ? 7 : 6;
-    std::uniform_int_distribution<int> distribution(0, maxSkillIndex);
-    switch (distribution(this->m_RandomEngine)) {
-    case 0:
-        return SkillKind::AutoChase;
-    case 1:
-        return SkillKind::ArrayShot;
-    case 2:
-        return SkillKind::InterceptLaser;
-    case 3:
-        return SkillKind::HeavyArtillery;
-    case 4:
-        return SkillKind::LightArtillery;
-    case 5:
-        return SkillKind::FloatingSatellite;
-    case 6:
-        return SkillKind::PowerfulMotherBullet;
-    default:
-        return SkillKind::BombTrap;
-    }
+    static constexpr std::array<SkillKind, 8> kAllSkills = {
+        SkillKind::AutoChase,
+        SkillKind::ArrayShot,
+        SkillKind::InterceptLaser,
+        SkillKind::HeavyArtillery,
+        SkillKind::LightArtillery,
+        SkillKind::BombTrap,
+        SkillKind::FloatingSatellite,
+        SkillKind::PowerfulMotherBullet
+    };
+
+    std::uniform_int_distribution<std::size_t> distribution(
+        0,
+        kAllSkills.size() - 1
+    );
+    return kAllSkills[distribution(this->m_RandomEngine)];
 }
 
 int ZulanInRuins::RandomAttackCount() {

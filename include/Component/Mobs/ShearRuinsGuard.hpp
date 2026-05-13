@@ -6,6 +6,7 @@
 
 #include <glm/geometric.hpp>
 
+#include "Component/AI/MeleeAI.hpp"
 #include "Component/Character/Character.hpp"
 #include "Component/Mobs/Mob.hpp"
 #include "Component/Weapons/Shear.hpp"
@@ -51,6 +52,16 @@ public:
         this->SetMaxHealth(5);
         this->SetCurrentHealth(this->GetMaxHealth());
         this->SetWeapon(std::make_shared<Shear>());
+
+        MeleeAIConfig aiConfig;
+        aiConfig.attackRange = 70.0F;
+        aiConfig.attackReleaseRange = 92.0F;
+        this->m_AI = std::make_shared<MeleeAI>(
+            this,
+            tracePlayer.lock(),
+            collisionSystem,
+            aiConfig
+        );
     }
 
 protected:

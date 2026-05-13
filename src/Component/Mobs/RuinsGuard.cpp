@@ -41,6 +41,8 @@ constexpr float kRadialShotDurationMs = 420.0F;
 constexpr int kRadialBulletCount = 18;
 constexpr float kRadialBulletSpeed = 0.32F;
 constexpr float kRadialBulletLifetimeMs = 2200.0F;
+constexpr float kRadialBulletVisualScale = 0.5F;
+const glm::vec2 kRadialBulletColliderSize = {18.0F, 18.0F};
 constexpr float kBulletKnockbackStrength = 0.08F;
 constexpr float kPi = 3.14159265358979323846F;
 
@@ -401,6 +403,11 @@ void RuinsGuard::FireRadialBullets() {
             this->GetFaction(),
             kRadialBulletLifetimeMs
         );
+        bullet->SetVisualScalePreservingFlip({
+            kRadialBulletVisualScale,
+            kRadialBulletVisualScale
+        });
+        bullet->SetColliderSize(kRadialBulletColliderSize);
         bullet->AddHitEffect(std::make_shared<KnockbackHitEffect>(kBulletKnockbackStrength));
         this->m_MapSystem->AddBullet(bullet);
     }
