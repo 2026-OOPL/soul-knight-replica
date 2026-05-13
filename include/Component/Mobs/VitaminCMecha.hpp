@@ -91,6 +91,12 @@ private:
         const glm::vec2 &direction,
         float thicknessScale
     );
+    void SetLaserBeamVisible(
+        const std::shared_ptr<VitaminCMechaBeamVisual> &beam,
+        bool &attached,
+        bool visible
+    );
+    void HideLaserBeams();
     void DamagePlayersAlongLaser(const glm::vec2 &start, const glm::vec2 &end);
 
     void StartMachineGun();
@@ -126,6 +132,8 @@ private:
     std::shared_ptr<VitaminCMechaBeamVisual> m_LeftLaserVisual;
     std::shared_ptr<VitaminCMechaBeamVisual> m_RightLaserVisual;
     std::vector<std::shared_ptr<VitaminCBombEffect>> m_BombEffects;
+    bool m_LeftLaserAttached = false;
+    bool m_RightLaserAttached = false;
     Util::ms_t m_StateStartTime = 0;
     Util::ms_t m_NextSkillTime = 0;
     Util::ms_t m_NextStrafeFlipTime = 0;

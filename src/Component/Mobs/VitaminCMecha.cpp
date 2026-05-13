@@ -66,6 +66,11 @@ const std::string kLaserResource = RESOURCE_DIR"/Bullet/EnemyLaserBullet.png";
 const std::string kWarningResource = RESOURCE_DIR"/Effect/WarningSign.png";
 
 constexpr int kMaxHealth = 600;
+constexpr float kBossScale = 1.0F / 3.0F;
+const glm::vec2 kBossColliderSize = {98.0F * kBossScale, 78.0F * kBossScale};
+constexpr float kBossCenterFireForwardOffset = 18.0F * kBossScale;
+constexpr float kBossHandFireForwardOffset = 18.0F * kBossScale;
+constexpr float kBossHandFireSideOffset = 38.0F * kBossScale;
 constexpr float kMoveSpeed = 0.034F;
 constexpr float kRetreatDistance = 140.0F;
 constexpr float kPreferredDistance = 200.0F;
@@ -140,10 +145,11 @@ constexpr float kBombAngryIntervalMs = 340.0F;
 constexpr float kBombWarningDelayMs = 600.0F;
 constexpr float kBombExplosionDurationMs = 520.0F;
 constexpr float kBombSpawnRadius = 76.0F;
-constexpr float kBombDamageRadius = 42.0F;
+constexpr float kBombDamageRadius = 21.0F;
 constexpr int kBombDamage = 5;
-constexpr float kBombWarningVisualScale = 1.0F;
-constexpr float kBombExplosionVisualScale = 1.25F;
+constexpr float kBombKnockbackStrength = 0.18F;
+constexpr float kBombWarningVisualScale = 0.5F;
+constexpr float kBombExplosionVisualScale = 0.625F;
 
 float DistancePointToSegment(
     const glm::vec2 &point,
@@ -402,6 +408,7 @@ public:
 
         if (this->m_Exploded && now >= this->m_FinishTime) {
             this->SetVisible(false);
+            this->SetDrawable(nullptr);
             this->m_Finished = true;
         }
     }
@@ -446,6 +453,14 @@ private:
             if (glm::distance(player->GetAbsoluteTranslation(), center) <=
                 kBombDamageRadius + playerRadius) {
                 player->ApplyDamage(kBombDamage);
+                glm::vec2 knockbackDirection =
+                    player->GetAbsoluteTranslation() - center;
+                if (glm::length(knockbackDirection) <= 0.0001F) {
+                    knockbackDirection = {1.0F, 0.0F};
+                }
+                player->ApplyImpulse(
+                    glm::normalize(knockbackDirection) * kBombKnockbackStrength
+                );
             }
         }
     }
@@ -507,7 +522,8 @@ VitaminCMecha::VitaminCMecha(
 
     this->SetMaxHealth(kMaxHealth);
     this->SetCurrentHealth(this->GetMaxHealth());
-    this->SetColliderSize({98.0F, 78.0F});
+    this->SetAbsoluteScale({kBossScale, kBossScale});
+    this->SetColliderSize(kBossColliderSize);
     this->SetWeapon(nullptr);
     this->m_PlayerSpeed = kMoveSpeed;
 
@@ -517,8 +533,6 @@ VitaminCMecha::VitaminCMecha(
         std::make_shared<VitaminCMechaBeamVisual>(kLaserResource, 6.0F);
     this->m_LeftLaserVisual->SetVisible(false);
     this->m_RightLaserVisual->SetVisible(false);
-    this->AddChild(this->m_LeftLaserVisual);
-    this->AddChild(this->m_RightLaserVisual);
 
     this->m_NextSkill = this->RandomSkillKind();
     this->m_NextSkillTime = Util::Time::GetElapsedTimeMs() + kInitialSkillDelayMs;
@@ -528,12 +542,7 @@ void VitaminCMecha::Update() {
     this->PruneBombEffects();
 
     if (this->IsDead()) {
-        if (this->m_LeftLaserVisual != nullptr) {
-            this->m_LeftLaserVisual->SetVisible(false);
-        }
-        if (this->m_RightLaserVisual != nullptr) {
-            this->m_RightLaserVisual->SetVisible(false);
-        }
+        this->HideLaserBeams();
         Character::Update();
         return;
     }
@@ -542,12 +551,7 @@ void VitaminCMecha::Update() {
 
     if (this->m_AI != nullptr && this->m_AI->IsFrozen()) {
         this->m_MoveIntent = {0.0F, 0.0F};
-        if (this->m_LeftLaserVisual != nullptr) {
-            this->m_LeftLaserVisual->SetVisible(false);
-        }
-        if (this->m_RightLaserVisual != nullptr) {
-            this->m_RightLaserVisual->SetVisible(false);
-        }
+        this->HideLaserBeams();
         Character::Update();
         return;
     }
@@ -593,12 +597,7 @@ void VitaminCMecha::UpdateState() {
     const std::shared_ptr<Character> target = this->GetTarget();
     if (target == nullptr || target->IsDead()) {
         this->m_MoveIntent = {0.0F, 0.0F};
-        if (this->m_LeftLaserVisual != nullptr) {
-            this->m_LeftLaserVisual->SetVisible(false);
-        }
-        if (this->m_RightLaserVisual != nullptr) {
-            this->m_RightLaserVisual->SetVisible(false);
-        }
+        this->HideLaserBeams();
         return;
     }
 
@@ -667,12 +666,7 @@ void VitaminCMecha::EnterState(BossState state) {
     this->m_StateStartTime = Util::Time::GetElapsedTimeMs();
     this->m_MoveIntent = {0.0F, 0.0F};
 
-    if (this->m_LeftLaserVisual != nullptr) {
-        this->m_LeftLaserVisual->SetVisible(false);
-    }
-    if (this->m_RightLaserVisual != nullptr) {
-        this->m_RightLaserVisual->SetVisible(false);
-    }
+    this->HideLaserBeams();
 
     switch (state) {
     case BossState::Idle:
@@ -852,12 +846,7 @@ void VitaminCMecha::UpdateLaserCannon() {
     const float activeMs = elapsedMs - kLaserSetupMs;
 
     if (activeMs >= sweepMs * 2.0F) {
-        if (this->m_LeftLaserVisual != nullptr) {
-            this->m_LeftLaserVisual->SetVisible(false);
-        }
-        if (this->m_RightLaserVisual != nullptr) {
-            this->m_RightLaserVisual->SetVisible(false);
-        }
+        this->HideLaserBeams();
         this->EnterState(BossState::Cooldown);
         return;
     }
@@ -877,8 +866,7 @@ void VitaminCMecha::UpdateLaserCannon() {
             RotateVector(baseDirection, (handOffset + sweepOffset) * turnSign)
         );
 
-    const int handIndex = firstPass ? 0 : 1;
-    const glm::vec2 start = this->GetHandFireOrigin(handIndex);
+    const glm::vec2 start = this->GetCenterFireOrigin();
     const float thicknessScale =
         this->m_Phase == Phase::Angry ?
             kLaserAngryThicknessScale :
@@ -895,8 +883,18 @@ void VitaminCMecha::UpdateLaserCannon() {
     const std::shared_ptr<VitaminCMechaBeamVisual> inactiveBeam =
         firstPass ? this->m_RightLaserVisual : this->m_LeftLaserVisual;
 
-    if (inactiveBeam != nullptr) {
-        inactiveBeam->SetVisible(false);
+    if (firstPass) {
+        this->SetLaserBeamVisible(
+            inactiveBeam,
+            this->m_RightLaserAttached,
+            false
+        );
+    } else {
+        this->SetLaserBeamVisible(
+            inactiveBeam,
+            this->m_LeftLaserAttached,
+            false
+        );
     }
     this->ConfigureLaserBeam(activeBeam, start, laserDirection, thicknessScale);
 
@@ -922,7 +920,48 @@ void VitaminCMecha::ConfigureLaserBeam(
     const float length =
         this->ComputeRoomClippedBeamLength(start, direction, kLaserFallbackLength);
     beam->ConfigureBeam(start, direction, length, thicknessScale);
-    beam->SetVisible(true);
+
+    if (beam == this->m_LeftLaserVisual) {
+        this->SetLaserBeamVisible(beam, this->m_LeftLaserAttached, true);
+        return;
+    }
+
+    if (beam == this->m_RightLaserVisual) {
+        this->SetLaserBeamVisible(beam, this->m_RightLaserAttached, true);
+    }
+}
+
+void VitaminCMecha::SetLaserBeamVisible(
+    const std::shared_ptr<VitaminCMechaBeamVisual> &beam,
+    bool &attached,
+    bool visible
+) {
+    if (beam == nullptr) {
+        return;
+    }
+
+    if (visible && !attached) {
+        this->AddChild(beam);
+        attached = true;
+    } else if (!visible && attached) {
+        this->RemoveChild(beam);
+        attached = false;
+    }
+
+    beam->SetVisible(visible);
+}
+
+void VitaminCMecha::HideLaserBeams() {
+    this->SetLaserBeamVisible(
+        this->m_LeftLaserVisual,
+        this->m_LeftLaserAttached,
+        false
+    );
+    this->SetLaserBeamVisible(
+        this->m_RightLaserVisual,
+        this->m_RightLaserAttached,
+        false
+    );
 }
 
 void VitaminCMecha::DamagePlayersAlongLaser(
@@ -1113,7 +1152,7 @@ void VitaminCMecha::SpawnBombWarning(
 
 glm::vec2 VitaminCMecha::GetCenterFireOrigin() const {
     const glm::vec2 forward = this->NormalizeOrFallback(this->m_FaceDirection);
-    return this->GetAbsoluteTranslation() + forward * 18.0F;
+    return this->GetAbsoluteTranslation() + forward * kBossCenterFireForwardOffset;
 }
 
 glm::vec2 VitaminCMecha::GetHandFireOrigin(int handIndex) const {
@@ -1122,8 +1161,8 @@ glm::vec2 VitaminCMecha::GetHandFireOrigin(int handIndex) const {
     const float sideSign = handIndex == 0 ? -1.0F : 1.0F;
 
     return this->GetAbsoluteTranslation() +
-        forward * 18.0F +
-        side * (sideSign * 38.0F);
+        forward * kBossHandFireForwardOffset +
+        side * (sideSign * kBossHandFireSideOffset);
 }
 
 float VitaminCMecha::ComputeRoomClippedBeamLength(
