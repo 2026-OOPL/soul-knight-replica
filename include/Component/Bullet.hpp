@@ -63,6 +63,7 @@ public:
     void OnCollision(const Collision::CollisionSituation &situation) override;
 
     glm::vec2 GetColliderSize() const;
+    void SetVisualScalePreservingFlip(const glm::vec2 &visualScale);
     void SetColliderSize(const glm::vec2 &colliderSize);
     void SetCollisionFilter(const Collision::CollisionFilter &filter);
     void SetCollisionResolver(CollisionResolver collisionResolver);

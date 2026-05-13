@@ -5,16 +5,12 @@
 #include <memory>
 #include <random>
 #include <string>
-#include <vector>
 
-#include "Component/Bullet.hpp"
+#include "Component/Bullets/BulletFactory.hpp"
 #include "Component/Weapon.hpp"
 
 namespace {
     const std::string WEAPON_SKIN = RESOURCE_DIR"/Weapon/BadPistol.png";
-    const std::vector<std::string> BAD_PISTOL_BULLET_SPRITE = {
-        RESOURCE_DIR"/Bullet/SmallNormalBullet.png"
-    };
     constexpr int kBadPistolFireDelayMs = 333;
     constexpr int kBadPistolDamage = 3;
     constexpr int kBadPistolAmmoCost = 0;
@@ -54,17 +50,12 @@ public:
 
 protected:
     std::shared_ptr<Bullet> CreateBullet() const override {
-        std::shared_ptr<Bullet> bullet = std::make_shared<Bullet>(
-            BAD_PISTOL_BULLET_SPRITE,
+        return BulletFactory::CreateSmallNormalBullet(
             this->GetMuzzlePoint(),
             ApplyBadPistolAttackOffset(this->m_FacingDirection),
-            1,
             this->GetBulletDamage(),
             this->GetProjectileFaction()
         );
-
-        bullet->SetAbsoluteScale({0.5F, 0.5F});
-        return bullet;
     }
 };
 

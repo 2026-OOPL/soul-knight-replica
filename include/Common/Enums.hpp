@@ -21,6 +21,7 @@ enum class RoomType {
 enum class RoomPurpose {
     STARTER,
     FIGHTING,
+    BOSS,
     REWARD,
     PORTAL
 };

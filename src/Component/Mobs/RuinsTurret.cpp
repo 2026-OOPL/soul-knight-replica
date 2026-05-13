@@ -8,6 +8,7 @@
 
 #include "Component/Bullet.hpp"
 #include "Component/BulletHitEffect.hpp"
+#include "Component/Bullets/BulletFactory.hpp"
 #include "Component/Map/BaseRoom.hpp"
 #include "Component/Map/MapSystem.hpp"
 #include "Component/Mobs/RuinsTurret.hpp"
@@ -33,10 +34,6 @@ const std::vector<std::string> kRuinsTurretDieSprite = {
     RESOURCE_DIR"/Mob/RuinsTurret/RuinsTurret_die.png"
 };
 
-const std::vector<std::string> kLaserSprite = {
-    RESOURCE_DIR"/Bullet/EnemyLaserBullet.png"
-};
-
 const std::string kLaserResource = RESOURCE_DIR"/Bullet/EnemyLaserBullet.png";
 
 constexpr float kAggroDistance = 320.0F;
@@ -57,15 +54,15 @@ public:
         const glm::vec2 &direction,
         CombatFaction faction
     ) : Bullet(
-            kLaserSprite,
+            BulletFactory::EnemyLaserBulletConfig().sprites,
             coordinate,
             direction * kLaserSpeed,
-            4,
+            BulletFactory::EnemyLaserBulletConfig().zIndex,
             kLaserDamage,
             faction
         ),
         m_SpawnTime(Util::Time::GetElapsedTimeMs()) {
-        this->SetColliderSize({30.0F, 8.0F});
+        BulletFactory::ApplyConfig(*this, BulletFactory::EnemyLaserBulletConfig());
         this->AddHitEffect(std::make_shared<KnockbackHitEffect>(kLaserKnockbackStrength));
     }
 

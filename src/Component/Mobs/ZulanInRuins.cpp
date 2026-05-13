@@ -227,12 +227,7 @@ void ConfigureBulletSize(
     float visualScale,
     const glm::vec2 &colliderSize
 ) {
-    const glm::vec2 currentScale = bullet.GetAbsoluteScale();
-    const glm::vec2 scaleSign = {
-        currentScale.x < 0.0F ? -1.0F : 1.0F,
-        currentScale.y < 0.0F ? -1.0F : 1.0F
-    };
-    bullet.SetAbsoluteScale(scaleSign * visualScale);
+    bullet.SetVisualScalePreservingFlip({visualScale, visualScale});
     bullet.SetColliderSize(colliderSize);
 }
 

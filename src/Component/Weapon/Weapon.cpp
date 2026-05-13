@@ -13,7 +13,7 @@
 
 #include "Component/Weapon.hpp"
 #include "Component/Bullet.hpp"
-#include "Component/Bullets/TestBullet.hpp"
+#include "Component/Bullets/BulletFactory.hpp"
 
 Weapon::Weapon(
     std::string resource,
@@ -195,7 +195,7 @@ void Weapon::TriggerRecoil(float durationMs) {
 }
 
 std::shared_ptr<Bullet> Weapon::CreateBullet() const {
-    std::shared_ptr<Bullet> bullet = std::make_shared<TestBullet>(
+    std::shared_ptr<Bullet> bullet = BulletFactory::CreateTestBullet(
         this->GetMuzzlePoint(),
         this->m_FacingDirection,
         this->m_BulletDamage,

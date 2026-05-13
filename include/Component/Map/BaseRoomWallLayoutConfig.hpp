@@ -78,6 +78,7 @@ inline const WallLayout kGlobalWallLayout = MakeWallLayout(
 // 依房間用途分類的牆設定。
 inline const WallLayout kStarterWallLayout = MakeWallLayout();
 inline const WallLayout kFightingWallLayout = MakeWallLayout();
+inline const WallLayout kBossWallLayout = MakeWallLayout();
 inline const WallLayout kRewardWallLayout = MakeWallLayout();
 inline const WallLayout kPortalWallLayout = MakeWallLayout();
 
@@ -115,6 +116,9 @@ inline WallLayout ResolvePurposeWallLayout(RoomPurpose purpose) {
 
     case RoomPurpose::FIGHTING:
         return kFightingWallLayout;
+
+    case RoomPurpose::BOSS:
+        return kBossWallLayout;
 
     case RoomPurpose::REWARD:
         return kRewardWallLayout;

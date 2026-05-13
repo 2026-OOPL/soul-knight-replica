@@ -162,12 +162,30 @@ glm::vec2 Bullet::GetColliderSize() const {
     return this->m_CollisionBoxes.front().size;
 }
 
+void Bullet::SetVisualScalePreservingFlip(const glm::vec2 &visualScale) {
+    const glm::vec2 currentScale = this->GetAbsoluteScale();
+    const glm::vec2 scaleSign = {
+        currentScale.x < 0.0F ? -1.0F : 1.0F,
+        currentScale.y < 0.0F ? -1.0F : 1.0F
+    };
+    const glm::vec2 absoluteScale = {
+        std::abs(visualScale.x) * scaleSign.x,
+        std::abs(visualScale.y) * scaleSign.y
+    };
+
+    this->SetAbsoluteScale(absoluteScale);
+    this->m_Transform.scale = absoluteScale;
+}
+
 void Bullet::SetColliderSize(const glm::vec2 &colliderSize) {
     if (this->m_CollisionBoxes.empty()) {
         this->m_CollisionBoxes.push_back(BuildDefaultBulletBodyBox(this->m_Faction));
     }
 
-    this->m_CollisionBoxes.front().size = colliderSize;
+    this->m_CollisionBoxes.front().size = {
+        std::abs(colliderSize.x),
+        std::abs(colliderSize.y)
+    };
 }
 
 void Bullet::SetCollisionFilter(const Collision::CollisionFilter &filter) {

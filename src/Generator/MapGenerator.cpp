@@ -9,12 +9,14 @@
 #include "Common/Constants.hpp"
 #include "Common/Enums.hpp"
 #include "Common/Random.hpp"
+#include "Component/Map/BossRoom.hpp"
 #include "Component/Map/FightRoom.hpp"
 #include "Component/Map/Gangway.hpp"
 #include "Component/Map/MapColliderConfig.hpp"
 #include "Component/Map/PortalRoom.hpp"
 #include "Component/Map/RewardRoom.hpp"
 #include "Component/Map/StarterRoom.hpp"
+#include "Generator/GenBossChamber.hpp"
 #include "Generator/GenFightChamber.hpp"
 #include "Generator/GenPortalChamber.hpp"
 #include "Generator/GenRewardChamber.hpp"
@@ -59,6 +61,14 @@ std::shared_ptr<BaseRoom> BuildRoom(
 
     case RoomPurpose::FIGHTING:
         return std::make_shared<FightRoom>(
+            absolutePosition,
+            doorConfig,
+            info,
+            MapColliderConfig::kDefaultWallThickness
+        );
+
+    case RoomPurpose::BOSS:
+        return std::make_shared<BossRoom>(
             absolutePosition,
             doorConfig,
             info,
@@ -210,8 +220,8 @@ void MapGenerator::Generate() {
     m_GenChamber = std::make_shared<GenFightChamber>(
         this->GetFightingChamberStartCooridinate(),
         [this](glm::vec2 p) { return this->FightChamberCooridinateValidator(p); },
+        m_MaximumFightRoomCount,
         m_MinimumFightRoomCount,
-        m_MaximumRewardRoomCount,
         this->m_Blueprint,
         m_RandomChoose
     );
@@ -219,8 +229,15 @@ void MapGenerator::Generate() {
 
     m_GenChamber = std::make_shared<GenRewardChamber>(
         [this](glm::vec2 p) { return this->RewardChamberCooridinateValidator(p); },
-        m_MinimumRewardRoomCount,
         m_MaximumRewardRoomCount,
+        m_MinimumRewardRoomCount,
+        this->m_Blueprint,
+        m_RandomChoose
+    );
+    m_GenChamber->Generate();
+
+    m_GenChamber = std::make_shared<GenBossChamber>(
+        [this](glm::vec2 p) { return this->RewardChamberCooridinateValidator(p); },
         this->m_Blueprint,
         m_RandomChoose
     );

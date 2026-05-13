@@ -44,6 +44,14 @@ public:
     void Update() override;
     
 protected:
+    FightRoom(
+        const glm::vec2 &absolutePosition,
+        const DoorConfig &doorConfig,
+        const std::shared_ptr<RoomInfo> &info,
+        float wallThickness,
+        RoomPurpose purpose
+    );
+
     void StartNextMonsterWave();
     void PushPlayersInsideClosedDoors();
 

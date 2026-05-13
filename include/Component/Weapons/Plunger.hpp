@@ -5,19 +5,15 @@
 #include <memory>
 #include <random>
 #include <string>
-#include <vector>
 
 #include <glm/geometric.hpp>
 #include <glm/vec2.hpp>
 
-#include "Component/Bullets/SpinningBullet.hpp"
+#include "Component/Bullets/BulletFactory.hpp"
 #include "Component/Weapon.hpp"
 
 namespace {
     const std::string PLUNGER_WEAPON_SKIN = RESOURCE_DIR"/Weapon/Plunger.png";
-    const std::vector<std::string> PLUNGER_BULLET_SPRITE = {
-        RESOURCE_DIR"/Bullet/PoopBullet.png"
-    };
 
     constexpr int kPlungerFireDelayMs = 333;
     constexpr int kPlungerDamage = 5;
@@ -76,16 +72,12 @@ protected:
         const bool isCritical = RollPlungerCritical(this->GetCriticalChance());
         const int damage = this->GetBulletDamage() * (isCritical ? 2 : 1);
 
-        std::shared_ptr<Bullet> bullet = std::make_shared<SpinningBullet>(
-            PLUNGER_BULLET_SPRITE,
+        return BulletFactory::CreateSpinningPoopBullet(
             this->GetMuzzlePoint(),
             bulletDirection * kPlungerBulletSpeed,
-            1,
             damage,
             this->GetProjectileFaction()
         );
-        bullet->SetColliderSize({16.0F, 16.0F});
-        return bullet;
     }
 };
 

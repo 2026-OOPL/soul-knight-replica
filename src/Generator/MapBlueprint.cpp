@@ -123,6 +123,10 @@ void MapBlueprint::OutputMapGridType() {
                     buf += "F";
                     break;
 
+                case RoomPurpose::BOSS:
+                    buf += "B";
+                    break;
+
                 case RoomPurpose::STARTER:
                     buf += "R";
                     break;

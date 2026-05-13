@@ -25,8 +25,7 @@ public:
         damage,
         faction
     ) {
-        this->SetAbsoluteScale(glm::vec2(0.05F, 0.05F));
-        this->m_Transform.scale = this->m_AbsoluteTransform.scale;
+        this->SetVisualScalePreservingFlip(glm::vec2(0.05F, 0.05F));
         this->SetColliderSize(this->GetScaledSize());
     };
 

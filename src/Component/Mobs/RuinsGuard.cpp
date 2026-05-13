@@ -9,16 +9,13 @@
 #include "Common/CombatFaction.hpp"
 #include "Component/Bullet.hpp"
 #include "Component/BulletHitEffect.hpp"
+#include "Component/Bullets/BulletFactory.hpp"
 #include "Component/Map/MapSystem.hpp"
 #include "Component/Player/Player.hpp"
 #include "Util/Image.hpp"
 #include "Util/Time.hpp"
 
 namespace {
-
-const std::vector<std::string> kEnemyRoundBulletSprite = {
-    RESOURCE_DIR"/Bullet/EnemyRoundBullet.png"
-};
 
 const std::vector<std::string> kChargeEffectSprite = {
     RESOURCE_DIR"/Effect/Charge/Charge_0.png",
@@ -54,34 +51,6 @@ glm::vec2 NormalizeOrRight(const glm::vec2 &direction) {
 
     return glm::normalize(direction);
 }
-
-class TimedBullet : public Bullet {
-public:
-    TimedBullet(
-        const std::vector<std::string> &sprite,
-        const glm::vec2 &coordinate,
-        const glm::vec2 &momentum,
-        int damage,
-        CombatFaction faction,
-        float lifetimeMs
-    ) : Bullet(sprite, coordinate, momentum, 1, damage, faction),
-        m_SpawnTime(Util::Time::GetElapsedTimeMs()),
-        m_LifetimeMs(lifetimeMs) {
-    }
-
-    void Update() override {
-        if (Util::Time::GetElapsedTimeMs() - this->m_SpawnTime >= this->m_LifetimeMs) {
-            this->RequestDestroy();
-            return;
-        }
-
-        Bullet::Update();
-    }
-
-private:
-    float m_SpawnTime = 0.0F;
-    float m_LifetimeMs = 0.0F;
-};
 
 class PikeHitbox : public Bullet {
 public:
@@ -425,15 +394,13 @@ void RuinsGuard::FireRadialBullets() {
             2.0F * kPi * static_cast<float>(index) /
             static_cast<float>(kRadialBulletCount);
         const glm::vec2 direction = {std::cos(angle), std::sin(angle)};
-        std::shared_ptr<Bullet> bullet = std::make_shared<TimedBullet>(
-            kEnemyRoundBulletSprite,
+        std::shared_ptr<Bullet> bullet = BulletFactory::CreateEnemyRoundTimedBullet(
             this->GetAbsoluteTranslation() + direction * 16.0F,
             direction * kRadialBulletSpeed,
             3,
             this->GetFaction(),
             kRadialBulletLifetimeMs
         );
-        bullet->SetColliderSize({12.0F, 12.0F});
         bullet->AddHitEffect(std::make_shared<KnockbackHitEffect>(kBulletKnockbackStrength));
         this->m_MapSystem->AddBullet(bullet);
     }
