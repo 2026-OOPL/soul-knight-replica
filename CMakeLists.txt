@@ -22,17 +22,10 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(ptsd)
 
-include(files.cmake)
-set(SRC_DIR ${CMAKE_SOURCE_DIR}/src)
-set(INCLUDE_DIR ${CMAKE_SOURCE_DIR}/include)
-# list(TRANSFORM SRC_FILES PREPEND ${SRC_DIR}/)
-# list(TRANSFORM INCLUDE_FILES PREPEND ${INCLUDE_DIR}/)
-
 file(GLOB_RECURSE SRC_FILES CONFIGURE_DEPENDS "src/*.cpp")
 file(GLOB_RECURSE INCLUDE_FILES CONFIGURE_DEPENDS "include/*.hpp")
 
 add_executable(${PROJECT_NAME}
-    ${SRC_DIR}/main.cpp
     ${SRC_FILES}
     ${INCLUDE_FILES}
 )

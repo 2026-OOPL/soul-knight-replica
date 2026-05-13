@@ -105,7 +105,6 @@ private:
     /// Check if the desired place is occupied by obastacles
     bool IsPointBlocked(const glm::vec2& point);
 
-    void UpdateDesiredTranslation();
 };
 
 #endif // AI_HPP

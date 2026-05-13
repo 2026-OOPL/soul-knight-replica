@@ -2,7 +2,6 @@
 
 #include <glm/fwd.hpp>
 
-#include "Component/Mobs/GoblinGuard.hpp"
 #include "Component/Camera/Curve.hpp"
 #include "Component/Camera/TraceCamera.hpp"
 #include "Component/Player/Knight.hpp"
