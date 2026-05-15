@@ -26,9 +26,9 @@ enum class GeneratorType {
 
 class MapGenerator {
 public:
-    MapGenerator(GeneratorType type);
-    MapGenerator(std::string seed, GeneratorType type);
-    MapGenerator(std::shared_ptr<RandomChoose> random, GeneratorType type);
+    MapGenerator(bool generateBoss, GeneratorType type);
+    MapGenerator(bool generateBoss, std::string seed, GeneratorType type);
+    MapGenerator(bool generateBoss, std::shared_ptr<RandomChoose> random, GeneratorType type);
 
     void Generate();
 
@@ -66,6 +66,8 @@ private:
     int m_MaximumFightRoomCount;
     int m_MinimumRewardRoomCount;
     int m_MaximumRewardRoomCount;
+
+    bool m_GenerateBoss;
 };
 
 #endif

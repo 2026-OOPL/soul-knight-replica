@@ -20,6 +20,7 @@ MapTest::MapTest(
     MapSystemConfig::MapConfig config
 ) : MapSystem(config) {
     std::shared_ptr<MapGenerator> generator = std::make_shared<MapGenerator>(
+        config.section == 3,
         config.seed,
         config.difficulty
     );

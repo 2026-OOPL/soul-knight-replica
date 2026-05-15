@@ -27,7 +27,6 @@ void LevelSwitch::Update() {
     Util::ms_t now = Util::Time::GetElapsedTimeMs();
 
     if (now - this->m_SceneStartTime > 1000) {
-        std::shared_ptr<MapGenerator> generator = std::make_shared<MapGenerator>(GeneratorType::EASY);
         
         if (m_MapConfig.section < 3) {
             m_MapConfig.section += 1;

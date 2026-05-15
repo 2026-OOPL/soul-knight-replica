@@ -137,7 +137,7 @@ std::shared_ptr<Gangway> BuildGangway(
 
 } // namespace
 
-MapGenerator::MapGenerator(std::shared_ptr<RandomChoose> random, GeneratorType type) {
+MapGenerator::MapGenerator(bool generateBoss, std::shared_ptr<RandomChoose> random, GeneratorType type) {
     this->m_RandomChoose = random;
 
     const int mapSize = m_RandomChoose->GetInteger(5, 10);
@@ -174,15 +174,19 @@ MapGenerator::MapGenerator(std::shared_ptr<RandomChoose> random, GeneratorType t
         default:
             throw std::runtime_error("Unhandled generator type");
     }
+
+    m_GenerateBoss = generateBoss;
 }
 
-MapGenerator::MapGenerator(std::string seed, GeneratorType type)
+MapGenerator::MapGenerator(bool generateBoss, std::string seed, GeneratorType type)
 : MapGenerator(
+    generateBoss,
     std::make_shared<RandomChoose>(seed), type
 ) {}
 
-MapGenerator::MapGenerator(GeneratorType type)
+MapGenerator::MapGenerator(bool generateBoss, GeneratorType type)
 : MapGenerator(
+    generateBoss,
     std::make_shared<RandomChoose>(), type
 ) {}
 
@@ -246,12 +250,14 @@ void MapGenerator::Generate() {
     );
     m_GenChamber->Generate();
 
-    m_GenChamber = std::make_shared<GenBossChamber>(
-        [this](glm::vec2 p) { return this->RewardChamberCooridinateValidator(p); },
-        this->m_Blueprint,
-        m_RandomChoose
-    );
-    m_GenChamber->Generate();
+    if (m_GenerateBoss) {
+        m_GenChamber = std::make_shared<GenBossChamber>(
+            [this](glm::vec2 p) { return this->RewardChamberCooridinateValidator(p); },
+            this->m_Blueprint,
+            m_RandomChoose
+        );
+        m_GenChamber->Generate();
+    }
 
     m_GenChamber = std::make_shared<GenPortalChamber>(
         this->GetPortalChamberGenPolicy(),
