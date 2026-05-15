@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <memory>
 
+#include "Component/Mobs/GoblinGuard.hpp"
 #include "Generator/RoomInfo.hpp"
 #include "Util/Logger.hpp"
 
@@ -251,7 +252,7 @@ void FightRoom::StartNextMonsterWave() {
 
         switch (i.type) {
             case MobType::GOBLIN_GUARD:
-                LOG_WARN("Skipping GoblinGuard spawn.");
+                mob = std::make_shared<GoblinGuard>(target, m_MapSystem->GetCollisionSystem());
                 break;
 
             case MobType::RUINS_GUARD:

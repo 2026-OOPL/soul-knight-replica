@@ -49,7 +49,7 @@ std::vector<glm::ivec2> GenPortalChamber::GetAvailableCooridinate() {
 
     const glm::ivec2 directions[] = {
         glm::ivec2(0, 1),
-        glm::vec2(0, -1),
+        glm::ivec2(0, -1),
         glm::ivec2(1, 0),
         glm::ivec2(-1, 0),
     };

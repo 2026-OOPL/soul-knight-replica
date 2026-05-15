@@ -29,6 +29,13 @@ public:
         m_Engine = std::mt19937_64(m_Seed);
         m_Dist = std::uniform_real_distribution<float>(0.0, 1.0);
     }
+
+    RandomChoose(unsigned long long seed) {
+        this->m_Seed = seed;
+        
+        m_Engine = std::mt19937_64(m_Seed);
+        m_Dist = std::uniform_real_distribution<float>(0.0, 1.0);
+    }
         
     template <typename T>
     T GetEnum();

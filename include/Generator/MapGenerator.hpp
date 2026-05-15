@@ -26,8 +26,10 @@ enum class GeneratorType {
 
 class MapGenerator {
 public:
+    MapGenerator(GeneratorType type);
     MapGenerator(std::string seed, GeneratorType type);
-    
+    MapGenerator(std::shared_ptr<RandomChoose> random, GeneratorType type);
+
     void Generate();
 
     std::vector<std::shared_ptr<BaseRoom>> GetRooms();

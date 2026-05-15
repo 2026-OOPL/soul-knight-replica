@@ -137,8 +137,8 @@ std::shared_ptr<Gangway> BuildGangway(
 
 } // namespace
 
-MapGenerator::MapGenerator(std::string seed, GeneratorType type) {
-    this->m_RandomChoose = std::make_shared<RandomChoose>(seed);
+MapGenerator::MapGenerator(std::shared_ptr<RandomChoose> random, GeneratorType type) {
+    this->m_RandomChoose = random;
 
     const int mapSize = m_RandomChoose->GetInteger(5, 10);
 
@@ -175,6 +175,16 @@ MapGenerator::MapGenerator(std::string seed, GeneratorType type) {
             throw std::runtime_error("Unhandled generator type");
     }
 }
+
+MapGenerator::MapGenerator(std::string seed, GeneratorType type)
+: MapGenerator(
+    std::make_shared<RandomChoose>(seed), type
+) {}
+
+MapGenerator::MapGenerator(GeneratorType type)
+: MapGenerator(
+    std::make_shared<RandomChoose>(), type
+) {}
 
 bool MapGenerator::FightChamberCooridinateValidator(glm::ivec2 cooridinate) {
     switch (m_StartDirection) {

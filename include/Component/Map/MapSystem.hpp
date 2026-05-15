@@ -4,9 +4,10 @@
 #include <memory>
 #include <vector>
 
-#include <glm/fwd.hpp>
 #include <glm/vec2.hpp>
 
+#include "Component/Prop/Portal.hpp"
+#include "Generator/MapGenerator.hpp"
 #include "Util/GameObject.hpp"
 
 #include "Component/Bullet.hpp"
@@ -21,15 +22,28 @@
 #include "Component/World/WorldRegistry.hpp"
 #include "Scene.hpp"
 
+namespace MapSystemConfig {
+
+struct MapConfig {
+  int chapter = 1;
+  int section = 1;
+  GeneratorType difficulty = GeneratorType::EASY;
+  std::string seed = "";
+};
+
+}
+
 class CollisionDebugOverlay;
 
 class MapSystem : public Scene {
 public:
-    MapSystem();
+    MapSystem(MapSystemConfig::MapConfig config);
 
     ~MapSystem() override = default;
 
     void Update() override;
+
+    std::shared_ptr<Scene> GetRedirection() override;
 
     bool IsPlayerInsideRoom() const;
     glm::vec2 GetCameraCoor() const;
@@ -126,6 +140,13 @@ private:
     std::vector<std::shared_ptr<Mob>> m_PendingMobs;
     bool m_IsUpdatingScene = false;
     bool m_ShowCollisionDebug = false;
+
+    std::shared_ptr<Portal> m_CurrentPortal;
+
+    std::shared_ptr<Scene> m_RedirectScene;
+
+    MapSystemConfig::MapConfig m_MapConfig;
+
 };
 
 #endif
