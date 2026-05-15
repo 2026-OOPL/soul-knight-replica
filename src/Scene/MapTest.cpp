@@ -1,6 +1,7 @@
 #include <memory>
 
 #include <glm/vec2.hpp>
+#include <string>
 
 #include "Common/Random.hpp"
 #include "Component/Camera/Curve.hpp"
@@ -9,11 +10,20 @@
 #include "Component/UI/PlayUI.hpp"
 #include "Component/Weapon.hpp"
 #include "Generator/MapGenerator.hpp"
+#include "Util/Color.hpp"
+#include "Util/GameObject.hpp"
+#include "Util/Text.hpp"
+#include "Util/Time.hpp"
 #include "Scene/MapTest.hpp"
 
 MapTest::MapTest(
-    std::shared_ptr<MapGenerator> generator
-) : MapSystem() {
+    MapSystemConfig::MapConfig config
+) : MapSystem(config) {
+    std::shared_ptr<MapGenerator> generator = std::make_shared<MapGenerator>(
+        config.seed,
+        config.difficulty
+    );
+
     this->m_MainPlayer = std::make_shared<Knight>(
         [this] () {return this->GetNearestMonster();}
     );
@@ -66,20 +76,55 @@ MapTest::MapTest(
         this->m_MainPlayer,
         std::make_shared<EaseOutQubicCurve>()
     );
+
     this->m_AttachCamera->SetScale({2.5F, 2.5F});
+
+    // Level title shown code below
+
+    this->m_LevelIcon = std::make_shared<Util::GameObject>(
+        std::make_shared<Util::Image>(
+            RESOURCE_DIR "/UI/Gameplay/level_number.png"
+        ),
+        10
+    );
+
+    this->m_LevelIcon->m_Transform.translation = {0, 200.0F};
+
+    this->AddChild(m_LevelIcon);
+
+    this->m_LevelTitle = std::make_shared<Util::GameObject>(
+        std::make_shared<Util::Text>(
+            RESOURCE_DIR "/Font/Cubic-Font/Cubic_11.ttf",
+            80,
+            std::to_string(config.chapter) + "-" + std::to_string(config.section),
+            Util::Color(255, 255, 255)
+        ),
+        10
+    );
+
+    this->m_LevelTitle->m_Transform.translation = {11.0F, 195.0F};
+
+    this->AddChild(m_LevelTitle);
+
+    m_SceneStartTime = Util::Time::GetElapsedTimeMs();
 }
 
-MapTest::MapTest(
-    const std::string &seed,
-    const GeneratorType type
-) : MapTest(
-    std::make_shared<MapGenerator>(seed, type)
-) {}
-
 MapTest::MapTest()
-: MapTest(std::make_shared<MapGenerator>(GeneratorType::EASY)) {}
+: MapTest(
+    MapSystemConfig::MapConfig{
+        1 ,
+        1,
+        GeneratorType::EASY,
+        ""
+    }
+) {}
 
 
 void MapTest::Update() {
+    if (Util::Time::GetElapsedTimeMs() - m_SceneStartTime > 2500) {
+        m_LevelTitle->SetVisible(false);
+        m_LevelIcon->SetVisible(false);
+    }
+    
     MapSystem::Update();
 }

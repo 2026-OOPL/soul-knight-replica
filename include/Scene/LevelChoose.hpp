@@ -4,6 +4,7 @@
 #include <imgui.h>
 #include <memory>
 
+#include "Scene/MapTest.hpp"
 #include "Util/GameObject.hpp"
 
 #include "Scene.hpp"
@@ -11,7 +12,7 @@
 
 class LevelSwitch : public Scene {
 public:
-    LevelSwitch();
+    LevelSwitch(MapSystemConfig::MapConfig config);
 
     virtual ~LevelSwitch() = default;
 
@@ -26,6 +27,8 @@ private:
     Util::ms_t m_SceneStartTime;
     std::shared_ptr<Util::GameObject> m_LoadingText;
     std::shared_ptr<Scene> m_Redirect_Scene;
+
+    MapSystemConfig::MapConfig m_MapConfig;
 };
 
 #endif

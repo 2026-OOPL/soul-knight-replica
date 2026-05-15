@@ -1,7 +1,6 @@
 #include <cmath>
-#include <cstddef>
 #include <glm/geometric.hpp>
-#include <iterator>
+
 #include <memory>
 #include <stdexcept>
 #include <unordered_set>
@@ -17,7 +16,6 @@
 #include "Component/Prop/AmmoOrb.hpp"
 #include "Component/Prop/BlockingProp.hpp"
 #include "Component/Prop/Portal.hpp"
-#include "MainMenu.hpp"
 #include "Scene/LevelChoose.hpp"
 #include "Util/Input.hpp"
 #include "Util/Keycode.hpp"
@@ -60,7 +58,7 @@ Collision::AxisAlignedBox BuildPrimaryBodyBox(const ICollidable &body) {
 
 } // namespace
 
-MapSystem::MapSystem()
+MapSystem::MapSystem(MapSystemConfig::MapConfig config)
     : Scene(),
       m_CollisionQueries(&this->m_CollisionSystem) {
     this->m_World.SetRoot(this);
@@ -81,6 +79,8 @@ MapSystem::MapSystem()
     );
     this->m_CollisionDebugOverlay = std::make_shared<CollisionDebugOverlay>();
     this->AddChild(this->m_CollisionDebugOverlay);
+
+    this->m_MapConfig = config;
 }
 
 std::shared_ptr<Scene> MapSystem::GetRedirection() {
@@ -100,7 +100,7 @@ void MapSystem::Update() {
     this->m_IsUpdatingScene = false;
 
     if (m_CurrentPortal != nullptr && m_CurrentPortal->GetPlayerEntered()) {
-        m_RedirectScene = std::make_shared<LevelSwitch>();
+        m_RedirectScene = std::make_shared<LevelSwitch>(m_MapConfig);
     }
 
     this->FlushPendingBullets();
