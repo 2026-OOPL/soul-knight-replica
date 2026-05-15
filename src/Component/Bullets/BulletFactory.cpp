@@ -67,8 +67,8 @@ const BulletConfig &BulletFactory::EnemyRoundBulletConfig() {
 const BulletConfig &BulletFactory::EnemyLaserBulletConfig() {
     static const BulletConfig config = {
         {RESOURCE_DIR"/Bullet/EnemyLaserBullet.png"},
-        {1.0F, 1.0F},
-        {30.0F, 8.0F},
+        {0.5F, 0.5F},
+        {15.0F, 4.0F},
         4,
         true,
         20

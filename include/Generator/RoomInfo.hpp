@@ -20,6 +20,8 @@ enum MobType {
     ANCIENT_GEAR_SET,
     RUINS_TURRET,
     PORTAL_MOB,
+    GHOST,
+    GHOST_KING,
     ZULAN_IN_RUINS,
     VITAMIN_C_MECHA
 };

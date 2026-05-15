@@ -251,6 +251,14 @@ bool Character::IsDead() const {
     return this->m_CurrentHealth <= 0;
 }
 
+bool Character::IsTargetable() const {
+    return this->m_Targetable && !this->IsDead();
+}
+
+void Character::SetTargetable(bool targetable) {
+    this->m_Targetable = targetable;
+}
+
 bool Character::ConsumeDeathEvent() {
     if (!this->IsDead()) {
         return false;
@@ -288,6 +296,10 @@ void Character::StartDeathVisual() {
 }
 
 bool Character::CanBeDamagedBy(const Bullet &bullet) const {
+    if (!this->IsTargetable()) {
+        return false;
+    }
+
     if (bullet.GetFaction() == CombatFaction::Neutral) {
         return false;
     }

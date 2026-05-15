@@ -345,7 +345,7 @@ bool MapSystem::ResolvePlayerMeleeAttack(Player &player) {
 
     bool canTriggerMelee = false;
     for (const auto &mob : this->m_World.GetMobs()) {
-        if (mob == nullptr || mob->IsDead()) {
+        if (mob == nullptr || mob->IsDead() || !mob->IsTargetable()) {
             continue;
         }
 
@@ -371,7 +371,7 @@ bool MapSystem::ResolvePlayerMeleeAttack(Player &player) {
 
     bool hitAnyMob = false;
     for (const auto &mob : this->m_World.GetMobs()) {
-        if (mob == nullptr || mob->IsDead()) {
+        if (mob == nullptr || mob->IsDead() || !mob->IsTargetable()) {
             continue;
         }
 
@@ -845,7 +845,7 @@ std::shared_ptr<Character> MapSystem::GetNearestMonster() {
     std::shared_ptr<Character> nearestMonster = nullptr;
 
     for (const auto &i : this->m_World.GetMobs()) {
-        if (i == nullptr || i->IsDead()) {
+        if (i == nullptr || i->IsDead() || !i->IsTargetable()) {
             continue;
         }
 

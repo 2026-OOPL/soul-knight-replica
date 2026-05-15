@@ -10,6 +10,8 @@
 #include "Component/Collision/CollisionSystem.hpp"
 #include "Component/Mobs/AncientGearSet.hpp"
 #include "Component/Mobs/BowRuinsGuard.hpp"
+#include "Component/Mobs/Ghost.hpp"
+#include "Component/Mobs/GhostKing.hpp"
 #include "Component/Mobs/PortalMob.hpp"
 #include "Component/Mobs/RuinsGuard.hpp"
 #include "Component/Mobs/RuinsSearcher.hpp"
@@ -278,6 +280,14 @@ void FightRoom::StartNextMonsterWave() {
 
             case MobType::PORTAL_MOB:
                 mob = std::make_shared<PortalMob>(target, m_MapSystem->GetCollisionSystem());
+                break;
+
+            case MobType::GHOST:
+                mob = std::make_shared<Ghost>(target, m_MapSystem->GetCollisionSystem());
+                break;
+
+            case MobType::GHOST_KING:
+                mob = std::make_shared<GhostKing>(target, m_MapSystem->GetCollisionSystem());
                 break;
 
             case MobType::ZULAN_IN_RUINS:

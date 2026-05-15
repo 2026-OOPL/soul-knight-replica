@@ -150,6 +150,9 @@ void Bullet::OnCollision(const Collision::CollisionSituation &situation) {
     if (character != nullptr && character->IsDead()) {
         return;
     }
+    if (character != nullptr && !character->IsTargetable()) {
+        return;
+    }
 
     this->TryRegisterImpact();
 }

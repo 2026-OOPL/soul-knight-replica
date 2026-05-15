@@ -118,8 +118,8 @@ constexpr float kMachineGunNormalBulletSpeed = 0.48F;
 constexpr float kMachineGunAngryBulletSpeed = kMachineGunNormalBulletSpeed * 2.0F;
 constexpr float kMachineGunBulletLifetimeMs = 2600.0F;
 constexpr float kOvalSpinRadiansPerMs = kTau / 500.0F;
-constexpr float kOvalBulletVisualScale = 0.9F;
-const glm::vec2 kOvalBulletColliderSize = {26.0F, 16.0F};
+constexpr float kOvalBulletVisualScale = 0.45F;
+const glm::vec2 kOvalBulletColliderSize = {13.0F, 8.0F};
 
 constexpr float kDisintegrationNormalDelayMs = 560.0F;
 constexpr float kDisintegrationAngryDelayMs = 320.0F;
@@ -133,23 +133,23 @@ constexpr float kDisintegrationChildSpeed = 0.54F;
 constexpr float kDisintegrationMainLifetimeMs = 2400.0F;
 constexpr float kDisintegrationLargeLifetimeMs = 1800.0F;
 constexpr float kDisintegrationChildLifetimeMs = 1600.0F;
-constexpr float kDisintegrationMainScale = 1.85F;
-constexpr float kDisintegrationLargeScale = 1.35F;
-constexpr float kDisintegrationChildScale = 0.76F;
-const glm::vec2 kDisintegrationMainColliderSize = {44.0F, 44.0F};
-const glm::vec2 kDisintegrationLargeColliderSize = {32.0F, 32.0F};
-const glm::vec2 kDisintegrationChildColliderSize = {22.0F, 22.0F};
+constexpr float kDisintegrationMainScale = 0.5F;
+constexpr float kDisintegrationLargeScale = 0.6F;
+constexpr float kDisintegrationChildScale = 0.38F;
+const glm::vec2 kDisintegrationMainColliderSize = {18.0F, 18.0F};
+const glm::vec2 kDisintegrationLargeColliderSize = {21.6F, 21.6F};
+const glm::vec2 kDisintegrationChildColliderSize = {13.68F, 13.68F};
 
 constexpr float kBombNormalIntervalMs = 500.0F;
 constexpr float kBombAngryIntervalMs = 340.0F;
 constexpr float kBombWarningDelayMs = 600.0F;
 constexpr float kBombExplosionDurationMs = 520.0F;
 constexpr float kBombSpawnRadius = 76.0F;
-constexpr float kBombDamageRadius = 21.0F;
+constexpr float kBombDamageRadius = 42.0F;
 constexpr int kBombDamage = 5;
 constexpr float kBombKnockbackStrength = 0.18F;
-constexpr float kBombWarningVisualScale = 0.5F;
-constexpr float kBombExplosionVisualScale = 0.625F;
+constexpr float kBombWarningVisualScale = 1.0F;
+constexpr float kBombExplosionVisualScale = 1.25F;
 
 float DistancePointToSegment(
     const glm::vec2 &point,

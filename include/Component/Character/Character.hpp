@@ -74,6 +74,8 @@ public:
     void ApplyImpulse(const glm::vec2 &impulse);
     void Heal(int amount);
     bool IsDead() const;
+    bool IsTargetable() const;
+    void SetTargetable(bool targetable);
     bool ConsumeDeathEvent();
 
     void Update() override;
@@ -123,6 +125,7 @@ protected:
     glm::vec2 m_ImpulseVelocity = {0.0F, 0.0F};
     bool m_DeathVisualStarted = false;
     bool m_DeathEventConsumed = false;
+    bool m_Targetable = true;
 
 private:
 
