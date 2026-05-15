@@ -1,4 +1,5 @@
 #include <cmath>
+#include <cstddef>
 #include <glm/geometric.hpp>
 #include <iterator>
 #include <memory>
@@ -15,6 +16,9 @@
 #include "Component/Map/FightRoom.hpp"
 #include "Component/Prop/AmmoOrb.hpp"
 #include "Component/Prop/BlockingProp.hpp"
+#include "Component/Prop/Portal.hpp"
+#include "MainMenu.hpp"
+#include "Scene/LevelChoose.hpp"
 #include "Util/Input.hpp"
 #include "Util/Keycode.hpp"
 
@@ -79,6 +83,10 @@ MapSystem::MapSystem()
     this->AddChild(this->m_CollisionDebugOverlay);
 }
 
+std::shared_ptr<Scene> MapSystem::GetRedirection() {
+    return m_RedirectScene;
+}
+
 void MapSystem::Update() {
     if (Util::Input::IsKeyDown(Util::Keycode::R)) {
         this->m_ShowCollisionDebug = !this->m_ShowCollisionDebug;
@@ -90,6 +98,11 @@ void MapSystem::Update() {
     this->m_IsUpdatingScene = true;
     Scene::Update();
     this->m_IsUpdatingScene = false;
+
+    if (m_CurrentPortal != nullptr && m_CurrentPortal->GetPlayerEntered()) {
+        m_RedirectScene = std::make_shared<LevelSwitch>();
+    }
+
     this->FlushPendingBullets();
     this->FlushPendingMobs();
 
@@ -547,7 +560,8 @@ std::vector<ICollidable *> MapSystem::CollectDynamicCollisionBodies() const {
     bodies.reserve(
         this->m_World.GetPlayers().size() +
         this->m_World.GetMobs().size() +
-        this->m_World.GetBullets().size()
+        this->m_World.GetBullets().size() + 
+        this->m_World.GetProps().size()
     );
 
     for (const auto &player : this->m_World.GetPlayers()) {
@@ -568,6 +582,15 @@ std::vector<ICollidable *> MapSystem::CollectDynamicCollisionBodies() const {
         }
     }
 
+    for (const auto &prop : this->m_World.GetProps()) {
+        if (prop == nullptr) continue;
+
+        ICollidable *collidable = dynamic_cast<ICollidable *>(prop.get());
+        if (collidable != nullptr) {
+            bodies.push_back(collidable);
+        }
+    }
+   
     return bodies;
 }
 
@@ -672,11 +695,21 @@ void MapSystem::AddProp(const std::shared_ptr<Prop> &prop) {
         return;
     }
 
+    // Record if portal is present, used for the level complete check
+    std::shared_ptr<Portal> portal = std::dynamic_pointer_cast<Portal>(prop);
+    if (portal != nullptr) {
+        m_CurrentPortal = portal;
+    }
+
     prop->Initialize(this);
     this->m_World.AddProp(prop);
 }
 
 void MapSystem::RemoveProp(const std::shared_ptr<Prop> &prop) {
+    if (prop == this->m_CurrentPortal) {
+        this->m_CurrentPortal = nullptr;
+    }
+
     this->m_World.RemoveProp(prop);
 }
 
@@ -731,6 +764,7 @@ void MapSystem::SpawnDropsForMob(const std::shared_ptr<Mob> &mob) {
         AmmoOrb::Config config;
         config.ammoAmount = kAmmoRecoveredPerOrb;
         config.lingerDurationMs = 250.0F + static_cast<float>(i) * 35.0F;
+        config.renderSize = {4, 4};
 
         this->AddProp(std::make_shared<AmmoOrb>(
             deathPosition + BuildAmmoOrbSpawnOffset(deathPosition, i, kAmmoOrbsPerMob),

@@ -8,11 +8,23 @@
 #include "Component/Map/Gangway.hpp"
 #include "Component/Map/MapSystem.hpp"
 #include "Component/UI/PlayUI.hpp"
+#include "Generator/MapGenerator.hpp"
 
 class MapTest : public MapSystem {
 public:
     MapTest();
-    ~MapTest() override;
+    
+    MapTest(
+        const std::string &seed,
+        const GeneratorType type
+    );
+
+    MapTest(
+        std::shared_ptr<MapGenerator> generator
+    );
+
+    ~MapTest() override = default;
+
     void Update() override;
 
 private:

@@ -1,8 +1,8 @@
 #include <memory>
 
-#include <glm/fwd.hpp>
+#include <glm/vec2.hpp>
 
-#include "Component/Mobs/GoblinGuard.hpp"
+#include "Common/Random.hpp"
 #include "Component/Camera/Curve.hpp"
 #include "Component/Camera/TraceCamera.hpp"
 #include "Component/Player/Knight.hpp"
@@ -11,7 +11,9 @@
 #include "Generator/MapGenerator.hpp"
 #include "Scene/MapTest.hpp"
 
-MapTest::MapTest() : MapSystem() {
+MapTest::MapTest(
+    std::shared_ptr<MapGenerator> generator
+) : MapSystem() {
     this->m_MainPlayer = std::make_shared<Knight>(
         [this] () {return this->GetNearestMonster();}
     );
@@ -28,8 +30,6 @@ MapTest::MapTest() : MapSystem() {
 
     this->m_MainPlayer->SetAbsoluteScale({0.75F, 0.75F});
     this->AddPlayer(this->m_MainPlayer);
-    
-    std::shared_ptr<MapGenerator> generator = std::make_shared<MapGenerator>("I Love OOP", GeneratorType::EASY);
 
     generator->Generate();
 
@@ -69,7 +69,16 @@ MapTest::MapTest() : MapSystem() {
     this->m_AttachCamera->SetScale({2.5F, 2.5F});
 }
 
-MapTest::~MapTest() = default;
+MapTest::MapTest(
+    const std::string &seed,
+    const GeneratorType type
+) : MapTest(
+    std::make_shared<MapGenerator>(seed, type)
+) {}
+
+MapTest::MapTest()
+: MapTest(std::make_shared<MapGenerator>(GeneratorType::EASY)) {}
+
 
 void MapTest::Update() {
     MapSystem::Update();

@@ -18,7 +18,7 @@ class AmmoOrb : public Prop {
 public:
     struct Config {
         int ammoAmount = 5;
-        glm::vec2 renderSize = {18.0F, 18.0F};
+        glm::vec2 renderSize = {8.0F, 8.0F};
         float lingerDurationMs = 300.0F;
         float attractRadius = 120.0F;
         float collectRadius = 14.0F;
@@ -39,7 +39,7 @@ private:
 
     MapSystem *m_MapSystem = nullptr;
     std::shared_ptr<Util::Image> m_Image = nullptr;
-    glm::vec2 m_RenderSize = {18.0F, 18.0F};
+    glm::vec2 m_RenderSize = {8.0F, 8.0F};
     int m_AmmoAmount = 5;
     float m_LingerRemainingMs = 0.0F;
     float m_AttractRadius = 120.0F;

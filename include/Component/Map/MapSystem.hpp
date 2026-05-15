@@ -7,6 +7,7 @@
 #include <glm/fwd.hpp>
 #include <glm/vec2.hpp>
 
+#include "Component/Prop/Portal.hpp"
 #include "Util/GameObject.hpp"
 
 #include "Component/Bullet.hpp"
@@ -30,6 +31,8 @@ public:
     ~MapSystem() override = default;
 
     void Update() override;
+
+    std::shared_ptr<Scene> GetRedirection() override;
 
     bool IsPlayerInsideRoom() const;
     glm::vec2 GetCameraCoor() const;
@@ -122,6 +125,10 @@ private:
     std::vector<std::shared_ptr<Mob>> m_PendingMobs;
     bool m_IsUpdatingScene = false;
     bool m_ShowCollisionDebug = false;
+
+    std::shared_ptr<Portal> m_CurrentPortal;
+
+    std::shared_ptr<Scene> m_RedirectScene;
 };
 
 #endif
