@@ -1,13 +1,9 @@
 #include <cmath>
-#include <exception>
-#include <glm/ext/vector_float2.hpp>
+#include <glm/vec2.hpp>
 #include <memory>
 #include <stdexcept>
 #include <unordered_map>
 #include <vector>
-
-#include <glm/fwd.hpp>
-#include <glm/vec2.hpp>
 #include <glm/geometric.hpp>
 
 #include "Common/Constants.hpp"
@@ -131,8 +127,8 @@ std::shared_ptr<Gangway> BuildGangway(
 
 } // namespace
 
-MapGenerator::MapGenerator(std::string seed) {
-    this->m_RandomChoose = std::make_shared<RandomChoose>(seed);
+MapGenerator::MapGenerator(std::shared_ptr<RandomChoose> random, GeneratorType type) {
+    this->m_RandomChoose = random;
 
     const int mapSize = m_RandomChoose->GetInteger(5, 10);
 
@@ -142,7 +138,43 @@ MapGenerator::MapGenerator(std::string seed) {
     this->m_StartCoordinateOffset = m_RandomChoose->GetInteger(1, mapSize - 1);
 
     this->m_StartChamberCooridinate = this->GetStarterChamberCooridinate();
+
+    switch(type) {
+        case GeneratorType::EASY:
+            this->m_MinimumFightRoomCount = 2;
+            this->m_MaximumFightRoomCount = 2;
+            this->m_MinimumRewardRoomCount = 1;
+            this->m_MaximumRewardRoomCount = 1;
+            break;
+
+        case GeneratorType::MEDIUM:
+            this->m_MinimumFightRoomCount = 3;
+            this->m_MaximumFightRoomCount = 3;
+            this->m_MinimumRewardRoomCount = 1;
+            this->m_MaximumRewardRoomCount = 1;
+            break;
+
+        case GeneratorType::HARD:
+            this->m_MinimumFightRoomCount = 4;
+            this->m_MaximumFightRoomCount = 4;
+            this->m_MinimumRewardRoomCount = 1;
+            this->m_MaximumRewardRoomCount = 1;
+            break;
+
+        default:
+            throw std::runtime_error("Unhandled generator type");
+    }
 }
+
+MapGenerator::MapGenerator(std::string seed, GeneratorType type)
+: MapGenerator(
+    std::make_shared<RandomChoose>(seed), type
+) {}
+
+MapGenerator::MapGenerator(GeneratorType type)
+: MapGenerator(
+    std::make_shared<RandomChoose>(), type
+) {}
 
 bool MapGenerator::FightChamberCooridinateValidator(glm::ivec2 cooridinate) {
     switch (m_StartDirection) {
@@ -188,8 +220,8 @@ void MapGenerator::Generate() {
     m_GenChamber = std::make_shared<GenFightChamber>(
         this->GetFightingChamberStartCooridinate(),
         [this](glm::vec2 p) { return this->FightChamberCooridinateValidator(p); },
-        4,
-        2,
+        m_MinimumFightRoomCount,
+        m_MaximumRewardRoomCount,
         this->m_Blueprint,
         m_RandomChoose
     );
@@ -197,8 +229,8 @@ void MapGenerator::Generate() {
 
     m_GenChamber = std::make_shared<GenRewardChamber>(
         [this](glm::vec2 p) { return this->RewardChamberCooridinateValidator(p); },
-        4,
-        2,
+        m_MinimumRewardRoomCount,
+        m_MaximumRewardRoomCount,
         this->m_Blueprint,
         m_RandomChoose
     );

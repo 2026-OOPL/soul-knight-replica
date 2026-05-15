@@ -18,27 +18,12 @@ namespace {
 constexpr char kAmmoOrbSprite[] = RESOURCE_DIR "/Drops/EnergyOrb.png";
 constexpr float kMaxOrbDeltaTimeMs = 50.0F;
 
-glm::vec2 SafeScaleForSize(
-    const std::shared_ptr<Core::Drawable> &drawable,
-    const glm::vec2 &renderSize
-) {
-    if (drawable == nullptr) {
-        return {1.0F, 1.0F};
-    }
-
-    const glm::vec2 drawableSize = drawable->GetSize();
-    return {
-        renderSize.x / std::max(drawableSize.x, 1.0F),
-        renderSize.y / std::max(drawableSize.y, 1.0F)
-    };
-}
-
 } // namespace
 
 AmmoOrb::AmmoOrb(const glm::vec2 &coordinate, Config config)
     : m_RenderSize(
           config.renderSize.x > 0.0F && config.renderSize.y > 0.0F ?
-              config.renderSize :
+              config.renderSize : 
               glm::vec2(18.0F, 18.0F)
       ),
       m_AmmoAmount(std::max(0, config.ammoAmount)),
@@ -49,9 +34,10 @@ AmmoOrb::AmmoOrb(const glm::vec2 &coordinate, Config config)
       m_MaxSpeed(std::max(0.0F, config.maxSpeed)) {
     this->m_Image = std::make_shared<Util::Image>(kAmmoOrbSprite, false);
     this->SetDrawable(this->m_Image);
-    this->SetAbsoluteScale(SafeScaleForSize(this->m_Image, this->m_RenderSize));
+    this->SetAbsoluteScale({0.5F, 0.5F});
     this->SetAbsoluteTranslation(coordinate);
     this->SetZIndex(static_cast<float>(config.zIndex));
+
 }
 
 AmmoOrb::AmmoOrb(const glm::vec2 &coordinate)
