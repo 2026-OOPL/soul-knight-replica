@@ -94,7 +94,7 @@ Character::Character(
     );
     
     this->m_DieAnimation = std::make_shared<Util::Animation>(
-        DieSprite, true, 20, true, 0, false
+        DieSprite, true, 20, false, 0, false
     );
 
     this->m_StandAnimation = std::make_shared<Util::Animation>(
