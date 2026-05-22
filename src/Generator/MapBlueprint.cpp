@@ -146,7 +146,7 @@ void MapBlueprint::OutputMapGridType() {
 
             buf += " ";
         }
-        LOG_DEBUG(buf);
+        LOG_INFO(buf);
         buf.clear();
     }
 }

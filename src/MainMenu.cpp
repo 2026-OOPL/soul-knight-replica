@@ -2,7 +2,7 @@
 #include <memory>
 
 #include "MainMenu.hpp"
-#include "Component/TextButton/TextButton.hpp"
+#include "Component/Button/TextButton.hpp"
 #include "Core/Context.hpp"
 #include "Scene/MapTest.hpp"
 #include "Util/GameObject.hpp"
@@ -26,7 +26,6 @@ MainMenu::MainMenu() : Scene() {
 
     this->m_Button_NewGame = std::make_shared<TextButton>(
         "開新遊戲",
-        2,
         std::make_shared<ButtonAction>(
             nullptr,
             nullptr,
@@ -38,7 +37,6 @@ MainMenu::MainMenu() : Scene() {
 
     this->m_Button_LoadGame = std::make_shared<TextButton>(
         "載入存檔",
-        2,
         nullptr
     );
     this->m_Button_LoadGame->m_Transform.translation =
@@ -47,16 +45,15 @@ MainMenu::MainMenu() : Scene() {
 
     this->m_Button_Credit = std::make_shared<TextButton>(
         "遊玩設定",
-        2,
         nullptr
     );
+
     this->m_Button_Credit->m_Transform.translation =
         buttonBaseline + glm::vec2(0.0F, -140.0F);
     this->AddChild(this->m_Button_Credit);
 
     this->m_Button_Leave = std::make_shared<TextButton>(
         "離開遊戲",
-        2,
         std::make_shared<ButtonAction>(
             nullptr,
             nullptr,

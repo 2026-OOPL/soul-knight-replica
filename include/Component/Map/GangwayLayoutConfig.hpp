@@ -27,7 +27,7 @@ inline WallConfig MakeEmptyWallConfig() {
 inline LayoutProfile MakeHorizontalProfile() {
     LayoutProfile profile;
     profile.wallConfig = MakeEmptyWallConfig();
-    profile.renderOffset = {0.0F, -5.0F};
+    profile.renderOffset = {0.0F, -6.5F};
     profile.wallConfig.top.thickness = MapColliderConfig::kDefaultWallThickness;
     profile.wallConfig.top.centerOffset = 7.0F;
     profile.wallConfig.bottom.thickness = MapColliderConfig::kDefaultWallThickness;
@@ -38,7 +38,7 @@ inline LayoutProfile MakeHorizontalProfile() {
 inline LayoutProfile MakeVerticalProfile() {
     LayoutProfile profile;
     profile.wallConfig = MakeEmptyWallConfig();
-    profile.renderOffset = {0.0F, 0.0F};
+    profile.renderOffset = {0.0F, -5.0F};
     profile.wallConfig.right.thickness = MapColliderConfig::kDefaultWallThickness;
     profile.wallConfig.right.centerOffset = -1.0F;
     profile.wallConfig.left.thickness = MapColliderConfig::kDefaultWallThickness;

@@ -1,21 +1,17 @@
 #include "Util/Input.hpp"
-#include "Util/Keycode.hpp"
-#include "Util/Transform.hpp"
 
-#include <Component/TextButton/TextButton.hpp>
-#include <imgui.h>
-#include <memory>
+#include "Component/Button/Button.hpp"
 
-bool TextButton::isMouseInBound() {
-    Util::Transform transform = this->GetTransform();
-    glm::vec2 size = this->GetScaledSize();
+bool Button::isMouseInBound() {
+    glm::vec2 center = this->GetButonHitboxTranslation();
+    glm::vec2 size = this->GetButonHitboxSize();
 
-    float left = transform.translation.x - size.x / 2;
-    float right = transform.translation.x + size.x / 2;
-    float down = transform.translation.y - size.y / 2;
-    float up = transform.translation.y + size.y / 2;
+    float left = center.x - size.x / 2;
+    float right = center.x + size.x / 2;
+    float down = center.y - size.y / 2;
+    float up = center.y + size.y / 2;
 
-    glm::vec2 cursorPosition = Util::Input::GetCursorPosition();
+    Util::PTSDPosition cursorPosition = Util::Input::GetCursorPosition();
 
     return !(
         cursorPosition.x < left ||
@@ -25,7 +21,7 @@ bool TextButton::isMouseInBound() {
     );
 }
 
-void TextButton::HandlePress() {
+void Button::HandlePress() {
     const bool isInBound = this->isMouseInBound();
     const bool isMouseDown = Util::Input::IsKeyPressed(Util::Keycode::MOUSE_LB);
     const bool isMousePressedThisFrame = Util::Input::IsKeyDown(Util::Keycode::MOUSE_LB);
@@ -53,7 +49,7 @@ void TextButton::HandlePress() {
     }
 }
 
-void TextButton::HandleHover() {
+void Button::HandleHover() {
     bool isInBound = this->isMouseInBound();
 
     if (!isInBound && this->isEnter) {
@@ -76,15 +72,19 @@ void TextButton::HandleHover() {
     }
 }
 
-void TextButton::Update() {
+void Button::Update() {
     this->HandlePress();
     this->HandleHover();
+}
 
+ButtonState Button::GetButtonState() {
     if (this->isPressed) {
-        std::dynamic_pointer_cast<Util::Text>(this->m_Drawable)->SetColor(this->theme->pressed);
-    } else if (this->isEnter) {
-        std::dynamic_pointer_cast<Util::Text>(this->m_Drawable)->SetColor(this->theme->hover);
-    } else {
-        std::dynamic_pointer_cast<Util::Text>(this->m_Drawable)->SetColor(this->theme->normal);
+        return ButtonState::PRESSED;
     }
+
+    if (this->isEnter) {
+        return ButtonState::HOVER;
+    }
+
+    return ButtonState::NORMAL;
 }

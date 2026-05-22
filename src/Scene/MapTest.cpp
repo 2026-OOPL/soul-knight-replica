@@ -1,29 +1,41 @@
 #include <memory>
-
-#include <glm/vec2.hpp>
 #include <string>
+#include <glm/vec2.hpp>
 
-#include "Common/Random.hpp"
 #include "Component/Camera/Curve.hpp"
 #include "Component/Camera/TraceCamera.hpp"
+#include "Component/Map/MapSystem.hpp"
 #include "Component/Player/Knight.hpp"
+#include "Component/UI/PauseUI.hpp"
 #include "Component/UI/PlayUI.hpp"
 #include "Component/Weapon.hpp"
 #include "Generator/MapGenerator.hpp"
+#include "MainMenu.hpp"
+#include "Util/Animation.hpp"
 #include "Util/Color.hpp"
 #include "Util/GameObject.hpp"
 #include "Util/Text.hpp"
 #include "Util/Time.hpp"
+#include "Util/Input.hpp"
 #include "Scene/MapTest.hpp"
 
 MapTest::MapTest(
     MapSystemConfig::MapConfig config
 ) : MapSystem(config) {
-    std::shared_ptr<MapGenerator> generator = std::make_shared<MapGenerator>(
-        config.section == 3,
-        config.seed,
-        config.difficulty
-    );
+    std::shared_ptr<MapGenerator> generator;
+
+    if (config.seed == "") {
+        generator = std::make_shared<MapGenerator>(
+            config.section == 3,
+            config.difficulty
+        );
+    } else {
+        generator = std::make_shared<MapGenerator>(
+            config.section == 3,
+            config.seed,
+            config.difficulty
+        );
+    }
 
     this->m_MainPlayer = std::make_shared<Knight>(
         [this] () {return this->GetNearestMonster();}
@@ -43,6 +55,7 @@ MapTest::MapTest(
     this->AddPlayer(this->m_MainPlayer);
 
     generator->Generate();
+    generator->m_Blueprint->OutputMapGridType();
 
     this->m_RoomsInScene = generator->GetRooms();
     this->m_GangwaysInScene = generator->GetGangways();
@@ -118,7 +131,11 @@ MapTest::MapTest()
         GeneratorType::EASY,
         ""
     }
-) {}
+) {
+    m_PauseUI = std::make_shared<PauseUI>(
+        [this] { this->m_ExitToHome = true; }
+    );
+}
 
 
 void MapTest::Update() {
@@ -126,6 +143,37 @@ void MapTest::Update() {
         m_LevelTitle->SetVisible(false);
         m_LevelIcon->SetVisible(false);
     }
-    
-    MapSystem::Update();
+
+    // Game pause logic
+    if (Util::Input::IsKeyUp(Util::Keycode::ESCAPE)) {
+        m_IsPaused = !m_IsPaused;
+        
+        if (m_IsPaused) {
+            m_PauseUI = std::make_shared<PauseUI>(
+                [this] { this->m_ExitToHome = true; }
+            ); 
+            this->AddChild(m_PauseUI);
+        } else {
+            this->RemoveChild(m_PauseUI);
+        }
+    }
+
+    if (m_IsPaused && this->m_PauseUI->GetExitSignal()) {
+        m_IsPaused = false;
+        this->RemoveChild(m_PauseUI);
+    }
+
+    if (m_IsPaused) {
+        this->m_PauseUI->Update();      
+    } else {
+        MapSystem::Update();
+    }
+}
+
+std::shared_ptr<Scene> MapTest::GetRedirection() {
+    if (m_ExitToHome) {
+        return std::make_shared<MainMenu>();
+    }
+
+    return MapSystem::GetRedirection();
 }
