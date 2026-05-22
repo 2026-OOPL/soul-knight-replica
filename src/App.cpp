@@ -33,6 +33,10 @@ void App::Update() {
      * closing the window.
     */
 
+    if (Util::Input::IfExit()) {
+        this->m_CurrentState = State::END;
+    }
+
     this->m_Root.Update();
 }
 
