@@ -28,7 +28,8 @@ PauseUI::PauseUI(std::function<void()> onHomeButtonClick) {
 
     m_PauseMenu = std::make_shared<Util::GameObject>(
         std::make_shared<Util::Image>(
-            RESOURCE_DIR"/UI/Pause/menu_pause.png"
+            RESOURCE_DIR"/UI/Pause/menu_pause.png",
+            false
         ),
         21
     );
@@ -102,6 +103,5 @@ void PauseUI::Update() {
 }
 
 bool PauseUI::GetExitSignal() {
-    LOG_INFO(m_ExitSignal);
     return m_ExitSignal;
 }
