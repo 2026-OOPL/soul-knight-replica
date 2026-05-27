@@ -7,6 +7,7 @@
 #include "Component/Button/Button.hpp"
 #include "Component/Button/ImageButton.hpp"
 #include "Component/IStateful.hpp"
+#include "Component/UI/SettingsUI.hpp"
 #include "Util/GameObject.hpp"
 #include "Util/Image.hpp"
 #include "Util/Logger.hpp"
@@ -75,7 +76,13 @@ PauseUI::PauseUI(std::function<void()> onHomeButtonClick) {
     this->AddChild(m_ContinueButton);
 
     m_SettingsButton = std::make_shared<ImageButton>(
-        nullptr,
+        std::make_shared<ButtonAction>(
+            nullptr,
+            nullptr,
+            [this] () {
+                this->ToggleSettings();
+            }
+        ),
         std::make_shared<ImageButtonTheme>(
             RESOURCE_DIR"/UI/Pause/button_settings.png",
             RESOURCE_DIR"/UI/Pause/button_settings_hovered.png",
@@ -104,4 +111,16 @@ void PauseUI::Update() {
 
 bool PauseUI::GetExitSignal() {
     return m_ExitSignal;
+}
+
+void PauseUI::ToggleSettings() {
+    if (m_SettingsLaunched) {
+        this->RemoveChild(this->m_SettingsMenu);
+        this->m_SettingsLaunched = false;
+        return;
+    }
+
+    this->m_SettingsMenu = std::make_shared<SettingsUI>();
+    this->AddChild(this->m_SettingsMenu);
+    this->m_SettingsLaunched = true;
 }
