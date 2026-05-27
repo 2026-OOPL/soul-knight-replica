@@ -10,6 +10,35 @@
 #include "Generator/RoomInfo.hpp"
 #include "Common/Enums.hpp" 
 
+namespace GenPortalSpace {
+    bool SortFunction(GeneratePolicy m_GeneratePolicy, glm::ivec2 a, glm::ivec2 b) {
+        switch (m_GeneratePolicy) {
+            case GeneratePolicy::TOP_LEFT:
+                // 找最小 Y (Top)，若 Y 相同則找最小 X (Left)
+                if (a.y != b.y) return a.y < b.y;
+                return a.x < b.x;
+
+            case GeneratePolicy::TOP_RIGHT:
+                // 找最小 Y (Top)，若 Y 相同則找最大 X (Right)
+                if (a.y != b.y) return a.y < b.y;
+                return a.x > b.x;
+
+            case GeneratePolicy::BOTTOM_LEFT:
+                // 找最大 Y (Bottom)，若 Y 相同則找最小 X (Left)
+                if (a.y != b.y) return a.y > b.y;
+                return a.x < b.x;
+
+            case GeneratePolicy::BOTTOM_RIGHT:
+                // 找最大 Y (Bottom)，若 Y 相同則找最大 X (Right)
+                if (a.y != b.y) return a.y > b.y;
+                return a.x > b.x;
+                
+            default:
+                return false;
+        }
+    }
+};
+
 GenPortalChamber::GenPortalChamber(
     GeneratePolicy generatePolicy,
 
@@ -74,36 +103,10 @@ std::vector<glm::ivec2> GenPortalChamber::GetAvailableCooridinate() {
         candidate.begin(),
         candidate.end(),
         [this](glm::vec2 a, glm::vec2 b) {
-            return this->SortFunction(a, b); // 如果 a > b，則 a 應該排在前面
+            return GenPortalSpace::SortFunction(this->m_GeneratePolicy, a, b); // 如果 a > b，則 a 應該排在前面
         }
     );
 
     return candidate;
 }
 
-bool GenPortalChamber::SortFunction(glm::ivec2 a, glm::ivec2 b) {
-    switch (m_GeneratePolicy) {
-        case GeneratePolicy::TOP_LEFT:
-            // 找最小 Y (Top)，若 Y 相同則找最小 X (Left)
-            if (a.y != b.y) return a.y < b.y;
-            return a.x < b.x;
-
-        case GeneratePolicy::TOP_RIGHT:
-            // 找最小 Y (Top)，若 Y 相同則找最大 X (Right)
-            if (a.y != b.y) return a.y < b.y;
-            return a.x > b.x;
-
-        case GeneratePolicy::BOTTOM_LEFT:
-            // 找最大 Y (Bottom)，若 Y 相同則找最小 X (Left)
-            if (a.y != b.y) return a.y > b.y;
-            return a.x < b.x;
-
-        case GeneratePolicy::BOTTOM_RIGHT:
-            // 找最大 Y (Bottom)，若 Y 相同則找最大 X (Right)
-            if (a.y != b.y) return a.y > b.y;
-            return a.x > b.x;
-            
-        default:
-            return false;
-    }
-}

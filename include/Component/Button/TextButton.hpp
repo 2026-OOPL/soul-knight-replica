@@ -1,14 +1,12 @@
 #ifndef TEXT_BUTTON_HPP
 #define TEXT_BUTTON_HPP
 
-#include <Util/GameObject.hpp>
-#include <Util/Text.hpp>
-
 #include <memory>
 
-#include "Component/IStateful.hpp"
+#include "Component/Button/Button.hpp"
 #include <Util/Color.hpp>
-#include <functional>
+#include <Util/GameObject.hpp>
+#include <Util/Text.hpp>
 
 namespace {
 
@@ -20,7 +18,7 @@ const int         DefaultFontSize = 36;
 
 }
 
-typedef struct ButtonTheme {
+typedef struct TextButtonTheme {
     Util::Color normal;
     Util::Color hover;
     Util::Color pressed;
@@ -28,14 +26,14 @@ typedef struct ButtonTheme {
     std::string font;
     int size;
 
-    ButtonTheme(
+    TextButtonTheme(
     ) : normal(DefaultNormalColor), 
         hover(DefaultHoverColor),
         pressed(DefaultPressedColor), 
         font(DefaultFont),
         size(DefaultFontSize) {}
 
-    ButtonTheme(
+    TextButtonTheme(
         std::string font,
         int size
     ) : normal(DefaultNormalColor), 
@@ -44,7 +42,7 @@ typedef struct ButtonTheme {
         font(font),
         size(size) {}
 
-    ButtonTheme(
+    TextButtonTheme(
         Util::Color normal,
         Util::Color hover,
         Util::Color pressed
@@ -53,31 +51,16 @@ typedef struct ButtonTheme {
         pressed(pressed), 
         font(DefaultFont), 
         size(DefaultFontSize) {}
-} ButtonTheme_t;
+} TextButtonTheme_t;
 
-typedef struct ButtonAction {
-    std::function<void()> onEnter;
-    std::function<void()> onLeave;
-    std::function<void()> onClick;
-
-    ButtonAction(
-        std::function<void()> onEnter,
-        std::function<void()> onLeave,
-        std::function<void()> onClick
-    ) : onEnter(onEnter), onLeave(onLeave), onClick(onClick) {}
-} ButtonAction_t;
-
-class TextButton : public Util::GameObject, public IStateful {
+class TextButton : public Button {
 public:
     TextButton(
         const std::string &text,
-        int zIndex,
         std::shared_ptr<ButtonAction> action,
-        std::shared_ptr<ButtonTheme> theme
-    )
-        : GameObject(nullptr, zIndex) {
+        std::shared_ptr<TextButtonTheme> theme
+    ) : Button(action) {
         this->theme = theme != nullptr ? theme : this->theme;
-        this->action = action != nullptr ? action : this->action;
 
         this->m_Text = std::make_shared<Util::Text>(
             this->theme->font,
@@ -91,36 +74,19 @@ public:
 
     TextButton(
         const std::string &text,
-        int zIndex,
         std::shared_ptr<ButtonAction> action
-    ) : GameObject(nullptr, zIndex) {    
-        this->action = action != nullptr ? action : this->action;
+    ) : TextButton(
+        text, action, nullptr
+    ) {};
 
-        this->m_Text = std::make_shared<Util::Text>(
-            this->theme->font,
-            this->theme->size,
-            text,
-            this->theme->normal
-        );
-
-        this->SetDrawable(this->m_Text);
-    }
+    glm::vec2 GetButonHitboxSize() override;
+    glm::vec2 GetButonHitboxTranslation() override;
 
     void Update() override;
 
 private:
-    void HandlePress();
-    void HandleHover();
-    bool isMouseInBound();
-
-    bool isEnter = false;
-    bool isPressed = false;
-    bool m_PressedInside = false;
-
     std::shared_ptr<Util::Text> m_Text;
-
-    std::shared_ptr<ButtonTheme> theme = std::make_shared<ButtonTheme>();
-    std::shared_ptr<ButtonAction> action = nullptr;
+    std::shared_ptr<TextButtonTheme> theme = std::make_shared<TextButtonTheme>();
 };
 
 #endif

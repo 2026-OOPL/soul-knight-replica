@@ -1,14 +1,15 @@
 #include <cmath>
+#include <vector>
 #include <glm/vec2.hpp>
 #include <memory>
 #include <stdexcept>
+#include <string>
 #include <unordered_map>
-#include <vector>
-#include <glm/geometric.hpp>
 
 #include "Common/Constants.hpp"
 #include "Common/Enums.hpp"
 #include "Common/Random.hpp"
+#include "Component/Map/BaseRoom.hpp"
 #include "Component/Map/BossRoom.hpp"
 #include "Component/Map/FightRoom.hpp"
 #include "Component/Map/Gangway.hpp"
@@ -22,6 +23,7 @@
 #include "Generator/GenRewardChamber.hpp"
 #include "Generator/RoomInfo.hpp"
 #include "Generator/MapGenerator.hpp"
+#include "Util/Logger.hpp"
 
 namespace {
 
@@ -137,7 +139,13 @@ std::shared_ptr<Gangway> BuildGangway(
 
 } // namespace
 
-MapGenerator::MapGenerator(bool generateBoss, std::shared_ptr<RandomChoose> random, GeneratorType type) {
+MapGenerator::MapGenerator(GeneratorType type)
+: MapGenerator(type, std::make_shared<RandomChoose>()) {}
+
+MapGenerator::MapGenerator(GeneratorType type, std::string seed) 
+: MapGenerator(type, std::make_shared<RandomChoose>(seed)) {}
+
+MapGenerator::MapGenerator(GeneratorType type, std::shared_ptr<RandomChoose> random) {
     this->m_RandomChoose = random;
 
     const int mapSize = m_RandomChoose->GetInteger(5, 10);
@@ -146,10 +154,9 @@ MapGenerator::MapGenerator(bool generateBoss, std::shared_ptr<RandomChoose> rand
     this->m_MapGridSize = m_Blueprint->GetSize();
     this->m_StartDirection = m_RandomChoose->GetEnum<Direction>();
     this->m_StartCoordinateOffset = m_RandomChoose->GetInteger(1, mapSize - 1);
-
     this->m_StartChamberCooridinate = this->GetStarterChamberCooridinate();
 
-    switch(type) {
+    switch (type) {
         case GeneratorType::EASY:
             this->m_MinimumFightRoomCount = 2;
             this->m_MaximumFightRoomCount = 2;
@@ -163,32 +170,95 @@ MapGenerator::MapGenerator(bool generateBoss, std::shared_ptr<RandomChoose> rand
             this->m_MinimumRewardRoomCount = 1;
             this->m_MaximumRewardRoomCount = 1;
             break;
-
         case GeneratorType::HARD:
+        case GeneratorType::BOSS_1:
+        case GeneratorType::BOSS_2:
+        case GeneratorType::BOSS_3:
             this->m_MinimumFightRoomCount = 4;
             this->m_MaximumFightRoomCount = 4;
             this->m_MinimumRewardRoomCount = 1;
             this->m_MaximumRewardRoomCount = 1;
             break;
+    }
+    
+    const std::shared_ptr<RoomInfo> starterRoom = std::make_shared<RoomInfo>(
+        RoomType::ROOM_13_13, RoomPurpose::STARTER, m_RandomChoose
+    );
+    this->m_Blueprint->SetElementByCooridinate(
+        this->m_StartChamberCooridinate,
+        starterRoom
+    );
 
+    m_GenChamber.push_back(
+        std::make_shared<GenFightChamber>(
+            this->GetFightingChamberStartCooridinate(),
+            [this](glm::vec2 p) { return this->FightChamberCooridinateValidator(p); },
+            m_MaximumFightRoomCount,
+            m_MinimumFightRoomCount,
+            this->m_Blueprint,
+            m_RandomChoose
+        )
+    );
+
+    m_GenChamber.push_back(
+        std::make_shared<GenRewardChamber>(
+            [this](glm::vec2 p) { return this->RewardChamberCooridinateValidator(p); },
+            m_MaximumRewardRoomCount,
+            m_MinimumRewardRoomCount,
+            this->m_Blueprint,
+            m_RandomChoose
+        )
+    );
+
+    switch (type) {
+        case GeneratorType::BOSS_1:
+        case GeneratorType::BOSS_2:
+        case GeneratorType::BOSS_3:
+            m_GenChamber.push_back(
+                std::make_shared<GenBossChamber>(
+                    [this](glm::vec2 p) { return this->RewardChamberCooridinateValidator(p); },
+                    this->m_Blueprint,
+                    m_RandomChoose
+                )
+            );
         default:
-            throw std::runtime_error("Unhandled generator type");
+            break;
     }
 
-    m_GenerateBoss = generateBoss;
+    m_GenChamber.push_back(
+        std::make_shared<GenPortalChamber>(
+            this->GetPortalChamberGenPolicy(),
+            [this](glm::ivec2 coor) {
+                return this->PortalChamberCooridinateValidator(coor);
+            },
+            this->m_Blueprint,
+            m_RandomChoose
+        )
+    );
+
+    int retries = 0;
+    bool generateSuccess = false;
+    do {
+        try {
+            for (auto const &i : this->m_GenChamber) i->Generate();
+        } catch (const std::runtime_error& _) {
+            retries ++;
+            generateSuccess = false;
+            this->m_Blueprint->Reset();
+            this->m_MapGridSize = m_Blueprint->GetSize();
+            LOG_INFO("Retrying generating map... ");
+            continue;
+        }
+
+        generateSuccess = true;
+    } while (!generateSuccess || retries > 10);
+
+    if (!generateSuccess) {
+        LOG_ERROR("Failed to generate map after 10 retries");
+        throw std::runtime_error("Failed to generate map after 10 retries");
+    }
+
 }
-
-MapGenerator::MapGenerator(bool generateBoss, std::string seed, GeneratorType type)
-: MapGenerator(
-    generateBoss,
-    std::make_shared<RandomChoose>(seed), type
-) {}
-
-MapGenerator::MapGenerator(bool generateBoss, GeneratorType type)
-: MapGenerator(
-    generateBoss,
-    std::make_shared<RandomChoose>(), type
-) {}
 
 bool MapGenerator::FightChamberCooridinateValidator(glm::ivec2 cooridinate) {
     switch (m_StartDirection) {
@@ -226,93 +296,42 @@ bool MapGenerator::RewardChamberCooridinateValidator(glm::ivec2 cooridinate) {
     return true;
 }
 
-void MapGenerator::Generate() {
-    this->m_RuntimeMapBuilt = false;
-    this->m_RoomInstances.clear();
-    this->m_GangwayInstances.clear();
-
-    m_GenChamber = std::make_shared<GenFightChamber>(
-        this->GetFightingChamberStartCooridinate(),
-        [this](glm::vec2 p) { return this->FightChamberCooridinateValidator(p); },
-        m_MaximumFightRoomCount,
-        m_MinimumFightRoomCount,
-        this->m_Blueprint,
-        m_RandomChoose
-    );
-    m_GenChamber->Generate();
-
-    m_GenChamber = std::make_shared<GenRewardChamber>(
-        [this](glm::vec2 p) { return this->RewardChamberCooridinateValidator(p); },
-        m_MaximumRewardRoomCount,
-        m_MinimumRewardRoomCount,
-        this->m_Blueprint,
-        m_RandomChoose
-    );
-    m_GenChamber->Generate();
-
-    if (m_GenerateBoss) {
-        m_GenChamber = std::make_shared<GenBossChamber>(
-            [this](glm::vec2 p) { return this->RewardChamberCooridinateValidator(p); },
-            this->m_Blueprint,
-            m_RandomChoose
-        );
-        m_GenChamber->Generate();
-    }
-
-    m_GenChamber = std::make_shared<GenPortalChamber>(
-        this->GetPortalChamberGenPolicy(),
-        [](glm::vec2) { return true; },
-        this->m_Blueprint,
-        m_RandomChoose
-    );
-    m_GenChamber->Generate();
-
-    const std::shared_ptr<RoomInfo> starterRoom = std::make_shared<RoomInfo>(
-        RoomType::ROOM_13_13, RoomPurpose::STARTER, m_RandomChoose
-    );
-
-    this->m_Blueprint->SetElementByCooridinate(
-        this->GetStarterChamberCooridinate(),
-        starterRoom
-    );
-}
-
-glm::vec2 MapGenerator::GetStarterChamberCooridinate() {
+glm::ivec2 MapGenerator::GetStarterChamberCooridinate() {
     switch (m_StartDirection) {
     case Direction::BOTTOM:
-        return glm::vec2(m_StartCoordinateOffset, m_MapGridSize.y - 1);
+        return glm::ivec2(m_StartCoordinateOffset, m_MapGridSize.y - 1);
 
     case Direction::LEFT:
-        return glm::vec2(m_StartCoordinateOffset, 0);
+        return glm::ivec2(m_StartCoordinateOffset, 0);
 
     case Direction::RIGHT:
-        return glm::vec2(m_MapGridSize.x - 1, m_StartCoordinateOffset);
+        return glm::ivec2(m_MapGridSize.x - 1, m_StartCoordinateOffset);
 
     case Direction::TOP:
-        return glm::vec2(m_StartCoordinateOffset, 0);
+        return glm::ivec2(m_StartCoordinateOffset, 0);
     }
 
-    return glm::vec2(0, 0);
+    return glm::ivec2(0, 0);
 }
 
-glm::vec2 MapGenerator::GetFightingChamberStartCooridinate() {
-    const glm::vec2 startCoridinate = this->GetStarterChamberCooridinate();
+glm::ivec2 MapGenerator::GetFightingChamberStartCooridinate() {
+    const glm::ivec2 startCoridinate = this->GetStarterChamberCooridinate();
 
     switch (m_StartDirection) {
     case Direction::BOTTOM:
-        return startCoridinate + glm::vec2(0, -1);
+        return startCoridinate + glm::ivec2(0, -1);
 
     case Direction::LEFT:
-        return startCoridinate + glm::vec2(1, 0);
+        return startCoridinate + glm::ivec2(1, 0);
 
     case Direction::RIGHT:
-        return startCoridinate + glm::vec2(-1, 0);
+        return startCoridinate + glm::ivec2(-1, 0);
 
     case Direction::TOP:
-        return startCoridinate + glm::vec2(0, 1);
+        return startCoridinate + glm::ivec2(0, 1);
     }
 
-    return glm::vec2(0, 0);
+    return glm::ivec2(0, 0);
 }
 
 GeneratePolicy MapGenerator::GetPortalChamberGenPolicy() {
@@ -422,7 +441,100 @@ std::vector<std::shared_ptr<BaseRoom>> MapGenerator::GetRooms() {
     return this->m_RoomInstances;
 }
 
+std::vector<std::shared_ptr<BaseRoom>> MapGenerator::GetRooms(RoomPurpose type) {
+    std::vector<std::shared_ptr<BaseRoom>> result;
+
+    this->BuildRuntimeMap();
+
+    for (const auto &room : this->m_RoomInstances) {
+        if (room == nullptr || room->GetPurpose() != type) {
+            continue;
+        }
+
+        result.push_back(room);
+    }
+
+    return result;
+}
+
 std::vector<std::shared_ptr<Gangway>> MapGenerator::GetGangways() {
     this->BuildRuntimeMap();
     return this->m_GangwayInstances;
+}
+
+unsigned int long long MapGenerator::GetSeed() {
+    return this->m_RandomChoose->GetSeed();
+}
+
+bool MapGenerator::PortalChamberCooridinateValidator(glm::ivec2 coor) {
+    // 1. 確保傳送門絕對不會選中起點房間座標本身
+    if (coor == this->GetStarterChamberCooridinate()) {
+        return false;
+    }
+    // 2. 確保傳送門絕對不會緊鄰起點房間
+    glm::ivec2 starterCoor = this->GetStarterChamberCooridinate();
+    const glm::ivec2 directions[] = {
+        glm::ivec2(0, 1),
+        glm::ivec2(0, -1),
+        glm::ivec2(1, 0),
+        glm::ivec2(-1, 0),
+    };
+    for (int i = 0; i < 4; ++i) {
+        if (coor == starterCoor + directions[i]) {
+            return false;
+        }
+    }
+    
+    // 3. 尋找 Boss 房座標
+    std::vector<glm::ivec2> rooms = m_Blueprint->GetChamberCooirdinateByPurpose(RoomPurpose::BOSS);
+    if (rooms.empty()) {
+        return true;
+    }
+
+    glm::ivec2 bossCoordinate = rooms.front();
+
+    // 4. 若為 Boss 地圖，套用 Boss 專用限制
+    bool adjacentToBoss = false;
+    for (int i = 0; i < 4; ++i) {
+      if (coor == bossCoordinate + directions[i]) {
+        adjacentToBoss = true;
+        break;
+      }
+    }
+
+    if (!adjacentToBoss) {
+      return false;
+    }
+
+    // 統計該座標相鄰的已生成房間數量
+    auto getNeighborChamberCount = [this, directions](glm::ivec2 checkCoor) {
+      int count = 0;
+      for (int i = 0; i < 4; ++i) {
+        glm::ivec2 neighbor = checkCoor + directions[i];
+        if (this->m_Blueprint->isCooridinateInBound(neighbor) &&
+            this->m_Blueprint->GetElementByCooridinate(neighbor) != nullptr) {
+          count++;
+        }
+      }
+      return count;
+    };
+
+    bool existsExclusiveNeighbor = false;
+    for (int i = 0; i < 4; ++i) {
+      glm::ivec2 neighbor = bossCoordinate + directions[i];
+      if (this->m_Blueprint->isCooridinateInBound(neighbor) &&
+          this->m_Blueprint->GetElementByCooridinate(neighbor) == nullptr) {
+        if (getNeighborChamberCount(neighbor) == 1) {
+          existsExclusiveNeighbor = true;
+          break;
+        }
+      }
+    }
+
+    int myNeighbors = getNeighborChamberCount(coor);
+    if (existsExclusiveNeighbor) {
+      return myNeighbors == 1;
+    }
+    
+    return true;
 }

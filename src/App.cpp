@@ -31,9 +31,9 @@ void App::Update() {
     /*
      * Do not touch the code below as they serve the purpose for
      * closing the window.
-     */
-    if (Util::Input::IsKeyUp(Util::Keycode::ESCAPE) ||
-        Util::Input::IfExit()) {
+    */
+
+    if (Util::Input::IfExit()) {
         this->m_CurrentState = State::END;
     }
 

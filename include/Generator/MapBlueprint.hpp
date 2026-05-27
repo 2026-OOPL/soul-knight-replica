@@ -1,6 +1,7 @@
 #ifndef MAP_BLUEPRINT_HPP
 #define MAP_BLUEPRINT_HPP
 
+#include "Common/Enums.hpp"
 #include <memory>
 #include <vector>
 
@@ -13,8 +14,8 @@ class MapBlueprint {
 public:
     MapBlueprint(glm::ivec2 size);
 
-    std::vector<glm::ivec2> GetAllFightChamberCooirdinate();
     std::vector<glm::ivec2> GetAllChamberCooirdinate();
+    std::vector<glm::ivec2> GetChamberCooirdinateByPurpose(RoomPurpose purpose);
     
     std::shared_ptr<RoomInfo> GetElementByCooridinate(glm::ivec2 pos);
     glm::ivec2 GetCooridinateByElement(std::shared_ptr<RoomInfo> element); 
@@ -28,6 +29,8 @@ public:
     std::vector<std::shared_ptr<MapPiece>> GetMapPieces();
 
     void OutputMapGridType();
+
+    void Reset();
 
 private:
     glm::ivec2 m_MapGridSize;

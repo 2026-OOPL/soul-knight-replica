@@ -1,30 +1,62 @@
 #include <memory>
-
-#include <glm/vec2.hpp>
+#include <stdexcept>
 #include <string>
+#include <glm/vec2.hpp>
+#include <vector>
 
-#include "Common/Random.hpp"
+#include "Common/Enums.hpp"
 #include "Component/Camera/Curve.hpp"
 #include "Component/Camera/TraceCamera.hpp"
+#include "Component/Map/MapSystem.hpp"
 #include "Component/Player/Knight.hpp"
+#include "Component/UI/PauseUI.hpp"
 #include "Component/UI/PlayUI.hpp"
 #include "Component/Weapon.hpp"
 #include "Generator/MapGenerator.hpp"
 #include "Util/Color.hpp"
 #include "Util/GameObject.hpp"
+#include "Util/Logger.hpp"
 #include "Util/Text.hpp"
 #include "Util/Time.hpp"
+#include "Util/Input.hpp"
 #include "Scene/MapTest.hpp"
+#include "MainMenu.hpp"
 
 MapTest::MapTest(
     MapSystemConfig::MapConfig config
 ) : MapSystem(config) {
-    std::shared_ptr<MapGenerator> generator = std::make_shared<MapGenerator>(
-        config.section == 3,
-        config.seed,
-        config.difficulty
-    );
+    std::shared_ptr<MapGenerator> generator;
 
+    GeneratorType difficulty;
+
+    const std::vector<GeneratorType> bossType = {
+        GeneratorType::BOSS_1,
+        GeneratorType::BOSS_2,
+        GeneratorType::BOSS_3
+    };
+
+    switch (config.section) {
+        case 1: 
+            difficulty = GeneratorType::EASY;
+            break;
+        case 2:
+            difficulty = GeneratorType::MEDIUM;
+            break;
+        case 3:
+            difficulty = bossType.at(config.chapter - 1);
+            break;
+        default:
+            throw std::runtime_error("Unhandled difficulty");
+    }
+
+    generator = std::make_shared<MapGenerator>(difficulty);
+
+    m_MainRoom = generator->GetRooms(RoomPurpose::STARTER).front();
+
+    LOG_INFO("Map genertated by seed {} with result :", generator->GetSeed());
+    generator->m_Blueprint->OutputMapGridType();
+
+    // Player initialization
     this->m_MainPlayer = std::make_shared<Knight>(
         [this] () {return this->GetNearestMonster();}
     );
@@ -42,25 +74,14 @@ MapTest::MapTest(
     this->m_MainPlayer->SetAbsoluteScale({0.75F, 0.75F});
     this->AddPlayer(this->m_MainPlayer);
 
-    generator->Generate();
-
+    // Setup initial mob wave after player constructed
     this->m_RoomsInScene = generator->GetRooms();
     this->m_GangwaysInScene = generator->GetGangways();
     
     this->AddRooms(this->m_RoomsInScene);
     this->AddGangways(this->m_GangwaysInScene);
 
-    for (const auto &room : this->m_RoomsInScene) {
-        if (room == nullptr) {
-            continue;
-        }
-
-        if (this->m_MainRoom == nullptr &&
-            room->GetPurpose() == RoomPurpose::STARTER) {
-            this->m_MainRoom = room;
-        }
-    }
-
+    // Gameplay UI initialization
     this->m_PlayUI = std::make_shared<PlayUI>(
         [weakPlayer = std::shared_ptr<Player>(this->m_MainPlayer)]() {
             const std::shared_ptr<Player> player = weakPlayer;
@@ -118,7 +139,11 @@ MapTest::MapTest()
         GeneratorType::EASY,
         ""
     }
-) {}
+) {
+    m_PauseUI = std::make_shared<PauseUI>(
+        [this] { this->m_ExitToHome = true; }
+    );
+}
 
 
 void MapTest::Update() {
@@ -126,6 +151,37 @@ void MapTest::Update() {
         m_LevelTitle->SetVisible(false);
         m_LevelIcon->SetVisible(false);
     }
-    
-    MapSystem::Update();
+
+    // Game pause logic
+    if (Util::Input::IsKeyUp(Util::Keycode::ESCAPE)) {
+        m_IsPaused = !m_IsPaused;
+        
+        if (m_IsPaused) {
+            m_PauseUI = std::make_shared<PauseUI>(
+                [this] { this->m_ExitToHome = true; }
+            ); 
+            this->AddChild(m_PauseUI);
+        } else {
+            this->RemoveChild(m_PauseUI);
+        }
+    }
+
+    if (m_IsPaused && this->m_PauseUI->GetExitSignal()) {
+        m_IsPaused = false;
+        this->RemoveChild(m_PauseUI);
+    }
+
+    if (m_IsPaused) {
+        this->m_PauseUI->Update();      
+    } else {
+        MapSystem::Update();
+    }
+}
+
+std::shared_ptr<Scene> MapTest::GetRedirection() {
+    if (m_ExitToHome) {
+        return std::make_shared<MainMenu>();
+    }
+
+    return MapSystem::GetRedirection();
 }

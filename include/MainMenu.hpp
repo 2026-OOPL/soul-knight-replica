@@ -7,7 +7,7 @@
 #include "Util/GameObject.hpp"
 
 #include "Scene.hpp"
-#include "Component/TextButton/TextButton.hpp"
+#include "Component/Button/TextButton.hpp"
 
 class MainMenu : public Scene {
 public:

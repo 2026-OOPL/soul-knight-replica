@@ -62,7 +62,7 @@ void GenRewardChamber::Generate() {
 
 std::vector<glm::ivec2> GenRewardChamber::GetAvailableCooridinate() {
     std::vector<glm::ivec2> result;
-    std::vector<glm::ivec2> fightChamber = m_Blueprint->GetAllFightChamberCooirdinate();   
+    std::vector<glm::ivec2> fightChamber = m_Blueprint->GetChamberCooirdinateByPurpose(RoomPurpose::FIGHTING);
     
     const glm::ivec2 direction[] = {
         glm::ivec2(0, 1),
