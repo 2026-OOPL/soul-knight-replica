@@ -73,7 +73,7 @@ glm::ivec2 MapBlueprint::GetCooridinateByElement(std::shared_ptr<RoomInfo> eleme
     throw std::runtime_error("Element cannot be found");
 }
 
-std::vector<glm::ivec2> MapBlueprint::GetAllFightChamberCooirdinate() {
+std::vector<glm::ivec2> MapBlueprint::GetChamberCooirdinateByPurpose(RoomPurpose purpose) {
     std::vector<glm::ivec2> result;
     
     for (auto const& i : m_MapGrid) {
@@ -81,7 +81,7 @@ std::vector<glm::ivec2> MapBlueprint::GetAllFightChamberCooirdinate() {
             continue;
         }
 
-        if (i->GetRoomPurpose() != RoomPurpose::FIGHTING) {
+        if (i->GetRoomPurpose() != purpose) {
             continue;
         }
 
@@ -149,4 +149,8 @@ void MapBlueprint::OutputMapGridType() {
         LOG_INFO(buf);
         buf.clear();
     }
+}
+
+void MapBlueprint::Reset() {
+    this->m_MapGrid.clear();
 }

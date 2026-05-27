@@ -8,6 +8,7 @@
 
 #include <glm/vec2.hpp>
 
+#include "Common/Enums.hpp"
 #include "MapBlueprint.hpp"
 #include "Component/Map/BaseRoom.hpp"
 
@@ -21,35 +22,44 @@ enum class GeneratePolicy;
 enum class GeneratorType {
     EASY,
     MEDIUM,
-    HARD
+    HARD,
+    BOSS_1,
+    BOSS_2,
+    BOSS_3
 };
 
 class MapGenerator {
 public:
-    MapGenerator(bool generateBoss, GeneratorType type);
-    MapGenerator(bool generateBoss, std::string seed, GeneratorType type);
-    MapGenerator(bool generateBoss, std::shared_ptr<RandomChoose> random, GeneratorType type);
-
-    void Generate();
+    MapGenerator(GeneratorType type);
+    MapGenerator(GeneratorType type, std::string seed);
+    MapGenerator(GeneratorType type, std::shared_ptr<RandomChoose> random);
 
     std::vector<std::shared_ptr<BaseRoom>> GetRooms();
+    std::vector<std::shared_ptr<BaseRoom>> GetRooms(RoomPurpose type);
+
     std::vector<std::shared_ptr<Gangway>> GetGangways();
+
+    unsigned int long long GetSeed();
 
     std::shared_ptr<MapBlueprint> m_Blueprint;
 
 protected:
-    glm::vec2 GetStarterChamberCooridinate();
-    glm::vec2 GetFightingChamberStartCooridinate();
+    glm::ivec2 GetStarterChamberCooridinate();
+    glm::ivec2 GetFightingChamberStartCooridinate();
+
     GeneratePolicy GetPortalChamberGenPolicy();
 
-    std::shared_ptr<GenChamber> m_GenChamber;
     std::shared_ptr<RandomChoose> m_RandomChoose;
 
     bool FightChamberCooridinateValidator(glm::ivec2 cooridinate);
     bool RewardChamberCooridinateValidator(glm::ivec2 cooridinate);
+    bool PortalChamberCooridinateValidator(glm::ivec2 cooridinate);
+
     void BuildRuntimeMap();
 
 private:
+    std::vector<std::shared_ptr<GenChamber>> m_GenChamber;
+
     glm::ivec2 m_MapGridSize;
     glm::ivec2 m_CurrentPosition;
 
@@ -66,8 +76,8 @@ private:
     int m_MaximumFightRoomCount;
     int m_MinimumRewardRoomCount;
     int m_MaximumRewardRoomCount;
-
-    bool m_GenerateBoss;
+    
+    GeneratorType m_GenerateType;
 };
 
 #endif

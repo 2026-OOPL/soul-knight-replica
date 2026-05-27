@@ -72,6 +72,10 @@ T RandomChoose::ChooseFromVector(std::vector<T>& vector) {
     return vector[index];
 }
 
+unsigned int long long RandomChoose::GetSeed() {
+    return this->m_Seed;
+}
+
 enum class MobType;
 
 template RoomType RandomChoose::GetEnum<RoomType>();

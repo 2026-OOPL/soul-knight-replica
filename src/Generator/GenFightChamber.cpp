@@ -82,7 +82,7 @@ void GenFightChamber::CreateRoom(glm::ivec2 position) {
 }
 
 std::vector<glm::ivec2> GenFightChamber::GetAvailableCooridinate() {
-    std::vector<glm::ivec2> chambers = this->m_Blueprint->GetAllFightChamberCooirdinate();
+    std::vector<glm::ivec2> chambers = this->m_Blueprint->GetChamberCooirdinateByPurpose(RoomPurpose::FIGHTING);
 
     std::vector<glm::ivec2> results;
 

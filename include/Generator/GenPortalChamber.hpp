@@ -35,8 +35,6 @@ public:
     void Generate() override;
     std::vector<glm::ivec2> GetAvailableCooridinate() override;
 
-    bool SortFunction(glm::ivec2 a, glm::ivec2 b);
-
 protected:
     GeneratePolicy m_GeneratePolicy;
 };
