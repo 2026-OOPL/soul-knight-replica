@@ -35,6 +35,7 @@ public:
 
     virtual glm::vec2 GetMoveIntent() const override;
     void SetWeapon(std::shared_ptr<Weapon> weapon) override;
+    std::shared_ptr<Weapon> PickupWeapon(std::shared_ptr<Weapon> weapon);
     void SetOnWeaponBulletFired(std::function<void(std::shared_ptr<Bullet>)> callback);
     void SetMeleeAttackResolver(MeleeAttackResolver resolver);
     void ApplyDamage(int damage) override;

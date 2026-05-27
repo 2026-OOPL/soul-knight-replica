@@ -187,10 +187,14 @@ void Player::Update() {
 }
 
 void Player::SetWeapon(std::shared_ptr<Weapon> weapon) {
+    (void)this->PickupWeapon(std::move(weapon));
+}
+
+std::shared_ptr<Weapon> Player::PickupWeapon(std::shared_ptr<Weapon> weapon) {
     if (weapon == nullptr) {
         this->m_WeaponSlots[this->m_ActiveWeaponSlot] = nullptr;
         Character::SetWeapon(nullptr);
-        return;
+        return nullptr;
     }
 
     this->ApplyWeaponBulletCallback(weapon);
@@ -199,17 +203,20 @@ void Player::SetWeapon(std::shared_ptr<Weapon> weapon) {
     if (this->m_WeaponSlots[this->m_ActiveWeaponSlot] == nullptr) {
         this->m_WeaponSlots[this->m_ActiveWeaponSlot] = std::move(weapon);
         Character::SetWeapon(this->m_WeaponSlots[this->m_ActiveWeaponSlot]);
-        return;
+        return nullptr;
     }
 
     if (this->m_WeaponSlots[inactiveSlot] == nullptr) {
         this->m_WeaponSlots[inactiveSlot] = std::move(weapon);
         this->EquipWeaponSlot(inactiveSlot);
-        return;
+        return nullptr;
     }
 
+    std::shared_ptr<Weapon> droppedWeapon =
+        this->m_WeaponSlots[this->m_ActiveWeaponSlot];
     this->m_WeaponSlots[this->m_ActiveWeaponSlot] = std::move(weapon);
     Character::SetWeapon(this->m_WeaponSlots[this->m_ActiveWeaponSlot]);
+    return droppedWeapon;
 }
 
 void Player::SetOnWeaponBulletFired(

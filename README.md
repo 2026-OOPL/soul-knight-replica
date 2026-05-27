@@ -33,6 +33,7 @@ This is a [PTSD](https://github.com/ntut-open-source-club/practical-tools-for-si
 | `D` | Move right |
 | `Space` | Hold to melee attack when close to a target; otherwise fire the current weapon |
 | `Q` | Switch between the two carried weapons |
+| `E` | Pick up a dropped weapon when standing near it; if both weapon slots are full, drop the current weapon |
 | `Left Mouse Button` | Click menu buttons |
 | `Esc` | Exit the game |
 
@@ -41,7 +42,7 @@ This is a [PTSD](https://github.com/ntut-open-source-club/practical-tools-for-si
 | Key | Function |
 | --- | --- |
 | `R` | Toggle collision debug display |
-| `E` | Clear the current fight room for debugging |
+| `P` | Clear the current fight room for debugging |
 
 ## Documentation
 
