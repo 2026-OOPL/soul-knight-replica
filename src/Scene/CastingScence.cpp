@@ -1,3 +1,4 @@
+#include <cstdlib>
 #include <memory>
 
 #include "Common/MapObject.hpp"
@@ -5,7 +6,14 @@
 #include "Component/Camera/TraceCamera.hpp"
 #include "MainMenu.hpp"
 #include "Scene/CastingScene.hpp"
+#include "Util/BGM.hpp"
+#include "Util/Input.hpp"
+#include "Util/SFX.hpp"
 #include "Util/Time.hpp"
+
+namespace {
+    const int SCROLLING_END_POSITION = -1900;
+};
 
 CastingScene::CastingScene() {
     m_AttachedCamera = std::make_shared<TraceCamera>(
@@ -72,29 +80,107 @@ CastingScene::CastingScene() {
     ));
 
     this->AddChild(std::make_shared<CastingText>(
-        "版權皆屬於凉屋游戏",
+        "圖片版權皆屬於凉屋游戏",
         glm::vec2(0, -680)
     ));
 
     this->AddChild(std::make_shared<CastingText>(
-        "特別致謝 | Special Thanks",
+        "音樂與音效 | Art Director",
         glm::vec2(0, -780),
         20
     ));
 
     this->AddChild(std::make_shared<CastingText>(
-        "馬英九、蔡英文、台灣",
+        "Alan Walker - The Spectre",
         glm::vec2(0, -830)
     ));
 
     this->AddChild(std::make_shared<CastingText>(
-        "Thank you for playing",
-        glm::vec2(0, -1300)
+        "Alan Walker - Just the way you are",
+        glm::vec2(0, -880)
     ));
+
+    this->AddChild(std::make_shared<CastingText>(
+        "Alan Walker - Today is the best day for OOP demo ",
+        glm::vec2(0, -930)
+    ));
+
+    this->AddChild(std::make_shared<CastingText>(
+        "Alan Walker - My Way",
+        glm::vec2(0, -980)
+    ));
+
+    this->AddChild(std::make_shared<CastingText>(
+        "特別致謝 | Special Thanks",
+        glm::vec2(0, -1080),
+        20
+    ));
+
+    this->AddChild(std::make_shared<CastingText>(
+        "天、地、衣食父母、國立臺北科技大學",
+        glm::vec2(0, -1130)
+    ));
+
+    this->AddChild(std::make_shared<CastingText>(
+        "OpenAI, Alphabet, Anthropic, Intel, Apple",
+        glm::vec2(0, -1180)
+    ));
+
+    this->AddChild(std::make_shared<CastingText>(
+        "Stack Overflow, Reddit 網友, Gcc, Cmake",
+        glm::vec2(0, -1230)
+    ));
+
+    this->AddChild(std::make_shared<CastingText>(
+        "陽光、空氣、H₂O、陽光與仙人掌",
+        glm::vec2(0, -1280)
+    ));
+
+    this->AddChild(std::make_shared<CastingText>(
+        "特別內部供暖支援 | Special Internal Heating Support",
+        glm::vec2(0, -1380),
+        20
+    ));
+
+    this->AddChild(std::make_shared<CastingText>(
+        "Acer Swift Go 14 (2024)",
+        glm::vec2(0, -1430)
+    ));
+
+    this->AddChild(std::make_shared<CastingText>(
+        "Gigabyte 鐵磚",
+        glm::vec2(0, -1480)
+    ));
+
+    this->AddChild(std::make_shared<CastingText>(
+        "感謝您的遊玩，不要當我們拜託～",
+        glm::vec2(0, SCROLLING_END_POSITION)
+    ));
+
+    std::shared_ptr<Util::BGM> m_Music = std::make_shared<Util::BGM>(
+        RESOURCE_DIR"/SFX/Elektronomia - Sky High Intro.mp3"
+    );
+
+    m_Music->FadeIn(1000, 0);
+    m_Music->Play();
+    
+    m_SceneStartTime = Util::Time::GetElapsedTimeMs();
+}
+
+CastingScene::~CastingScene() {
     
 }
 
 void CastingScene::Update() {
+    if (!m_SwitchBGM && Util::Time::GetElapsedTimeMs() - m_SceneStartTime >= 4563) {
+        m_Music->Pause();
+        std::shared_ptr<Util::BGM> m_Music = std::make_shared<Util::BGM>(
+            RESOURCE_DIR"/SFX/Elektronomia - Sky High Loop.mp3"
+        );
+        m_Music->Play();
+        m_SwitchBGM = true;
+    }
+
     for (auto const &i : this->GetChildren()) {
         std::shared_ptr<IStateful> stateful = std::dynamic_pointer_cast<IStateful>(i);
         
@@ -109,15 +195,25 @@ void CastingScene::Update() {
         }
     }
 
+    if (Util::Input::IsKeyPressed(Util::Keycode::SPACE)) {
+        m_ScrollingSpeed = 10.0F;
+    } else {
+        m_ScrollingSpeed = 1.0F;
+    }
+
     glm::vec2 pos = m_AttachedCamera->GetCooridinate();
 
-    if (pos.y > -1300.0F) {
-        m_AttachedCamera->SetCooridinate(pos - glm::vec2(0.0F, 1.0F));
+    if (pos.y > SCROLLING_END_POSITION && abs(pos.y - m_ScrollingSpeed) < abs(SCROLLING_END_POSITION)) {
+        m_AttachedCamera->SetCooridinate(pos - glm::vec2(0.0F, m_ScrollingSpeed));
     } else {
+        m_AttachedCamera->SetCooridinate(glm::vec2(0.0F, SCROLLING_END_POSITION));
         m_CastingEndTime = (m_CastingEndTime < 0) ? Util::Time::GetElapsedTimeMs() : m_CastingEndTime;
     }
 
-    if (m_CastingEndTime > 0 && Util::Time::GetElapsedTimeMs() - m_CastingEndTime > 3000) {
+    float castEndElapsed = Util::Time::GetElapsedTimeMs() - m_CastingEndTime;
+    if (m_CastingEndTime > 0 &&  castEndElapsed > 2000 && castEndElapsed < 3000) {
+        m_Music->FadeOut(1000);
+    } else if (m_CastingEndTime > 0 && Util::Time::GetElapsedTimeMs() - m_CastingEndTime > 3000) {
         m_SceneRedirection = std::make_shared<MainMenu>();
     }
 

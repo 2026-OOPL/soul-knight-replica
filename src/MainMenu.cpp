@@ -4,13 +4,14 @@
 #include "MainMenu.hpp"
 #include "Component/Button/TextButton.hpp"
 #include "Core/Context.hpp"
+#include "Scene/CastingScene.hpp"
 #include "Scene/MapTest.hpp"
 #include "Util/GameObject.hpp"
 #include "Util/Image.hpp"
 #include "Util/Logger.hpp"
 
 void MainMenu::StartNewGame() {
-    this->m_Redirect_Scene = std::make_shared<MapTest>();
+    this->m_Redirect_Scene = std::make_shared<CastingScene>();
 }
 
 void MainMenu::LeaveGame() {

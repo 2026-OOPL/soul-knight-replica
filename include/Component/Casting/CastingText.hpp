@@ -1,11 +1,13 @@
 #ifndef CASTING_TEXT_HPP
 #define CASTING_TEXT_HPP
 
+#include <memory>
+
+#include <glm/vec2.hpp>
+
 #include "Common/MapObject.hpp"
 #include "Util/GameObject.hpp"
 #include "Util/Text.hpp"
-#include <glm/ext/vector_float2.hpp>
-#include <memory>
 
 class CastingText : public MapObject, public Util::GameObject {
 public:
