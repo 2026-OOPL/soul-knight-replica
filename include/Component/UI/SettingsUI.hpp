@@ -13,7 +13,7 @@
 
 class SettingsUI : public Util::GameObject, public IStateful {
 public:
-    SettingsUI();
+    SettingsUI(float zIndex);
 
     ~SettingsUI() override = default;
 
@@ -26,6 +26,7 @@ private:
 
     std::shared_ptr<Util::GameObject> m_SettingsMenu;
     std::shared_ptr<Util::GameObject> m_Background;
+    std::shared_ptr<Util::GameObject> m_CloseButton; 
 };
 
 #endif

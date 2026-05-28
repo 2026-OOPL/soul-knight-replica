@@ -45,7 +45,11 @@ MainMenu::MainMenu() : Scene() {
 
     this->m_Button_Credit = std::make_shared<TextButton>(
         "遊玩設定",
-        nullptr
+        std::make_shared<ButtonAction>(
+            nullptr,
+            nullptr,
+            [this]() { this->LaunchSettingsUI(true); }
+        )
     );
 
     this->m_Button_Credit->m_Transform.translation =
@@ -82,4 +86,25 @@ MainMenu::~MainMenu() = default;
 
 std::shared_ptr<Scene> MainMenu::GetRedirection() {
     return this->m_Redirect_Scene;
+}
+
+void MainMenu::LaunchSettingsUI(bool launch) {
+    if (launch) {
+        this->m_SettingsUI = std::make_shared<SettingsUI>(m_ZIndex + 5);
+        this->AddChild(this->m_SettingsUI);
+    } else {
+        this->RemoveChild(this->m_SettingsUI);
+        this->m_SettingsUI = nullptr;   
+    }
+}
+
+void MainMenu::Update() {
+    if (this->m_SettingsUI && this->m_SettingsUI) {
+        this->m_SettingsUI->Update();
+        if (this->m_SettingsUI->GetExitSignal()) {
+            this->LaunchSettingsUI(false);
+        }
+    }
+
+    Scene::Update();
 }

@@ -4,6 +4,7 @@
 #include <imgui.h>
 #include <memory>
 
+#include "Component/UI/SettingsUI.hpp"
 #include "Util/GameObject.hpp"
 
 #include "Scene.hpp"
@@ -16,9 +17,13 @@ public:
 
     std::shared_ptr<Scene> GetRedirection() override;
 
+    void Update() override;
+
 private:
     void StartNewGame();
     void LeaveGame();
+
+    void LaunchSettingsUI(bool launch);
 
     std::shared_ptr<TextButton> m_Button_NewGame;
     std::shared_ptr<TextButton> m_Button_LoadGame;
@@ -29,6 +34,8 @@ private:
     std::shared_ptr<Util::GameObject> m_Game_Title;
 
     std::shared_ptr<Scene> m_Redirect_Scene;
+
+    std::shared_ptr<SettingsUI> m_SettingsUI = nullptr;
 };
 
 #endif
