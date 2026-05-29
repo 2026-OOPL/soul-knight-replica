@@ -102,7 +102,7 @@ void FightRoom::OnPlayerEnter() {
             i->m_AI->UnFreeze();
         }
 
-        LOG_INFO("Player entered a room, start spawning mobs.");
+        LOG_DEBUG("Player entered a room, start spawning mobs.");
     }
 
 }

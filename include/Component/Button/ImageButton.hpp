@@ -34,7 +34,8 @@ public:
         this->theme = theme != nullptr ? theme : this->theme;
 
         this->m_Image = std::make_shared<Util::Image>(
-            theme->normal
+            theme->normal,
+            false
         );
 
         this->SetDrawable(m_Image);

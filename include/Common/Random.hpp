@@ -10,7 +10,6 @@
 #include <glm/vec2.hpp>
 #include <glm/glm.hpp>
 
-#include "../Common/Enums.hpp"
 #include "../Common/EnumMask.hpp"
 
 class RandomChoose {
@@ -59,6 +58,8 @@ public:
     bool GetBool();
 
     template <typename T> T ChooseFromVector(std::vector<T>& vector);
+
+    unsigned int long long GetSeed();
 
 protected:
     unsigned int long long m_Seed;

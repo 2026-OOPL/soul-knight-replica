@@ -11,6 +11,7 @@
 #include "Common/Random.hpp"
 #include "Generator/MapBlueprint.hpp"
 #include "Generator/RoomInfo.hpp"
+#include "Util/Logger.hpp"
 
 namespace {
 
@@ -33,7 +34,10 @@ GenBossChamber::GenBossChamber(
 
 void GenBossChamber::Generate() {
     std::vector<glm::ivec2> candidates = this->GetAvailableCooridinate();
+    
     if (candidates.empty()) {
+        LOG_ERROR("No space for boss room to generate");
+        this->m_Blueprint->OutputMapGridType();
         throw std::runtime_error("Boss room cannot be generated");
     }
 
@@ -54,7 +58,7 @@ void GenBossChamber::Generate() {
 std::vector<glm::ivec2> GenBossChamber::GetAvailableCooridinate() {
     std::vector<glm::ivec2> result;
     const std::vector<glm::ivec2> fightRooms =
-        this->m_Blueprint->GetAllFightChamberCooirdinate();
+        this->m_Blueprint->GetChamberCooirdinateByPurpose(RoomPurpose::FIGHTING);
 
     const glm::ivec2 directions[] = {
         glm::ivec2(0, 1),
