@@ -90,6 +90,26 @@ MapTest::MapTest(
             }
 
             return player->GetHudState();
+        },
+        [this]() {
+            const std::shared_ptr<BaseRoom> room = this->GetCurrentRoom();
+            if (room == nullptr || room->GetPurpose() != RoomPurpose::BOSS) {
+                return PlayUI::BossHudState{};
+            }
+
+            for (const auto &mob : room->GetMobs()) {
+                if (mob == nullptr || mob->IsDead()) {
+                    continue;
+                }
+
+                return PlayUI::BossHudState{
+                    mob->GetCurrentHealth(),
+                    mob->GetMaxHealth(),
+                    true
+                };
+            }
+
+            return PlayUI::BossHudState{};
         }
     );
     this->AddChild(this->m_PlayUI);

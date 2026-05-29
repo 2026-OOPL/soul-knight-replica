@@ -34,6 +34,7 @@ struct MapConfig {
 }
 
 class CollisionDebugOverlay;
+class Weapon;
 
 class MapSystem : public Scene {
 public:
@@ -87,6 +88,7 @@ public:
     const std::vector<std::shared_ptr<Mob>>& GetMob() const;
 
     void AddProp(const std::shared_ptr<Prop> &prop);
+    void DropWeapon(std::shared_ptr<Weapon> weapon, const glm::vec2 &position);
     void RemoveProp(const std::shared_ptr<Prop> &prop);
     const std::vector<std::shared_ptr<Prop>> &GetProps() const;
 
@@ -130,6 +132,8 @@ private:
     void FlushPendingBullets();
     void AddMobImmediately(const std::shared_ptr<Mob> &mob);
     void FlushPendingMobs();
+    void AddPropImmediately(const std::shared_ptr<Prop> &prop);
+    void FlushPendingProps();
     void PruneDestroyedBullets();
     void PruneDestroyedProps();
     void PruneDefeatedMobs();
@@ -138,6 +142,7 @@ private:
     std::shared_ptr<CollisionDebugOverlay> m_CollisionDebugOverlay;
     std::vector<std::shared_ptr<Bullet>> m_PendingBullets;
     std::vector<std::shared_ptr<Mob>> m_PendingMobs;
+    std::vector<std::shared_ptr<Prop>> m_PendingProps;
     bool m_IsUpdatingScene = false;
     bool m_ShowCollisionDebug = false;
 

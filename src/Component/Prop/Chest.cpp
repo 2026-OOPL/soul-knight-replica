@@ -100,7 +100,11 @@ void Chest::Open(Player &player) {
     this->ApplyCurrentVisual();
 
     if (this->m_Reward != nullptr && this->m_MapSystem != nullptr) {
-        this->m_Reward->Grant(player, *this->m_MapSystem);
+        this->m_Reward->Grant(
+            player,
+            *this->m_MapSystem,
+            this->GetAbsoluteTranslation()
+        );
         this->m_Reward.reset();
     }
 }

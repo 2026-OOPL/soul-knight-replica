@@ -1,10 +1,10 @@
 #include <memory>
-
 #include "Component/Map/RewardRoom.hpp"
 
 #include "Component/Map/MapSystem.hpp"
 #include "Component/Prop/Chest.hpp"
 #include "Component/Prop/ChestReward.hpp"
+#include "Component/Weapons/Plunger.hpp"
 #include "Util/Image.hpp"
 
 namespace {
@@ -21,6 +21,10 @@ Chest::Visuals BuildRewardChestVisuals() {
     visuals.closedIdle = std::make_shared<Util::Image>(kRewardChestClosedSprite, false);
     visuals.openIdle = std::make_shared<Util::Image>(kRewardChestOpenSprite, false);
     return visuals;
+}
+
+std::shared_ptr<Weapon> CreateRewardWeapon() {
+    return std::make_shared<Plunger>();
 }
 
 } // namespace
@@ -54,10 +58,7 @@ void RewardRoom::Initialize(MapSystem *mapSystem) {
     config.autoOpenRange = kRewardChestAutoOpenRange;
     config.zIndex = 3;
     config.visuals = BuildRewardChestVisuals();
-    config.reward = std::make_shared<ConsumableChestReward>(
-        ConsumableChestReward::Type::Heal,
-        2
-    );
+    config.reward = std::make_shared<WeaponChestReward>(CreateRewardWeapon);
 
     mapSystem->AddProp(
         std::make_shared<Chest>(this->GetAbsoluteTranslation(), std::move(config))

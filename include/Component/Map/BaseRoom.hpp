@@ -92,12 +92,14 @@ private:
     glm::vec2 BuildDoorPosition(const DoorBuildInfo &doorInfo) const;
     const DoorSideConfig &GetDoorSideConfig(DoorSide side) const;
     const WallSideConfig &GetWallSideConfig(DoorSide side) const;
+    void BuildMissingDoorWallPatches();
     void BuildDoors();
 
     RoomType m_RoomType = RoomType::ROOM_13_13;
     RoomPurpose m_Purpose = RoomPurpose::FIGHTING;
     DoorConfig m_DoorConfig;
     std::vector<std::shared_ptr<Door>> m_Doors;
+    std::vector<std::shared_ptr<MapPiece>> m_WallPatches;
     std::vector<std::shared_ptr<Mob>> m_Mobs;
 };
 

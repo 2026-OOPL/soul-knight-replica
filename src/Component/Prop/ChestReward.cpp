@@ -13,7 +13,11 @@ WeaponChestReward::WeaponChestReward(WeaponFactory factory)
     : m_Factory(std::move(factory)) {
 }
 
-void WeaponChestReward::Grant(Player &player, MapSystem &mapSystem) {
+void WeaponChestReward::Grant(
+    Player &player,
+    MapSystem &mapSystem,
+    const glm::vec2 &dropPosition
+) {
     if (this->m_Factory == nullptr) {
         return;
     }
@@ -28,7 +32,7 @@ void WeaponChestReward::Grant(Player &player, MapSystem &mapSystem) {
             mapSystem.AddBullet(std::move(bullet));
         }
     );
-    player.SetWeapon(weapon);
+    mapSystem.DropWeapon(weapon, dropPosition);
 }
 
 ConsumableChestReward::ConsumableChestReward(Type type, int amount)
@@ -36,8 +40,13 @@ ConsumableChestReward::ConsumableChestReward(Type type, int amount)
       m_Amount(std::max(0, amount)) {
 }
 
-void ConsumableChestReward::Grant(Player &player, MapSystem &mapSystem) {
+void ConsumableChestReward::Grant(
+    Player &player,
+    MapSystem &mapSystem,
+    const glm::vec2 &dropPosition
+) {
     (void)mapSystem;
+    (void)dropPosition;
 
     switch (this->m_Type) {
     case Type::Heal:
