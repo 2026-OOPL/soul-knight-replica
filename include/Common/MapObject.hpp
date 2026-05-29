@@ -7,7 +7,6 @@
 
 class MapObject {
 public:
-
     // Getter of the m_Transform in object
     glm::vec2 GetObjectScale() const;
     glm::vec2 GetObjectTranslation() const;
