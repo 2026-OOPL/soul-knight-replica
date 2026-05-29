@@ -131,7 +131,26 @@ std::shared_ptr<Gangway> BuildGangway(
         config.length = std::abs(secondSocket.worldCenter.y - firstSocket.worldCenter.y);
     }
 
-    const glm::vec2 center = (firstSocket.worldCenter + secondSocket.worldCenter) / 2.0F;
+    glm::vec2 center = (firstSocket.worldCenter + secondSocket.worldCenter) / 2.0F;
+    
+    if (config.orientation == GangwayOrientation::Horizontal) {
+        int firstRoomSize = firstRoom->GetAreaSize().x / MAP_PIXEL_PER_BLOCK;
+        int secondRoomSize = secondRoom->GetAreaSize().x / MAP_PIXEL_PER_BLOCK;
+
+        // 計算尺寸差值
+        int diff = std::abs(firstRoomSize - secondRoomSize);
+        // 當差值除以 2 為奇數時，代表中心點落在了整數格，需要偏移半格 (8px) 來對齊
+        float offset = ((diff / 2) % 2 == 0) ? 8.0F : 0.0F;
+        center.x += offset;
+    } else {
+        int firstRoomSize = firstRoom->GetAreaSize().y / MAP_PIXEL_PER_BLOCK;
+        int secondRoomSize = secondRoom->GetAreaSize().y / MAP_PIXEL_PER_BLOCK;
+
+        int diff = std::abs(firstRoomSize - secondRoomSize);
+        float offset = ((diff / 2) % 2 == 0) ? 8.0F : 0.0F;
+        center.y += offset;
+    }
+
     const std::shared_ptr<Gangway> gangway = std::make_shared<Gangway>(center, config);
     gangway->ConnectRooms(firstRoom, secondRoom);
     return gangway;
