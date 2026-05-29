@@ -10,6 +10,13 @@ namespace {
 
 constexpr char kHorizontalClosedDoorSprite[] = RESOURCE_DIR "/Map/Room/Fence_5x2.png";
 constexpr char kVerticalClosedDoorSprite[] = RESOURCE_DIR "/Map/Room/Fence_1x5.png";
+constexpr char kHorizontalMissingDoorWallSprite[] = RESOURCE_DIR "/Map/Room/Wall_5x1.png";
+constexpr char kVerticalMissingDoorWallSprite[] = RESOURCE_DIR "/Map/Room/Wall_1x5.png";
+constexpr float kMissingDoorWallPatchZIndex = 3.5F;
+constexpr glm::vec2 kTopMissingDoorWallPatchOffset = {0.0F, -14.625F};
+constexpr glm::vec2 kRightMissingDoorWallPatchOffset = {-1.0F, 1.5F};
+constexpr glm::vec2 kBottomMissingDoorWallPatchOffset = {0.0F, -12.25F};
+constexpr glm::vec2 kLeftMissingDoorWallPatchOffset = {1.0F, 1.5F};
 
 glm::vec2 BuildDoorColliderSize(DoorSide side, const WallSideConfig &wallSideConfig) {
     switch (side) {
@@ -26,6 +33,24 @@ glm::vec2 BuildDoorColliderSize(DoorSide side, const WallSideConfig &wallSideCon
             wallSideConfig.thickness,
             wallSideConfig.openingSize
         };
+    }
+
+    return {0.0F, 0.0F};
+}
+
+glm::vec2 ResolveMissingDoorWallPatchOffset(DoorSide side) {
+    switch (side) {
+    case DoorSide::Top:
+        return kTopMissingDoorWallPatchOffset;
+
+    case DoorSide::Right:
+        return kRightMissingDoorWallPatchOffset;
+
+    case DoorSide::Bottom:
+        return kBottomMissingDoorWallPatchOffset;
+
+    case DoorSide::Left:
+        return kLeftMissingDoorWallPatchOffset;
     }
 
     return {0.0F, 0.0F};
@@ -49,6 +74,7 @@ BaseRoom::BaseRoom(
       m_RoomType(roomType),
       m_Purpose(purpose),
       m_DoorConfig(doorConfig) {
+    this->BuildMissingDoorWallPatches();
     this->BuildDoors();
 }
 
@@ -310,6 +336,39 @@ const WallSideConfig &BaseRoom::GetWallSideConfig(DoorSide side) const {
     }
 
     return this->m_WallConfig.bottom;
+}
+
+void BaseRoom::BuildMissingDoorWallPatches() {
+    const DoorSide sides[] = {
+        DoorSide::Top,
+        DoorSide::Right,
+        DoorSide::Bottom,
+        DoorSide::Left
+    };
+
+    for (DoorSide side : sides) {
+        if (this->HasPassageOnSide(side)) {
+            continue;
+        }
+
+        const bool isHorizontal =
+            side == DoorSide::Top || side == DoorSide::Bottom;
+        const char *sprite = isHorizontal ?
+            kHorizontalMissingDoorWallSprite :
+            kVerticalMissingDoorWallSprite;
+        const glm::vec2 position =
+            this->GetPassageSocket(side).worldCenter +
+            ResolveMissingDoorWallPatchOffset(side);
+
+        const std::shared_ptr<MapPiece> wallPatch = std::make_shared<MapPiece>(
+            position,
+            sprite
+        );
+        wallPatch->SetZIndex(kMissingDoorWallPatchZIndex);
+
+        this->m_WallPatches.push_back(wallPatch);
+        this->AddChild(wallPatch);
+    }
 }
 
 void BaseRoom::BuildDoors() {

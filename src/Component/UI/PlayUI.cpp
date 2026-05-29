@@ -36,9 +36,15 @@ constexpr glm::vec2 kHealthBarOffset = {46.0F, -9.0F};
 constexpr glm::vec2 kShieldBarOffset = {46.0F, -21.0F};
 constexpr glm::vec2 kAmmoBarOffset = {46.0F, -32.0F};
 constexpr float kHealthBarFullWidth =   58.0F;
+constexpr float kBossBarWidthMultiplier = 5.0F;
+constexpr float kBossBarTopMargin = 28.0F;
 
 PlayerHudState BuildEmptyHudState() {
     return {0, 0, 0, 0, 0, 0};
+}
+
+PlayUI::BossHudState BuildEmptyBossHudState() {
+    return {};
 }
 
 std::string FormatValueText(int current, int maximum) {
@@ -91,9 +97,13 @@ void LayoutProgressBar(
 
 } // namespace
 
-PlayUI::PlayUI(HudStateProvider hudStateProvider)
+PlayUI::PlayUI(
+    HudStateProvider hudStateProvider,
+    BossHudStateProvider bossHudStateProvider
+)
     : GameObject(nullptr, kBackgroundZIndex),
-      m_HudStateProvider(std::move(hudStateProvider)) {
+      m_HudStateProvider(std::move(hudStateProvider)),
+      m_BossHudStateProvider(std::move(bossHudStateProvider)) {
     this->m_Background = std::make_shared<Util::Image>(kPlayUiTexture, false);
     this->SetDrawable(this->m_Background);
     this->m_Transform.scale = {kUiScale, kUiScale};
@@ -122,6 +132,15 @@ PlayUI::PlayUI(HudStateProvider hudStateProvider)
     );
     this->AddChild(this->m_AmmoBarNode);
 
+    this->m_BossHealthBar = std::make_shared<Util::Image>(kHealthBarTexture, false);
+    this->m_BossHealthBarNode = std::make_shared<Util::GameObject>(
+        this->m_BossHealthBar,
+        kBarZIndex,
+        glm::vec2{-0.5F, 0.0F}
+    );
+    this->m_BossHealthBarNode->SetVisible(false);
+    this->AddChild(this->m_BossHealthBarNode);
+
     this->m_HealthText = std::make_shared<Util::Text>(
         kFontPath,
         kFontSize,
@@ -143,6 +162,13 @@ PlayUI::PlayUI(HudStateProvider hudStateProvider)
         kAmmoTextColor,
         false
     );
+    this->m_BossHealthText = std::make_shared<Util::Text>(
+        kFontPath,
+        kFontSize,
+        "0/0",
+        kHealthTextColor,
+        false
+    );
 
     this->m_HealthTextNode = std::make_shared<Util::GameObject>(
         this->m_HealthText,
@@ -156,17 +182,25 @@ PlayUI::PlayUI(HudStateProvider hudStateProvider)
         this->m_AmmoText,
         kTextZIndex
     );
+    this->m_BossHealthTextNode = std::make_shared<Util::GameObject>(
+        this->m_BossHealthText,
+        kTextZIndex
+    );
+    this->m_BossHealthTextNode->SetVisible(false);
 
     this->AddChild(this->m_HealthTextNode);
     this->AddChild(this->m_ShieldTextNode);
     this->AddChild(this->m_AmmoTextNode);
+    this->AddChild(this->m_BossHealthTextNode);
 
     this->SyncHudState();
+    this->SyncBossHudState();
     this->UpdateLayout();
 }
 
 void PlayUI::Update() {
     this->SyncHudState();
+    this->SyncBossHudState();
     this->UpdateLayout();
 }
 
@@ -235,6 +269,26 @@ void PlayUI::UpdateLayout() {
         topLeft.x + kAmmoTextOffset.x * kUiScale,
         topLeft.y + kAmmoTextOffset.y * kUiScale
     };
+
+    const float bossBarFullWidth = barFullWidth * kBossBarWidthMultiplier;
+    const glm::vec2 bossBarTopLeft = {
+        -bossBarFullWidth / 2.0F,
+        halfWindowHeight - kBossBarTopMargin
+    };
+    LayoutProgressBar(
+        this->m_BossHealthBar,
+        this->m_BossHealthBarNode,
+        {bossBarFullWidth / (2.0F * kUiScale), 0.0F},
+        BuildRatio(this->m_LastBossHudState.hp, this->m_LastBossHudState.maxHp),
+        kUiScale,
+        bossBarFullWidth,
+        bossBarTopLeft,
+        barTargetHeight
+    );
+    this->m_BossHealthTextNode->m_Transform.translation = {
+        0.0F,
+        bossBarTopLeft.y
+    };
 }
 
 void PlayUI::SyncHudState() {
@@ -256,6 +310,24 @@ void PlayUI::SyncHudState() {
     this->m_HasLastHudState = true;
 }
 
+void PlayUI::SyncBossHudState() {
+    const BossHudState state = this->m_BossHudStateProvider != nullptr ?
+        this->m_BossHudStateProvider() :
+        BuildEmptyBossHudState();
+
+    if (!this->IsBossHudStateDirty(state)) {
+        return;
+    }
+
+    const bool visible = state.visible && state.maxHp > 0 && state.hp > 0;
+    this->m_BossHealthBarNode->SetVisible(visible);
+    this->m_BossHealthTextNode->SetVisible(visible);
+    this->m_BossHealthText->SetText(FormatValueText(state.hp, state.maxHp));
+
+    this->m_LastBossHudState = state;
+    this->m_HasLastBossHudState = true;
+}
+
 bool PlayUI::IsHudStateDirty(const PlayerHudState &state) const {
     if (!this->m_HasLastHudState) {
         return true;
@@ -267,4 +339,14 @@ bool PlayUI::IsHudStateDirty(const PlayerHudState &state) const {
            this->m_LastHudState.maxShield != state.maxShield ||
            this->m_LastHudState.ammo != state.ammo ||
            this->m_LastHudState.maxAmmo != state.maxAmmo;
+}
+
+bool PlayUI::IsBossHudStateDirty(const BossHudState &state) const {
+    if (!this->m_HasLastBossHudState) {
+        return true;
+    }
+
+    return this->m_LastBossHudState.hp != state.hp ||
+           this->m_LastBossHudState.maxHp != state.maxHp ||
+           this->m_LastBossHudState.visible != state.visible;
 }

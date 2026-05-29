@@ -4,6 +4,8 @@
 #include <functional>
 #include <memory>
 
+#include <glm/vec2.hpp>
+
 class MapSystem;
 class Player;
 class Weapon;
@@ -12,7 +14,11 @@ class IChestReward {
 public:
     virtual ~IChestReward() = default;
 
-    virtual void Grant(Player &player, MapSystem &mapSystem) = 0;
+    virtual void Grant(
+        Player &player,
+        MapSystem &mapSystem,
+        const glm::vec2 &dropPosition
+    ) = 0;
 };
 
 class WeaponChestReward : public IChestReward {
@@ -21,7 +27,11 @@ public:
 
     explicit WeaponChestReward(WeaponFactory factory);
 
-    void Grant(Player &player, MapSystem &mapSystem) override;
+    void Grant(
+        Player &player,
+        MapSystem &mapSystem,
+        const glm::vec2 &dropPosition
+    ) override;
 
 private:
     WeaponFactory m_Factory;
@@ -37,7 +47,11 @@ public:
 
     ConsumableChestReward(Type type, int amount);
 
-    void Grant(Player &player, MapSystem &mapSystem) override;
+    void Grant(
+        Player &player,
+        MapSystem &mapSystem,
+        const glm::vec2 &dropPosition
+    ) override;
 
 private:
     Type m_Type = Type::Heal;

@@ -217,7 +217,7 @@ void FightRoom::DebugClearRoom() {
         }
 
         mob->SetDamageEnabled(true);
-        mob->ApplyDamage(mob->GetCurrentHealth());
+        mob->SetCurrentHealth(0);
     }
 
     this->m_CompletedWave = this->m_MaxMobWave;
