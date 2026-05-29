@@ -11,7 +11,7 @@
 #include "Util/Logger.hpp"
 
 void MainMenu::StartNewGame() {
-    this->m_Redirect_Scene = std::make_shared<CastingScene>();
+    this->m_Redirect_Scene = std::make_shared<MapTest>();
 }
 
 void MainMenu::LeaveGame() {

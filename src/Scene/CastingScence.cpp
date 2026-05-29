@@ -148,7 +148,7 @@ CastingScene::CastingScene() {
     ));
 
     this->AddChild(std::make_shared<CastingText>(
-        "Gigabyte 鐵磚",
+        "Gigabyte K4A1 鐵磚",
         glm::vec2(0, -1480)
     ));
 
