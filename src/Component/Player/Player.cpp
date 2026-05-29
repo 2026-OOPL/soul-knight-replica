@@ -12,6 +12,7 @@
 #include "Util/GameObject.hpp"
 #include "Util/Input.hpp"
 #include "Util/Keycode.hpp"
+#include "Util/Logger.hpp"
 #include "Util/Time.hpp"
 
 #include "Component/Player/Player.hpp"
@@ -127,6 +128,14 @@ void Player::UpdateWeaponPresentation() {
 void Player::Update() {
     Character::Update();
     this->UpdateMeleeAttackVisual();
+
+    if (Util::Input::IsKeyDown(Util::Keycode::T)) {
+        this->m_HealthLocked = !this->m_HealthLocked;
+        LOG_INFO(
+            "Player health lock {}.",
+            this->m_HealthLocked ? "enabled" : "disabled"
+        );
+    }
 
     if (Util::Input::IsKeyDown(Util::Keycode::Q)) {
         this->SwitchWeapon();
@@ -349,12 +358,20 @@ void Player::ApplyDamage(int damage) {
         return;
     }
 
+    if (this->m_HealthLocked) {
+        return;
+    }
+
     this->m_ShieldRegenDelayRemainingMs = kShieldRegenDelayMs;
     this->m_ShieldRegenElapsedMs = 0.0F;
 
     const int shieldDamage = std::min(this->m_CurrentShield, damage);
     this->SetCurrentShield(this->m_CurrentShield - shieldDamage);
     Character::ApplyDamage(damage - shieldDamage);
+}
+
+bool Player::IsHealthLocked() const {
+    return this->m_HealthLocked;
 }
 
 int Player::GetCurrentShield() const {

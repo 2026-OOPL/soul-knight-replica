@@ -39,6 +39,7 @@ public:
     void SetOnWeaponBulletFired(std::function<void(std::shared_ptr<Bullet>)> callback);
     void SetMeleeAttackResolver(MeleeAttackResolver resolver);
     void ApplyDamage(int damage) override;
+    bool IsHealthLocked() const;
     
     int GetCurrentShield() const;
     int GetMaxShield() const;
@@ -79,6 +80,7 @@ private:
     int m_MaxAmmo = 0;
     std::array<std::shared_ptr<Weapon>, 2> m_WeaponSlots = {nullptr, nullptr};
     int m_ActiveWeaponSlot = 0;
+    bool m_HealthLocked = false;
     std::function<void(std::shared_ptr<Bullet>)> m_OnWeaponBulletFired;
     MeleeAttackResolver m_MeleeAttackResolver = nullptr;
     std::shared_ptr<Util::Animation> m_MeleeAttackAnimation;
