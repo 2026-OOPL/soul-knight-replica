@@ -20,11 +20,15 @@ public:
 
     bool GetExitSignal();
 
+    void ToggleSettings();
+
 private:
     bool m_ExitSignal = false;
+    bool m_SettingsLaunched = false;
 
     std::shared_ptr<Util::GameObject> m_PauseMenu;
     std::shared_ptr<Util::GameObject> m_Background;
+    std::shared_ptr<Util::GameObject> m_SettingsMenu;
 
     std::shared_ptr<ImageButton> m_HomeButton;
     std::shared_ptr<ImageButton> m_ContinueButton;
