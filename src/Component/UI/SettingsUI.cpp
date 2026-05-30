@@ -26,6 +26,20 @@
 #include "Component/UI/SettingsUI.hpp"
 #include "Component/Button/ImageButton.hpp"
 #include "Util/GameObject.hpp"
+#include "Util/Input.hpp"
+
+#include <glm/vec2.hpp>
+
+#include "Component/UI/SettingsUI.hpp"
+#include "Component/Button/ImageButton.hpp"
+#include "Util/GameObject.hpp"
+#include "Util/Input.hpp"
+
+#include <glm/vec2.hpp>
+
+#include "Component/UI/SettingsUI.hpp"
+#include "Component/Button/ImageButton.hpp"
+#include "Util/GameObject.hpp"
 
 SettingsUI::SettingsUI(float zIndex)
 : Util::GameObject(nullptr, zIndex)
