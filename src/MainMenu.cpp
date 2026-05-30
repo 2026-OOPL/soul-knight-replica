@@ -1,4 +1,5 @@
 #include <memory>
+
 #include <glm/vec2.hpp>
 
 #include "MainMenu.hpp"
@@ -88,14 +89,12 @@ MainMenu::MainMenu() : Scene() {
     this->AddChild(this->m_Background);
 
     m_BGM = std::make_shared<Util::BGM>(
-        RESOURCE_DIR"/SFX/Alan Walker - Fade (NCS).m4a"
+        RESOURCE_DIR"/SFX/Alan Walker - Fade (NCS).mp3"
     );
 
-    m_BGM->LoadMedia(RESOURCE_DIR"/SFX/Alan Walker - Fade (NCS).m4a");
+    m_BGM->LoadMedia(RESOURCE_DIR"/SFX/Alan Walker - Fade (NCS).mp3");
 
     m_BGM->Play();
-
-    LOG_INFO(m_BGM->GetVolume());
 }
 
 MainMenu::~MainMenu() = default;

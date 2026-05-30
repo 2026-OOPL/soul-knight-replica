@@ -6,7 +6,6 @@
 
 #include "Generator/MapBlueprint.hpp"
 #include "Common/Enums.hpp"
-#include "Generator/MapGenerator.hpp"
 #include "Generator/RoomInfo.hpp"
 #include "Util/Logger.hpp"
 
@@ -152,5 +151,7 @@ void MapBlueprint::OutputMapGridType() {
 }
 
 void MapBlueprint::Reset() {
-    this->m_MapGrid.clear();
+    m_MapGrid = std::vector<std::shared_ptr<RoomInfo>>(
+        m_MapGridSize.x * m_MapGridSize.y, nullptr
+    );
 }

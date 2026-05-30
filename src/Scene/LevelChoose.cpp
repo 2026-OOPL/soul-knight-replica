@@ -52,6 +52,28 @@ void LevelSwitch::Update() {
                 m_MapConfig.difficulty = GeneratorType::HARD;
                 break;
         }
+
+        const std::vector<GeneratorType> bossType = {
+            GeneratorType::BOSS_1,
+            GeneratorType::BOSS_2,
+            GeneratorType::BOSS_3
+        };
+
+        switch (m_MapConfig.section) {
+            case 1: 
+                m_MapConfig.difficulty = GeneratorType::EASY;
+                break;
+            case 2:
+                m_MapConfig.difficulty = GeneratorType::MEDIUM;
+                break;
+            case 3:
+                m_MapConfig.difficulty = bossType.at(m_MapConfig.chapter - 1);
+                break;
+            default:
+                throw std::runtime_error("Unhandled difficulty");
+        }
+
+        m_MapConfig.difficulty = bossType.at(m_MapConfig.chapter - 1);
         
         m_Redirect_Scene = std::make_shared<MapTest>(m_MapConfig);
     }

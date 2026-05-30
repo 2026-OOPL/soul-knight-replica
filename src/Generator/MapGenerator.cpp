@@ -295,9 +295,13 @@ MapGenerator::MapGenerator(GeneratorType type, std::shared_ptr<RandomChoose> ran
         } catch (const std::runtime_error& _) {
             retries ++;
             generateSuccess = false;
+
             this->m_Blueprint->Reset();
-            this->m_MapGridSize = m_Blueprint->GetSize();
-            LOG_INFO("Retrying generating map... ");
+            
+            int seed = random->GetInteger(INT_MAX);
+            this->m_RandomChoose = std::make_shared<RandomChoose>(seed);
+
+            LOG_ERROR("Retrying generating maps... ");
             continue;
         }
 

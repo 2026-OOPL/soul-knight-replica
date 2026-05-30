@@ -15,7 +15,7 @@ FetchContent_Declare(
 
     # Or alternatively if you want to use a specific git commit instead of a release:
     GIT_REPOSITORY  https://github.com/ntut-open-source-club/practical-tools-for-simple-design.git
-    GIT_TAG         main
+    GIT_TAG         28669352a5bd8466a8d0b34de816c2935c3dfab5
 
     SOURCE_DIR  ${CMAKE_CURRENT_SOURCE_DIR}/PTSD
 )

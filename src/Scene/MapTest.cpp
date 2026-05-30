@@ -27,29 +27,7 @@ MapTest::MapTest(
 ) : MapSystem(config) {
     std::shared_ptr<MapGenerator> generator;
 
-    GeneratorType difficulty;
-
-    const std::vector<GeneratorType> bossType = {
-        GeneratorType::BOSS_1,
-        GeneratorType::BOSS_2,
-        GeneratorType::BOSS_3
-    };
-
-    switch (config.section) {
-        case 1: 
-            difficulty = GeneratorType::EASY;
-            break;
-        case 2:
-            difficulty = GeneratorType::MEDIUM;
-            break;
-        case 3:
-            difficulty = bossType.at(config.chapter - 1);
-            break;
-        default:
-            throw std::runtime_error("Unhandled difficulty");
-    }
-
-    generator = std::make_shared<MapGenerator>(difficulty);
+    generator = std::make_shared<MapGenerator>(config.difficulty);
 
     m_MainRoom = generator->GetRooms(RoomPurpose::STARTER).front();
 
