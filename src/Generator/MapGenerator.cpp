@@ -1,4 +1,5 @@
 #include <cmath>
+#include <glm/ext/vector_float2.hpp>
 #include <vector>
 #include <glm/vec2.hpp>
 #include <memory>
@@ -8,6 +9,7 @@
 
 #include "Common/Constants.hpp"
 #include "Common/Enums.hpp"
+#include "Common/MapObject.hpp"
 #include "Common/Random.hpp"
 #include "Component/Map/BaseRoom.hpp"
 #include "Component/Map/BossRoom.hpp"
@@ -131,8 +133,57 @@ std::shared_ptr<Gangway> BuildGangway(
         config.length = std::abs(secondSocket.worldCenter.y - firstSocket.worldCenter.y);
     }
 
-    const glm::vec2 center = (firstSocket.worldCenter + secondSocket.worldCenter) / 2.0F;
+    glm::vec2 center = (firstSocket.worldCenter + secondSocket.worldCenter) / 2.0F;
+    int firstRoomSize, secondRoomSize;
+    float offset;
+
+    // Adjust offset for the gangway to prevent misaligned block 
+    if (config.orientation == GangwayOrientation::Horizontal) {
+        firstRoomSize = firstRoom->GetAreaSize().x / MAP_PIXEL_PER_BLOCK;
+        secondRoomSize = secondRoom->GetAreaSize().x / MAP_PIXEL_PER_BLOCK;
+
+        // 計算尺寸差值
+        int diff = std::abs(firstRoomSize - secondRoomSize);
+        // 當差值除以 2 為奇數時，代表中心點落在了整數格，需要偏移半格 (8px) 來對齊
+        offset = ((diff / 2) % 2 == 0) ? 8.0F : 0.0F;
+        center.x += offset;
+    } else {
+        firstRoomSize = firstRoom->GetAreaSize().y / MAP_PIXEL_PER_BLOCK;
+        secondRoomSize = secondRoom->GetAreaSize().y / MAP_PIXEL_PER_BLOCK;
+
+        int diff = std::abs(firstRoomSize - secondRoomSize);
+        offset = ((diff / 2) % 2 == 0) ? 8.0F : 0.0F;
+        center.y += offset;
+    }
+
     const std::shared_ptr<Gangway> gangway = std::make_shared<Gangway>(center, config);
+
+    // One block patch for each vertical gangway
+    if (config.orientation == GangwayOrientation::Vertical) {
+        const BaseRoom::PassageSocket &upperSocket = (firstSide == DoorSide::Bottom) ? firstSocket : secondSocket;
+
+        std::shared_ptr<MapPiece> rBlock = std::make_shared<MapPiece>(
+            glm::vec2(
+                upperSocket.worldCenter.x + 3 * MAP_PIXEL_PER_BLOCK,
+                upperSocket.worldCenter.y - upperSocket.wallThickness / 2.0F - 12.0F
+            ),
+            RESOURCE_DIR"/Map/Room/Wall_1x1.png"
+        );
+        rBlock->SetZIndex(10);
+
+        std::shared_ptr<MapPiece> lBlock = std::make_shared<MapPiece>(
+            glm::vec2(
+                upperSocket.worldCenter.x - 3 * MAP_PIXEL_PER_BLOCK,
+                upperSocket.worldCenter.y - upperSocket.wallThickness / 2.0F - 12.0F
+            ),
+            RESOURCE_DIR"/Map/Room/Wall_1x1.png"
+        );
+        lBlock->SetZIndex(10);
+
+        gangway->AddChild(rBlock);
+        gangway->AddChild(lBlock);
+    }
+
     gangway->ConnectRooms(firstRoom, secondRoom);
     return gangway;
 }
