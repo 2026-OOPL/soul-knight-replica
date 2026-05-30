@@ -1,8 +1,5 @@
-#include <memory>
-
 #include "App.hpp"
 #include "Core/Context.hpp"
-#include "Generator/MapGenerator.hpp"
 
 int main(int, char**) {
     App app;
