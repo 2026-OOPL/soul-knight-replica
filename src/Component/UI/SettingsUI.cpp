@@ -27,6 +27,7 @@ SettingsUI::SettingsUI(float zIndex)
 
     this->AddChild(m_SettingsMenu);
 
+    
     m_CloseButton = std::make_shared<ImageButton>(
         std::make_shared<ButtonAction>(
           nullptr,
@@ -47,6 +48,34 @@ SettingsUI::SettingsUI(float zIndex)
     m_CloseButton->SetZIndex(m_ZIndex+2);
 
     this->AddChild(m_CloseButton);
+
+    m_MasterVolumeKnob = std::make_shared<ImageButton>(
+        nullptr,
+        std::make_shared<ImageButtonTheme>(
+            RESOURCE_DIR"/UI/Settings/settings_ui_slider_button.png",
+            RESOURCE_DIR"/UI/Settings/settings_ui_slider_button.png",
+            RESOURCE_DIR"/UI/Settings/settings_ui_slider_button.png"
+        ),
+        nullptr
+    );
+
+    m_MasterVolumeKnob->m_Transform.scale = {.5F, .5F};
+    m_MasterVolumeKnob->m_Transform.translation = glm::vec2(-150, 25);
+    m_MasterVolumeKnob->SetZIndex(m_ZIndex+4);
+
+    this->AddChild(m_MasterVolumeKnob);
+
+    m_MasterVolumeProgress = std::make_shared<Util::GameObject>(
+        std::make_shared<Util::Image>(
+            RESOURCE_DIR"/UI/Settings/settings_ui_slider_active.png",
+            false
+        ),
+        m_ZIndex+3
+    );
+
+    m_MasterVolumeProgress->m_Transform.scale = {.5F, .5F};
+    m_MasterVolumeProgress->m_Transform.translation = glm::vec2(-150, 24.5);
+    this->AddChild(m_MasterVolumeProgress);
 }
 
 void SettingsUI::Update() {
@@ -59,6 +88,18 @@ void SettingsUI::Update() {
         std::shared_ptr<IStateful> stateful = std::dynamic_pointer_cast<IStateful>(children[i]);
         if (stateful) { stateful->Update(); }
     }
+
+    float cursorOffset = Util::Input::GetCursorPosition().x;
+    
+    if (m_MasterVolumeKnob->GetButtonState() == ButtonState::PRESSED) {
+        cursorOffset = (cursorOffset < -150) ? -150 : cursorOffset;
+        cursorOffset = (cursorOffset > 170) ? 170 : cursorOffset;
+        m_MasterVolumeKnob->m_Transform.translation.x = cursorOffset;
+
+        m_MasterVolumeProgress->m_Transform.translation.x = -150 + (cursorOffset + 150) / 2;
+        m_MasterVolumeProgress->m_Transform.scale.x = (cursorOffset + 150) / 150 * 2.7;
+    }
+
 } 
 
 bool SettingsUI::GetExitSignal() {

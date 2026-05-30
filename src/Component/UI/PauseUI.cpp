@@ -26,7 +26,8 @@ PauseUI::PauseUI(std::function<void()> onHomeButtonClick, float zIndex)
 
     m_Background = std::make_shared<Util::GameObject>(
         std::make_shared<Util::Image>(
-            RESOURCE_DIR"/UI/Pause/layer_dim.png"
+            RESOURCE_DIR"/UI/Pause/layer_dim.png",
+            false
         ),
         zIndexBase+1
     );

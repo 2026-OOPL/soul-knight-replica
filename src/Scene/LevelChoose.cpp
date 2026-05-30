@@ -2,6 +2,7 @@
 
 #include "Scene/LevelChoose.hpp"
 #include "Generator/MapGenerator.hpp"
+#include "Scene/CastingScene.hpp"
 #include "Scene/MapTest.hpp"
 #include "Util/GameObject.hpp"
 #include "Util/Text.hpp"
@@ -24,6 +25,11 @@ LevelSwitch::LevelSwitch(MapSystemConfig::MapConfig config) {
 }
 
 void LevelSwitch::Update() {
+    if (m_MapConfig.chapter >= 3 && m_MapConfig.section >= 3) {
+        m_Redirect_Scene = std::make_shared<CastingScene>();
+        return;
+    }
+
     Util::ms_t now = Util::Time::GetElapsedTimeMs();
 
     if (now - this->m_SceneStartTime > 1000) {

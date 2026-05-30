@@ -1,7 +1,7 @@
-#include <glm/ext/vector_float2.hpp>
-#include <imgui.h>
 #include <memory>
-#include <stdexcept>
+#include <imgui.h>
+
+#include <glm/vec2.hpp>
 
 #include "Component/Button/ImageButton.hpp"
 
@@ -33,7 +33,7 @@ glm::vec2 ImageButton::GetButonHitboxSize() {
 
 glm::vec2 ImageButton::GetButonHitboxTranslation() {
     if (m_HitBox == nullptr) {
-        return this->GetScaledSize();
+        return this->m_Transform.translation;
     }
 
     return this->m_HitBox->translation;

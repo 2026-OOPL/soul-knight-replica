@@ -1,6 +1,7 @@
 #ifndef SCENE_HPP
 #define SCENE_HPP
 
+#include "Util/BGM.hpp"
 #include "Util/GameObject.hpp"
 #include <Util/Renderer.hpp>
 #include <memory>

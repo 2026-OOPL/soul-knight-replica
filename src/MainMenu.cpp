@@ -1,10 +1,12 @@
-#include <glm/vec2.hpp>
 #include <memory>
+#include <glm/vec2.hpp>
 
 #include "MainMenu.hpp"
 #include "Component/Button/TextButton.hpp"
 #include "Core/Context.hpp"
+#include "Scene/CastingScene.hpp"
 #include "Scene/MapTest.hpp"
+#include "Util/BGM.hpp"
 #include "Util/GameObject.hpp"
 #include "Util/Image.hpp"
 #include "Util/Logger.hpp"
@@ -36,19 +38,23 @@ MainMenu::MainMenu() : Scene() {
     this->AddChild(this->m_Button_NewGame);
 
     this->m_Button_LoadGame = std::make_shared<TextButton>(
-        "載入存檔",
-        nullptr
+        "遊玩設定",
+        std::make_shared<ButtonAction>(
+            nullptr,
+            nullptr,
+            [this]() { this->LaunchSettingsUI(true); }
+        )
     );
     this->m_Button_LoadGame->m_Transform.translation =
         buttonBaseline + glm::vec2(0.0F, -70.0F);
     this->AddChild(this->m_Button_LoadGame);
 
     this->m_Button_Credit = std::make_shared<TextButton>(
-        "遊玩設定",
+        "製作名單",
         std::make_shared<ButtonAction>(
             nullptr,
             nullptr,
-            [this]() { this->LaunchSettingsUI(true); }
+            [this]() { this->m_Redirect_Scene = std::make_shared<CastingScene>(); }
         )
     );
 
@@ -80,6 +86,16 @@ MainMenu::MainMenu() : Scene() {
         0
     );
     this->AddChild(this->m_Background);
+
+    m_BGM = std::make_shared<Util::BGM>(
+        RESOURCE_DIR"/SFX/Alan Walker - Fade (NCS).m4a"
+    );
+
+    m_BGM->LoadMedia(RESOURCE_DIR"/SFX/Alan Walker - Fade (NCS).m4a");
+
+    m_BGM->Play();
+
+    LOG_INFO(m_BGM->GetVolume());
 }
 
 MainMenu::~MainMenu() = default;

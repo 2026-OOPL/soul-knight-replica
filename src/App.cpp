@@ -1,12 +1,10 @@
 #include <memory>
 
-#include "Util/Input.hpp"
-#include "Util/Keycode.hpp"
-#include "Util/Logger.hpp"
-#include "Util/Renderer.hpp"
-
 #include "App.hpp"
 #include "MainMenu.hpp"
+#include "Util/Input.hpp"
+#include "Util/Logger.hpp"
+#include "Util/Renderer.hpp"
 
 void App::Start() {
     LOG_TRACE("Start");
