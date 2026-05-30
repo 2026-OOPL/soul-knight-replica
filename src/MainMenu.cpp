@@ -5,6 +5,7 @@
 #include "Component/Button/TextButton.hpp"
 #include "Core/Context.hpp"
 #include "Scene/MapTest.hpp"
+#include "Util/BGM.hpp"
 #include "Util/GameObject.hpp"
 #include "Util/Image.hpp"
 #include "Util/Logger.hpp"
@@ -80,6 +81,16 @@ MainMenu::MainMenu() : Scene() {
         0
     );
     this->AddChild(this->m_Background);
+
+    m_BGM = std::make_shared<Util::BGM>(
+        RESOURCE_DIR"/Resources/SFX/Alan Walker - Fade (NCS).m4a"
+    );
+
+    m_BGM->LoadMedia(RESOURCE_DIR"/Resources/SFX/Alan Walker - Fade (NCS).m4a");
+
+    m_BGM->Play();
+
+    LOG_INFO(m_BGM->GetVolume());
 }
 
 MainMenu::~MainMenu() = default;
