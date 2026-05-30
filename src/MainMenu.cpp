@@ -6,6 +6,7 @@
 #include "Core/Context.hpp"
 #include "Scene/CastingScene.hpp"
 #include "Scene/MapTest.hpp"
+#include "Util/BGM.hpp"
 #include "Util/GameObject.hpp"
 #include "Util/Image.hpp"
 #include "Util/Logger.hpp"
@@ -38,7 +39,11 @@ MainMenu::MainMenu() : Scene() {
 
     this->m_Button_LoadGame = std::make_shared<TextButton>(
         "遊玩設定",
-        nullptr
+        std::make_shared<ButtonAction>(
+            nullptr,
+            nullptr,
+            [this]() { this->LaunchSettingsUI(true); }
+        )
     );
     this->m_Button_LoadGame->m_Transform.translation =
         buttonBaseline + glm::vec2(0.0F, -70.0F);
@@ -82,10 +87,40 @@ MainMenu::MainMenu() : Scene() {
     );
     this->AddChild(this->m_Background);
 
+    m_BGM = std::make_shared<Util::BGM>(
+        RESOURCE_DIR"/SFX/Alan Walker - Fade (NCS).m4a"
+    );
+
+    m_BGM->LoadMedia(RESOURCE_DIR"/SFX/Alan Walker - Fade (NCS).m4a");
+
+    m_BGM->Play();
+
+    LOG_INFO(m_BGM->GetVolume());
 }
 
 MainMenu::~MainMenu() = default;
 
 std::shared_ptr<Scene> MainMenu::GetRedirection() {
     return this->m_Redirect_Scene;
+}
+
+void MainMenu::LaunchSettingsUI(bool launch) {
+    if (launch) {
+        this->m_SettingsUI = std::make_shared<SettingsUI>(m_ZIndex + 5);
+        this->AddChild(this->m_SettingsUI);
+    } else {
+        this->RemoveChild(this->m_SettingsUI);
+        this->m_SettingsUI = nullptr;   
+    }
+}
+
+void MainMenu::Update() {
+    if (this->m_SettingsUI && this->m_SettingsUI) {
+        this->m_SettingsUI->Update();
+        if (this->m_SettingsUI->GetExitSignal()) {
+            this->LaunchSettingsUI(false);
+        }
+    }
+
+    Scene::Update();
 }

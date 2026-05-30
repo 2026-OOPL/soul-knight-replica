@@ -2,6 +2,7 @@
 #define IMAGE_BUTTON_HPP
 
 #include <memory>
+#include <stdexcept>
 #include <string>
 
 #include "Component/Button/Button.hpp"
@@ -23,15 +24,29 @@ typedef struct ImageButtonTheme {
 
 } ImageButtonTheme_t;
 
+typedef struct ButtonHitbox {
+    glm::vec2 size;
+    glm::vec2 translation;
+
+    ButtonHitbox(
+        glm::vec2 size,
+        glm::vec2 translation
+    ) : size(size), translation(translation) {}
+} ButtonHitbox_t;
+
 class ImageButton : public Button {
 public:
     ImageButton(
         std::shared_ptr<ButtonAction> action,
         std::shared_ptr<ImageButtonTheme> theme,
-        glm::vec2 size,
-        glm::vec2 translation
+        std::shared_ptr<ButtonHitbox> hitbox
     ) : Button(action) {
-        this->theme = theme != nullptr ? theme : this->theme;
+        if (theme == nullptr) {
+            throw std::runtime_error("Image button should have a theme.");
+        }
+        
+        this->m_Theme = theme;
+        this->m_HitBox = hitbox;
 
         this->m_Image = std::make_shared<Util::Image>(
             theme->normal,
@@ -39,15 +54,12 @@ public:
         );
 
         this->SetDrawable(m_Image);
-
-        this->m_Size = size;
-        this->m_Translation = translation;
     }
 
     ImageButton(
         std::shared_ptr<ImageButtonTheme> theme
     ) : ImageButton(
-        nullptr, theme, {0,0}, {0,0}
+        nullptr, theme, nullptr
     ) {};
 
     virtual glm::vec2 GetButonHitboxSize() override;
@@ -56,11 +68,10 @@ public:
     void Update() override;
 
 private:
-    glm::vec2 m_Size = {-114514, -228922};
-    glm::vec2 m_Translation = {-114514, -228922};
-
     std::shared_ptr<Util::Image> m_Image;
-    std::shared_ptr<ImageButtonTheme> theme;
+
+    std::shared_ptr<ButtonHitbox> m_HitBox;
+    std::shared_ptr<ImageButtonTheme> m_Theme;
 };
 
 #endif

@@ -84,9 +84,19 @@ inline const WallLayout kPortalWallLayout = MakeWallLayout();
 
 // 依房間尺寸分類的牆設定。
 inline const WallLayout kRoom13x13WallLayout = MakeWallLayout();
-inline const WallLayout kRoom15x15WallLayout = MakeWallLayout();
+inline const WallLayout kRoom15x15WallLayout = MakeWallLayout(
+    MakeWallSideLayout(-1.0F, 0.0F, 1.0F),
+    MakeWallSideLayout(),
+    MakeWallSideLayout(-1.0F, 0.0F, 1.0F),
+    MakeWallSideLayout()
+);
 inline const WallLayout kRoom17x17WallLayout = MakeWallLayout();
-inline const WallLayout kRoom17x23WallLayout = MakeWallLayout();
+inline const WallLayout kRoom17x23WallLayout = MakeWallLayout(
+    MakeWallSideLayout(-1.0F, 0.0F, 1.0F),
+    MakeWallSideLayout(),
+    MakeWallSideLayout(-1.0F, 0.0F, 1.0F),
+    MakeWallSideLayout()
+);
 inline const WallLayout kRoom23x17WallLayout = MakeWallLayout();
 
 // 將單面牆設定套到實際的 WallSideConfig 上。

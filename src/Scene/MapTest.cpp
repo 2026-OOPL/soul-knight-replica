@@ -160,9 +160,6 @@ MapTest::MapTest()
         ""
     }
 ) {
-    m_PauseUI = std::make_shared<PauseUI>(
-        [this] { this->m_ExitToHome = true; }
-    );
 }
 
 
@@ -172,29 +169,26 @@ void MapTest::Update() {
         m_LevelIcon->SetVisible(false);
     }
 
-    // Game pause logic
-    if (Util::Input::IsKeyUp(Util::Keycode::ESCAPE)) {
-        m_IsPaused = !m_IsPaused;
-        
-        if (m_IsPaused) {
-            m_PauseUI = std::make_shared<PauseUI>(
-                [this] { this->m_ExitToHome = true; }
-            ); 
-            this->AddChild(m_PauseUI);
-        } else {
-            this->RemoveChild(m_PauseUI);
-        }
-    }
-
-    if (m_IsPaused && this->m_PauseUI->GetExitSignal()) {
-        m_IsPaused = false;
-        this->RemoveChild(m_PauseUI);
-    }
-
     if (m_IsPaused) {
-        this->m_PauseUI->Update();      
+        this->m_PauseUI->Update();
     } else {
         MapSystem::Update();
+    }
+
+    // Game pause logic
+    if (m_IsPaused) {
+        if (this->m_PauseUI->GetExitSignal()) {
+            m_IsPaused = false;
+            this->RemoveChild(m_PauseUI);
+        }
+    } else if (Util::Input::IsKeyUp(Util::Keycode::ESCAPE)) {
+        m_IsPaused = true;
+
+        m_PauseUI = std::make_shared<PauseUI>(
+            [this] { this->m_ExitToHome = true; },
+            20
+        );
+        this->AddChild(m_PauseUI);
     }
 }
 

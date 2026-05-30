@@ -1,7 +1,7 @@
-#include <glm/ext/vector_float2.hpp>
-#include <imgui.h>
 #include <memory>
-#include <stdexcept>
+#include <imgui.h>
+
+#include <glm/vec2.hpp>
 
 #include "Component/Button/ImageButton.hpp"
 
@@ -12,29 +12,29 @@ void ImageButton::Update() {
 
     switch (this->GetButtonState()) {
         case ButtonState::PRESSED:
-            image->SetImage(this->theme->pressed);
+            image->SetImage(this->m_Theme->pressed);
             break;
         case ButtonState::HOVER:
-            image->SetImage(this->theme->hover);
+            image->SetImage(this->m_Theme->hover);
             break;
         default:
-            image->SetImage(this->theme->normal);
+            image->SetImage(this->m_Theme->normal);
             break;
     }
 }
 
 glm::vec2 ImageButton::GetButonHitboxSize() {
-    if (m_Size == glm::vec2(-114514, -228922)) {
-        throw std::runtime_error("GetButonHitboxSize not override and static size was not set");
+    if (m_HitBox == nullptr) {
+        return this->GetScaledSize();
     }
 
-    return this->m_Size;
+    return this->m_HitBox->size;
 }
 
 glm::vec2 ImageButton::GetButonHitboxTranslation() {
-    if (m_Translation == glm::vec2(-114514, -228922)) {
-        throw std::runtime_error("GetButonHitboxTranslation not override and static translation was not set");
+    if (m_HitBox == nullptr) {
+        return this->m_Transform.translation;
     }
 
-    return this->m_Translation;
+    return this->m_HitBox->translation;
 }
