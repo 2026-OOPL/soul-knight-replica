@@ -3,6 +3,7 @@
 
 #include "Component/Button/ImageButton.hpp"
 #include "Component/IStateful.hpp"
+#include "Component/UI/SettingsUI.hpp"
 #include "Util/GameObject.hpp"
 #include <glm/vec2.hpp>
 #include <memory>
@@ -11,7 +12,8 @@ class PauseUI : public Util::GameObject, IStateful {
 
 public:
     PauseUI(
-        std::function<void()> onHomeButtonClick
+        std::function<void()> onHomeButtonClick,
+        float zIndex
     );
 
     ~PauseUI() override = default;
@@ -28,7 +30,7 @@ private:
 
     std::shared_ptr<Util::GameObject> m_PauseMenu;
     std::shared_ptr<Util::GameObject> m_Background;
-    std::shared_ptr<Util::GameObject> m_SettingsMenu;
+    std::shared_ptr<SettingsUI> m_SettingsMenu;
 
     std::shared_ptr<ImageButton> m_HomeButton;
     std::shared_ptr<ImageButton> m_ContinueButton;
