@@ -12,6 +12,7 @@
 #include "Util/GameObject.hpp"
 #include "Util/Input.hpp"
 #include "Util/Keycode.hpp"
+#include "Util/Logger.hpp"
 #include "Util/Time.hpp"
 
 #include "Component/Player/Player.hpp"
@@ -128,6 +129,14 @@ void Player::Update() {
     Character::Update();
     this->UpdateMeleeAttackVisual();
 
+    if (Util::Input::IsKeyDown(Util::Keycode::T)) {
+        this->m_HealthLocked = !this->m_HealthLocked;
+        LOG_INFO(
+            "Player health lock {}.",
+            this->m_HealthLocked ? "enabled" : "disabled"
+        );
+    }
+
     if (Util::Input::IsKeyDown(Util::Keycode::Q)) {
         this->SwitchWeapon();
     }
@@ -187,10 +196,14 @@ void Player::Update() {
 }
 
 void Player::SetWeapon(std::shared_ptr<Weapon> weapon) {
+    (void)this->PickupWeapon(std::move(weapon));
+}
+
+std::shared_ptr<Weapon> Player::PickupWeapon(std::shared_ptr<Weapon> weapon) {
     if (weapon == nullptr) {
         this->m_WeaponSlots[this->m_ActiveWeaponSlot] = nullptr;
         Character::SetWeapon(nullptr);
-        return;
+        return nullptr;
     }
 
     this->ApplyWeaponBulletCallback(weapon);
@@ -199,17 +212,20 @@ void Player::SetWeapon(std::shared_ptr<Weapon> weapon) {
     if (this->m_WeaponSlots[this->m_ActiveWeaponSlot] == nullptr) {
         this->m_WeaponSlots[this->m_ActiveWeaponSlot] = std::move(weapon);
         Character::SetWeapon(this->m_WeaponSlots[this->m_ActiveWeaponSlot]);
-        return;
+        return nullptr;
     }
 
     if (this->m_WeaponSlots[inactiveSlot] == nullptr) {
         this->m_WeaponSlots[inactiveSlot] = std::move(weapon);
         this->EquipWeaponSlot(inactiveSlot);
-        return;
+        return nullptr;
     }
 
+    std::shared_ptr<Weapon> droppedWeapon =
+        this->m_WeaponSlots[this->m_ActiveWeaponSlot];
     this->m_WeaponSlots[this->m_ActiveWeaponSlot] = std::move(weapon);
     Character::SetWeapon(this->m_WeaponSlots[this->m_ActiveWeaponSlot]);
+    return droppedWeapon;
 }
 
 void Player::SetOnWeaponBulletFired(
@@ -342,12 +358,20 @@ void Player::ApplyDamage(int damage) {
         return;
     }
 
+    if (this->m_HealthLocked) {
+        return;
+    }
+
     this->m_ShieldRegenDelayRemainingMs = kShieldRegenDelayMs;
     this->m_ShieldRegenElapsedMs = 0.0F;
 
     const int shieldDamage = std::min(this->m_CurrentShield, damage);
     this->SetCurrentShield(this->m_CurrentShield - shieldDamage);
     Character::ApplyDamage(damage - shieldDamage);
+}
+
+bool Player::IsHealthLocked() const {
+    return this->m_HealthLocked;
 }
 
 int Player::GetCurrentShield() const {

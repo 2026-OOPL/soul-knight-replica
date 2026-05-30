@@ -16,6 +16,11 @@ public:
     );
 
     ~BossRoom() override = default;
+
+    void Initialize(MapSystem *mapSystem) override;
+
+private:
+    void SpawnCornerObstacles(MapSystem *mapSystem);
 };
 
 #endif

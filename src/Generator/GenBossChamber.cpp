@@ -49,7 +49,7 @@ void GenBossChamber::Generate() {
     );
 
     std::vector<SpawnInfo<MobType>> bossWave;
-    bossWave.emplace_back(MobType::GHOST_KING, glm::vec2(0.0F, 0.0F));
+    bossWave.emplace_back(MobType::ZULAN_IN_RUINS, glm::vec2(0.0F, 0.0F));
     info->AddMonsterWave(bossWave);
 
     this->m_Blueprint->SetElementByCooridinate(coordinate, info);

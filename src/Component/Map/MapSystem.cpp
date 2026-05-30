@@ -15,6 +15,7 @@
 #include "Component/Map/FightRoom.hpp"
 #include "Component/Prop/AmmoOrb.hpp"
 #include "Component/Prop/BlockingProp.hpp"
+#include "Component/Prop/DroppedWeapon.hpp"
 #include "Component/Prop/Portal.hpp"
 #include "Scene/LevelChoose.hpp"
 #include "Util/Input.hpp"
@@ -122,7 +123,7 @@ void MapSystem::Update() {
     if (Util::Input::IsKeyDown(Util::Keycode::R)) {
         this->m_ShowCollisionDebug = !this->m_ShowCollisionDebug;
     }
-    if (Util::Input::IsKeyDown(Util::Keycode::E)) {
+    if (Util::Input::IsKeyDown(Util::Keycode::P)) {
         this->DebugClearCurrentFightRoom();
     }
 
@@ -136,6 +137,7 @@ void MapSystem::Update() {
 
     this->FlushPendingBullets();
     this->FlushPendingMobs();
+    this->FlushPendingProps();
 
     this->m_CollisionSystem.DispatchCollisions();
     this->PruneDestroyedBullets();
@@ -790,6 +792,27 @@ void MapSystem::AddProp(const std::shared_ptr<Prop> &prop) {
         return;
     }
 
+    if (this->m_IsUpdatingScene) {
+        this->m_PendingProps.push_back(prop);
+        return;
+    }
+
+    this->AddPropImmediately(prop);
+}
+
+void MapSystem::DropWeapon(std::shared_ptr<Weapon> weapon, const glm::vec2 &position) {
+    if (weapon == nullptr) {
+        return;
+    }
+
+    this->AddProp(std::make_shared<DroppedWeapon>(position, std::move(weapon)));
+}
+
+void MapSystem::AddPropImmediately(const std::shared_ptr<Prop> &prop) {
+    if (prop == nullptr) {
+        return;
+    }
+
     // Record if portal is present, used for the level complete check
     std::shared_ptr<Portal> portal = std::dynamic_pointer_cast<Portal>(prop);
     if (portal != nullptr) {
@@ -798,6 +821,19 @@ void MapSystem::AddProp(const std::shared_ptr<Prop> &prop) {
 
     prop->Initialize(this);
     this->m_World.AddProp(prop);
+}
+
+void MapSystem::FlushPendingProps() {
+    if (this->m_PendingProps.empty()) {
+        return;
+    }
+
+    std::vector<std::shared_ptr<Prop>> pending;
+    pending.swap(this->m_PendingProps);
+
+    for (const auto &prop : pending) {
+        this->AddPropImmediately(prop);
+    }
 }
 
 void MapSystem::RemoveProp(const std::shared_ptr<Prop> &prop) {
