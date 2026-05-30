@@ -1,18 +1,15 @@
 #include <memory>
 
-#include "Scene/CastingScene.hpp"
-#include "Util/Input.hpp"
-#include "Util/Keycode.hpp"
-#include "Util/Logger.hpp"
-#include "Util/Renderer.hpp"
-
 #include "App.hpp"
 #include "MainMenu.hpp"
+#include "Util/Input.hpp"
+#include "Util/Logger.hpp"
+#include "Util/Renderer.hpp"
 
 void App::Start() {
     LOG_TRACE("Start");
 
-    this->m_Scene = std::make_shared<CastingScene>();
+    this->m_Scene = std::make_shared<MainMenu>();
     this->m_Root.AddChild(this->m_Scene);
 
     this->m_CurrentState = State::UPDATE;

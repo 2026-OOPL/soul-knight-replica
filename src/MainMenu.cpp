@@ -1,5 +1,5 @@
-#include <glm/vec2.hpp>
 #include <memory>
+#include <glm/vec2.hpp>
 
 #include "MainMenu.hpp"
 #include "Component/Button/TextButton.hpp"
@@ -37,7 +37,7 @@ MainMenu::MainMenu() : Scene() {
     this->AddChild(this->m_Button_NewGame);
 
     this->m_Button_LoadGame = std::make_shared<TextButton>(
-        "載入存檔",
+        "遊玩設定",
         nullptr
     );
     this->m_Button_LoadGame->m_Transform.translation =
@@ -45,8 +45,12 @@ MainMenu::MainMenu() : Scene() {
     this->AddChild(this->m_Button_LoadGame);
 
     this->m_Button_Credit = std::make_shared<TextButton>(
-        "遊玩設定",
-        nullptr
+        "製作名單",
+        std::make_shared<ButtonAction>(
+            nullptr,
+            nullptr,
+            [this]() { this->m_Redirect_Scene = std::make_shared<CastingScene>(); }
+        )
     );
 
     this->m_Button_Credit->m_Transform.translation =
@@ -77,6 +81,7 @@ MainMenu::MainMenu() : Scene() {
         0
     );
     this->AddChild(this->m_Background);
+
 }
 
 MainMenu::~MainMenu() = default;
