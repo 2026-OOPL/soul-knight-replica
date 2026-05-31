@@ -4,6 +4,7 @@
 
 #include "MainMenu.hpp"
 #include "Component/Button/TextButton.hpp"
+#include "GameConfig/GameConfig.hpp"
 #include "Core/Context.hpp"
 #include "Scene/CastingScene.hpp"
 #include "Scene/MapTest.hpp"
@@ -120,6 +121,8 @@ void MainMenu::Update() {
             this->LaunchSettingsUI(false);
         }
     }
+
+    m_BGM->SetVolume(GameConfig::GetInstance().m_BGMVolume * 128);
 
     Scene::Update();
 }

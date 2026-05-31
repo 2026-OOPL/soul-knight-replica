@@ -240,58 +240,62 @@ MapGenerator::MapGenerator(GeneratorType type, std::shared_ptr<RandomChoose> ran
         starterRoom
     );
 
-    m_GenChamber.push_back(
-        std::make_shared<GenFightChamber>(
-            this->GetFightingChamberStartCooridinate(),
-            [this](glm::vec2 p) { return this->FightChamberCooridinateValidator(p); },
-            m_MaximumFightRoomCount,
-            m_MinimumFightRoomCount,
-            this->m_Blueprint,
-            m_RandomChoose
-        )
-    );
-
-    m_GenChamber.push_back(
-        std::make_shared<GenRewardChamber>(
-            [this](glm::vec2 p) { return this->RewardChamberCooridinateValidator(p); },
-            m_MaximumRewardRoomCount,
-            m_MinimumRewardRoomCount,
-            this->m_Blueprint,
-            m_RandomChoose
-        )
-    );
-
-    switch (type) {
-        case GeneratorType::BOSS_1:
-        case GeneratorType::BOSS_2:
-        case GeneratorType::BOSS_3:
-            m_GenChamber.push_back(
-                std::make_shared<GenBossChamber>(
-                    [this](glm::vec2 p) { return this->RewardChamberCooridinateValidator(p); },
-                    this->m_Blueprint,
-                    m_RandomChoose
-                )
-            );
-        default:
-            break;
-    }
-
-    m_GenChamber.push_back(
-        std::make_shared<GenPortalChamber>(
-            this->GetPortalChamberGenPolicy(),
-            [this](glm::ivec2 coor) {
-                return this->PortalChamberCooridinateValidator(coor);
-            },
-            this->m_Blueprint,
-            m_RandomChoose
-        )
-    );
-
     int retries = 0;
     bool generateSuccess = false;
     do {
+        this->m_GenChamber.clear();
+
+        m_GenChamber.push_back(
+            std::make_shared<GenFightChamber>(
+                this->GetFightingChamberStartCooridinate(),
+                [this](glm::vec2 p) { return this->FightChamberCooridinateValidator(p); },
+                m_MaximumFightRoomCount,
+                m_MinimumFightRoomCount,
+                this->m_Blueprint,
+                m_RandomChoose
+            )
+        );
+
+        switch (type) {
+            case GeneratorType::BOSS_1:
+            case GeneratorType::BOSS_2:
+            case GeneratorType::BOSS_3:
+                m_GenChamber.push_back(
+                    std::make_shared<GenBossChamber>(
+                        nullptr, // 移除 limiter，讓 Boss 房能在戰鬥房周圍任意位置生成
+                        this->m_Blueprint,
+                        m_RandomChoose
+                    )
+                );
+                break;
+            default:
+                break;
+        }
+
+        m_GenChamber.push_back(
+            std::make_shared<GenRewardChamber>(
+                [this](glm::vec2 p) { return this->RewardChamberCooridinateValidator(p); },
+                m_MaximumRewardRoomCount,
+                m_MinimumRewardRoomCount,
+                this->m_Blueprint,
+                m_RandomChoose
+            )
+        );
+
+        m_GenChamber.push_back(
+            std::make_shared<GenPortalChamber>(
+                this->GetPortalChamberGenPolicy(),
+                [this](glm::ivec2 coor) {
+                    return this->PortalChamberCooridinateValidator(coor);
+                },
+                this->m_Blueprint,
+                m_RandomChoose
+            )
+        );
+
         try {
             for (auto const &i : this->m_GenChamber) i->Generate();
+            generateSuccess = true;
         } catch (const std::runtime_error& _) {
             retries ++;
             generateSuccess = false;
@@ -302,11 +306,8 @@ MapGenerator::MapGenerator(GeneratorType type, std::shared_ptr<RandomChoose> ran
             this->m_RandomChoose = std::make_shared<RandomChoose>(seed);
 
             LOG_ERROR("Retrying generating maps... ");
-            continue;
         }
-
-        generateSuccess = true;
-    } while (!generateSuccess || retries > 10);
+    } while (!generateSuccess && retries <= 1000);
 
     if (!generateSuccess) {
         LOG_ERROR("Failed to generate map after 10 retries");
