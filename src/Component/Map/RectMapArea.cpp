@@ -105,15 +105,17 @@ std::vector<Collision::AxisAlignedBox> BuildVerticalWallSegments(
     std::vector<Collision::AxisAlignedBox> segments;
 
     if (bottomHeight > 0.0F) {
+        // +12px to patch the gangway and wall misaligned 
         segments.push_back(Collision::CollisionSystem::BuildBox(
-            {wallX, wallBottom + bottomHeight / 2.0F},
+            {wallX, wallBottom + bottomHeight / 2.0F + 12},
             {wallThickness, bottomHeight}
         ));
     }
 
     if (topHeight > 0.0F) {
+        // -10px to patch the gangway and wall misaligned
         segments.push_back(Collision::CollisionSystem::BuildBox(
-            {wallX, wallTop - topHeight / 2.0F},
+            {wallX, wallTop - topHeight / 2.0F - 10},
             {wallThickness, topHeight}
         ));
     }

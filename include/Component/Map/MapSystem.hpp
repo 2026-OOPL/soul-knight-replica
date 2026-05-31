@@ -24,11 +24,25 @@
 
 namespace MapSystemConfig {
 
+struct MapInfo {
+    int chapter = 1;
+    int section = 1;
+    GeneratorType difficulty = GeneratorType::EASY;
+    std::string seed = "";
+};
+
+struct PlayerInfo {
+    int mana = 100;
+    int health = 100;
+    int protection = 100;
+    int maxMana = 100;
+    int maxHealth = 100;
+    int maxProtection = 100;
+};
+
 struct MapConfig {
-  int chapter = 1;
-  int section = 1;
-  GeneratorType difficulty = GeneratorType::EASY;
-  std::string seed = "";
+    MapInfo info;
+    PlayerInfo playerInfo;
 };
 
 }
@@ -151,6 +165,8 @@ private:
     std::shared_ptr<Scene> m_RedirectScene;
 
     MapSystemConfig::MapConfig m_MapConfig;
+
+    void SwitchToLevelSelect();
 
 };
 

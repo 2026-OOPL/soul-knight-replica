@@ -119,6 +119,21 @@ std::shared_ptr<Scene> MapSystem::GetRedirection() {
     return m_RedirectScene;
 }
 
+void MapSystem::SwitchToLevelSelect() {
+    std::shared_ptr<Player> player = this->GetPlayers().front();
+
+    this->m_MapConfig.playerInfo.health = player->GetCurrentHealth();
+    this->m_MapConfig.playerInfo.maxHealth = player->GetMaxHealth();
+
+    this->m_MapConfig.playerInfo.protection = player->GetCurrentShield();
+    this->m_MapConfig.playerInfo.maxProtection = player->GetMaxShield();
+
+    this->m_MapConfig.playerInfo.mana = player->GetCurrentAmmo();
+    this->m_MapConfig.playerInfo.maxMana = player->GetMaxAmmo();
+
+    m_RedirectScene = std::make_shared<LevelSwitch>(this->m_MapConfig);
+}
+
 void MapSystem::Update() {
     if (Util::Input::IsKeyDown(Util::Keycode::R)) {
         this->m_ShowCollisionDebug = !this->m_ShowCollisionDebug;
@@ -132,7 +147,7 @@ void MapSystem::Update() {
     this->m_IsUpdatingScene = false;
 
     if (m_CurrentPortal != nullptr && m_CurrentPortal->GetPlayerEntered()) {
-        m_RedirectScene = std::make_shared<LevelSwitch>(m_MapConfig);
+        return this->SwitchToLevelSelect();
     }
 
     this->FlushPendingBullets();

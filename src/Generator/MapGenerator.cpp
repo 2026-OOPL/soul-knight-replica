@@ -1,5 +1,5 @@
 #include <cmath>
-#include <glm/ext/vector_float2.hpp>
+#include <glm/vec2.hpp>
 #include <vector>
 #include <glm/vec2.hpp>
 #include <memory>
@@ -9,7 +9,6 @@
 
 #include "Common/Constants.hpp"
 #include "Common/Enums.hpp"
-#include "Common/MapObject.hpp"
 #include "Common/Random.hpp"
 #include "Component/Map/BaseRoom.hpp"
 #include "Component/Map/BossRoom.hpp"
@@ -126,11 +125,13 @@ std::shared_ptr<Gangway> BuildGangway(
     );
 
     if (firstSide == DoorSide::Left || firstSide == DoorSide::Right) {
+        // -8px to prevent misaligned block between gangway and room 
         config.orientation = GangwayOrientation::Horizontal;
-        config.length = std::abs(secondSocket.worldCenter.x - firstSocket.worldCenter.x);
+        config.length = std::abs(secondSocket.worldCenter.x - firstSocket.worldCenter.x - 8.0F);
     } else {
         config.orientation = GangwayOrientation::Vertical;
-        config.length = std::abs(secondSocket.worldCenter.y - firstSocket.worldCenter.y);
+        // -8px to prevent misaligned block between gangway and room 
+        config.length = std::abs(secondSocket.worldCenter.y - firstSocket.worldCenter.y - 8.0F);
     }
 
     glm::vec2 center = (firstSocket.worldCenter + secondSocket.worldCenter) / 2.0F;
@@ -146,14 +147,14 @@ std::shared_ptr<Gangway> BuildGangway(
         int diff = std::abs(firstRoomSize - secondRoomSize);
         // 當差值除以 2 為奇數時，代表中心點落在了整數格，需要偏移半格 (8px) 來對齊
         offset = ((diff / 2) % 2 == 0) ? 8.0F : 0.0F;
-        center.x += offset;
+        center.x -= offset;
     } else {
         firstRoomSize = firstRoom->GetAreaSize().y / MAP_PIXEL_PER_BLOCK;
         secondRoomSize = secondRoom->GetAreaSize().y / MAP_PIXEL_PER_BLOCK;
 
         int diff = std::abs(firstRoomSize - secondRoomSize);
         offset = ((diff / 2) % 2 == 0) ? 8.0F : 0.0F;
-        center.y += offset;
+        center.y -= offset;
     }
 
     const std::shared_ptr<Gangway> gangway = std::make_shared<Gangway>(center, config);
@@ -258,16 +259,37 @@ MapGenerator::MapGenerator(GeneratorType type, std::shared_ptr<RandomChoose> ran
 
         switch (type) {
             case GeneratorType::BOSS_1:
-            case GeneratorType::BOSS_2:
-            case GeneratorType::BOSS_3:
                 m_GenChamber.push_back(
                     std::make_shared<GenBossChamber>(
-                        nullptr, // 移除 limiter，讓 Boss 房能在戰鬥房周圍任意位置生成
+                        MobType::ZULAN_IN_RUINS,
+                        nullptr,
                         this->m_Blueprint,
                         m_RandomChoose
                     )
                 );
                 break;
+            case GeneratorType::BOSS_2:
+                m_GenChamber.push_back(
+                    std::make_shared<GenBossChamber>(
+                        MobType::VITAMIN_C_MECHA,
+                        nullptr,
+                        this->m_Blueprint,
+                        m_RandomChoose
+                    )
+                );
+                break;
+            case GeneratorType::BOSS_3:
+                m_GenChamber.push_back(
+                    std::make_shared<GenBossChamber>(
+                        MobType::GHOST_KING,
+                        nullptr,
+                        this->m_Blueprint,
+                        m_RandomChoose
+                    )
+                );
+                break;
+
+                
             default:
                 break;
         }
@@ -575,22 +597,5 @@ bool MapGenerator::PortalChamberCooridinateValidator(glm::ivec2 coor) {
       return count;
     };
 
-    bool existsExclusiveNeighbor = false;
-    for (int i = 0; i < 4; ++i) {
-      glm::ivec2 neighbor = bossCoordinate + directions[i];
-      if (this->m_Blueprint->isCooridinateInBound(neighbor) &&
-          this->m_Blueprint->GetElementByCooridinate(neighbor) == nullptr) {
-        if (getNeighborChamberCount(neighbor) == 1) {
-          existsExclusiveNeighbor = true;
-          break;
-        }
-      }
-    }
-
-    int myNeighbors = getNeighborChamberCount(coor);
-    if (existsExclusiveNeighbor) {
-      return myNeighbors == 1;
-    }
-    
-    return true;
+    return getNeighborChamberCount(coor) == 1;
 }

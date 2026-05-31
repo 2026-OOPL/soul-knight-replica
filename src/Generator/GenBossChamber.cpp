@@ -26,10 +26,12 @@ bool ContainsCoordinate(
 } // namespace
 
 GenBossChamber::GenBossChamber(
+    MobType mobType,
     std::function<bool(glm::ivec2)> limiter,
     std::shared_ptr<MapBlueprint> blueprint,
     std::shared_ptr<RandomChoose> random
 ) : GenChamber(limiter, blueprint, random) {
+    m_MobType = mobType;
 }
 
 void GenBossChamber::Generate() {
@@ -49,7 +51,7 @@ void GenBossChamber::Generate() {
     );
 
     std::vector<SpawnInfo<MobType>> bossWave;
-    bossWave.emplace_back(MobType::ZULAN_IN_RUINS, glm::vec2(0.0F, 0.0F));
+    bossWave.emplace_back(m_MobType, glm::vec2(0.0F, 0.0F));
     info->AddMonsterWave(bossWave);
 
     this->m_Blueprint->SetElementByCooridinate(coordinate, info);

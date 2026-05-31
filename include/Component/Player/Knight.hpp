@@ -8,6 +8,7 @@
 #include <functional>
 
 #include <glm/vec2.hpp>
+#include "Component/Map/MapSystem.hpp"
 #include "Component/Player/Player.hpp"
 #include "Util/Animation.hpp"
 #include "Util/Transform.hpp"
@@ -52,6 +53,11 @@ const std::vector<std::string> DIE_SPRITES = {
 
 class Knight : public Player {
 public:
+    Knight(
+        MapSystemConfig::PlayerInfo playerInfo,
+        std::function<std::shared_ptr<Character>()> GetNearestMob
+    );
+
     Knight(std::function<std::shared_ptr<Character>()> GetNearestMob);
 
     glm::vec2 GetFaceDirection() const override;

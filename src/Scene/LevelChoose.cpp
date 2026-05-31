@@ -25,7 +25,7 @@ LevelSwitch::LevelSwitch(MapSystemConfig::MapConfig config) {
 }
 
 void LevelSwitch::Update() {
-    if (m_MapConfig.chapter >= 3 && m_MapConfig.section >= 3) {
+    if (m_MapConfig.info.chapter >= 3 && m_MapConfig.info.section >= 3) {
         m_Redirect_Scene = std::make_shared<CastingScene>();
         return;
     }
@@ -33,52 +33,54 @@ void LevelSwitch::Update() {
     Util::ms_t now = Util::Time::GetElapsedTimeMs();
 
     if (now - this->m_SceneStartTime > 1000) {
-        
-        if (m_MapConfig.section < 3) {
-            m_MapConfig.section += 1;
-        }  else {
-            m_MapConfig.section = 1;
-            m_MapConfig.chapter += 1;
-        }
-
-        switch(m_MapConfig.section) {
-            case 1:
-                m_MapConfig.difficulty = GeneratorType::EASY;
-                break;
-            case 2:
-                m_MapConfig.difficulty = GeneratorType::MEDIUM;
-                break;
-            case 3:
-                m_MapConfig.difficulty = GeneratorType::HARD;
-                break;
-        }
-
-        const std::vector<GeneratorType> bossType = {
-            GeneratorType::BOSS_1,
-            GeneratorType::BOSS_2,
-            GeneratorType::BOSS_3
-        };
-
-        switch (m_MapConfig.section) {
-            case 1: 
-                m_MapConfig.difficulty = GeneratorType::EASY;
-                break;
-            case 2:
-                m_MapConfig.difficulty = GeneratorType::MEDIUM;
-                break;
-            case 3:
-                m_MapConfig.difficulty = bossType.at(m_MapConfig.chapter - 1);
-                break;
-            default:
-                throw std::runtime_error("Unhandled difficulty");
-        }
-
-        m_MapConfig.difficulty = bossType.at(m_MapConfig.chapter - 1);
-        
-        m_Redirect_Scene = std::make_shared<MapTest>(m_MapConfig);
+        this->SwitcToNextLevel();
     }
 }
 
 std::shared_ptr<Scene> LevelSwitch::GetRedirection() {
     return this->m_Redirect_Scene;
+}
+
+
+void LevelSwitch::SwitcToNextLevel() {
+    if (m_MapConfig.info.section < 3) {
+        m_MapConfig.info.section += 1;
+    }  else {
+        m_MapConfig.info.section = 1;
+        m_MapConfig.info.chapter += 1;
+    }
+
+    switch(m_MapConfig.info.section) {
+        case 1:
+            m_MapConfig.info.difficulty = GeneratorType::EASY;
+            break;
+        case 2:
+            m_MapConfig.info.difficulty = GeneratorType::MEDIUM;
+            break;
+        case 3:
+            m_MapConfig.info.difficulty = GeneratorType::HARD;
+            break;
+    }
+
+    const std::vector<GeneratorType> bossType = {
+        GeneratorType::BOSS_1,
+        GeneratorType::BOSS_2,
+        GeneratorType::BOSS_3
+    };
+
+    switch (m_MapConfig.info.section) {
+        case 1: 
+            m_MapConfig.info.difficulty = GeneratorType::EASY;
+            break;
+        case 2:
+            m_MapConfig.info.difficulty = GeneratorType::MEDIUM;
+            break;
+        case 3:
+            m_MapConfig.info.difficulty = bossType.at(m_MapConfig.info.chapter - 1);
+            break;
+        default:
+            throw std::runtime_error("Unhandled difficulty");
+    }
+    
+    m_Redirect_Scene = std::make_shared<MapTest>(m_MapConfig);
 }

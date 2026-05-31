@@ -1,0 +1,15 @@
+#ifndef SKILLCARD_HPP
+#define SKILLCARD_HPP
+
+enum class SkillCardType {
+    HEALTH_BOOST,
+    HEALTH_RECOVER,
+    PROTECTION_BOOST,
+    PROTECTION_RECOVER,
+    MANA_BOOST,
+    MANA_RECOVER,
+    ATTACK_BOOST,
+    ATTACK_RECOVER
+};
+
+#endif

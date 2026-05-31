@@ -29,7 +29,7 @@ MapTest::MapTest(
 ) : MapSystem(config) {
     std::shared_ptr<MapGenerator> generator;
 
-    generator = std::make_shared<MapGenerator>(config.difficulty);
+    generator = std::make_shared<MapGenerator>(config.info.difficulty);
 
     m_MainRoom = generator->GetRooms(RoomPurpose::STARTER).front();
 
@@ -38,6 +38,7 @@ MapTest::MapTest(
 
     // Player initialization
     this->m_MainPlayer = std::make_shared<Knight>(
+        config.playerInfo,
         [this] () {return this->GetNearestMonster();}
     );
     
@@ -99,10 +100,9 @@ MapTest::MapTest(
         std::make_shared<EaseOutQubicCurve>()
     );
 
-    this->m_AttachCamera->SetScale({2.5F, 2.5F});
+    this->m_AttachCamera->SetScale({3.0F, 3.0F});
 
     // Level title shown code below
-
     this->m_LevelIcon = std::make_shared<Util::GameObject>(
         std::make_shared<Util::Image>(
             RESOURCE_DIR "/UI/Gameplay/level_number.png"
@@ -118,7 +118,7 @@ MapTest::MapTest(
         std::make_shared<Util::Text>(
             RESOURCE_DIR "/Font/Cubic-Font/Cubic_11.ttf",
             80,
-            std::to_string(config.chapter) + "-" + std::to_string(config.section),
+            std::to_string(config.info.chapter) + "-" + std::to_string(config.info.section),
             Util::Color(255, 255, 255)
         ),
         10
@@ -134,7 +134,7 @@ MapTest::MapTest(
         RESOURCE_DIR"/SFX/Alan Walker - Fade (NCS).mp3"
     );
 
-    switch (config.section) {
+    switch (config.info.section) {
         case 1:
             this->m_BGM->LoadMedia(RESOURCE_DIR"/SFX/Tobu - Candyland.mp3");
             break;
@@ -151,14 +151,8 @@ MapTest::MapTest(
 
 MapTest::MapTest()
 : MapTest(
-    MapSystemConfig::MapConfig{
-        1 ,
-        1,
-        GeneratorType::EASY,
-        ""
-    }
-) {
-}
+    MapSystemConfig::MapConfig{}
+) {}
 
 MapTest::~MapTest() {
     this->m_BGM->Pause();
