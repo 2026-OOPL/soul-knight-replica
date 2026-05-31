@@ -10,6 +10,7 @@
 #include "Component/UI/PauseUI.hpp"
 #include "Component/UI/PlayUI.hpp"
 #include "Generator/MapGenerator.hpp"
+#include "Util/BGM.hpp"
 #include "Util/GameObject.hpp"
 #include "Util/Time.hpp"
 
@@ -21,7 +22,7 @@ public:
         MapSystemConfig::MapConfig config
     );
 
-    ~MapTest() override = default;
+    ~MapTest() override;
 
     void Update() override;
 
@@ -44,6 +45,8 @@ private:
     bool m_IsPaused = false;
     bool m_ExitToHome = false;
     std::shared_ptr<PauseUI> m_PauseUI;
+
+    std::shared_ptr<Util::BGM> m_BGM;
 };
 
 #endif

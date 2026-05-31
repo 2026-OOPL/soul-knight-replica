@@ -11,8 +11,6 @@
 #include "Util/GameObject.hpp"
 #include "Util/Image.hpp"
 #include "Util/Input.hpp"
-#include "Util/Logger.hpp"
-#include "Util/Text.hpp"
 #include "Util/Transform.hpp"
 
 PauseUI::PauseUI(std::function<void()> onHomeButtonClick, float zIndex) 
@@ -125,8 +123,17 @@ void PauseUI::Update() {
     }
     
     std::vector<std::shared_ptr<GameObject>> children = this->GetChildren();
-    for (int i=0; i< (int) children.size(); i++) {
-        std::shared_ptr<IStateful> stateful = std::dynamic_pointer_cast<IStateful>(children[i]);
+    for (const auto& i : this->GetChildren()) {
+        std::shared_ptr<IStateful> stateful = std::dynamic_pointer_cast<IStateful>(i);
+        
+        if (m_SettingsLaunched && (
+            i == m_ContinueButton ||
+            i == m_HomeButton ||
+            i == m_SettingsButton)
+        ) {
+            continue;
+        }
+
         if (stateful) { stateful->Update(); }
     }
 }

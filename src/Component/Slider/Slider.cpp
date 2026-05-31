@@ -59,6 +59,11 @@ void Slider::Update() {
 
     m_Knob->SetZIndex(m_ZIndex+1);
     m_Active->SetZIndex(m_ZIndex);
+
+    for (const auto&i : this->GetChildren()) {
+        std::shared_ptr<IStateful> stateful = std::dynamic_pointer_cast<IStateful>(i);
+        if (stateful) { stateful->Update(); }
+    }
 }
 
 float Slider::GetCursorPercentage() {

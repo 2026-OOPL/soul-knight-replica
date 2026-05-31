@@ -7,6 +7,7 @@
 #include "Component/Slider/Slider.hpp"
 #include "GameConfig/GameConfig.hpp"
 #include "Util/Input.hpp"
+#include "Util/Logger.hpp"
 
 SettingsUI::SettingsUI(float zIndex)
 : Util::GameObject(nullptr, zIndex)
@@ -95,6 +96,7 @@ void SettingsUI::Update() {
         std::shared_ptr<IStateful> stateful = std::dynamic_pointer_cast<IStateful>(children[i]);
         if (stateful) { stateful->Update(); }
     }
+
 }
 
 bool SettingsUI::GetExitSignal() {

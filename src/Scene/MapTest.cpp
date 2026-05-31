@@ -12,7 +12,9 @@
 #include "Component/UI/PauseUI.hpp"
 #include "Component/UI/PlayUI.hpp"
 #include "Component/Weapon.hpp"
+#include "GameConfig/GameConfig.hpp"
 #include "Generator/MapGenerator.hpp"
+#include "Util/BGM.hpp"
 #include "Util/Color.hpp"
 #include "Util/GameObject.hpp"
 #include "Util/Logger.hpp"
@@ -127,6 +129,24 @@ MapTest::MapTest(
     this->AddChild(m_LevelTitle);
 
     m_SceneStartTime = Util::Time::GetElapsedTimeMs();
+
+    this->m_BGM = std::make_shared<Util::BGM>(
+        RESOURCE_DIR"/SFX/Alan Walker - Fade (NCS).mp3"
+    );
+
+    switch (config.section) {
+        case 1:
+            this->m_BGM->LoadMedia(RESOURCE_DIR"/SFX/Tobu - Candyland.mp3");
+            break;
+        case 2:
+            this->m_BGM->LoadMedia(RESOURCE_DIR"/SFX/Alan Walker - The Spectre ( Slowed + Reverb ).mp3");
+            break;
+        case 3:
+            this->m_BGM->LoadMedia(RESOURCE_DIR"/SFX/MONTAGEM ALQUIMIA.mp3");
+            break;
+    }
+    
+    this->m_BGM->Play();
 }
 
 MapTest::MapTest()
@@ -140,6 +160,9 @@ MapTest::MapTest()
 ) {
 }
 
+MapTest::~MapTest() {
+    this->m_BGM->Pause();
+}
 
 void MapTest::Update() {
     if (Util::Time::GetElapsedTimeMs() - m_SceneStartTime > 2500) {
@@ -168,6 +191,8 @@ void MapTest::Update() {
         );
         this->AddChild(m_PauseUI);
     }
+
+    this->m_BGM->SetVolume(GameConfig::GetInstance().m_BGMVolume * 128);
 }
 
 std::shared_ptr<Scene> MapTest::GetRedirection() {
