@@ -6,11 +6,12 @@
 #include "Component/Button/ImageButton.hpp"
 #include "Component/IStateful.hpp"
 #include "Component/Slider/Slider.hpp"
+#include "Component/UI/BaseUI.hpp"
 #include "Util/GameObject.hpp"
 
-class SettingsUI : public Util::GameObject, public IStateful {
+class SettingsUI : public BaseUI {
 public:
-    SettingsUI(float zIndex);
+    SettingsUI();
 
     ~SettingsUI() override = default;
 
@@ -19,7 +20,6 @@ public:
     bool GetExitSignal();
 
 private:
-    bool m_ExitSignal = false;
 
     std::shared_ptr<Util::GameObject> m_SettingsMenu;
     std::shared_ptr<Util::GameObject> m_Background;

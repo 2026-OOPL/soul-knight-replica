@@ -33,13 +33,12 @@ GenRewardChamber::GenRewardChamber(
 }
 
 void GenRewardChamber::Generate() {
-    std::vector<glm::ivec2> candidateCooridinate = this->GetAvailableCooridinate();
-    glm::ivec2 currentPosition = m_RandomChoose->ChooseFromVector(candidateCooridinate);
+    glm::ivec2 currentPosition;
 
     int i=0;
 
     do {
-        candidateCooridinate = this->GetAvailableCooridinate();
+        std::vector<glm::ivec2> candidateCooridinate = this->GetAvailableCooridinate();
 
         if (candidateCooridinate.size() == 0) {
 

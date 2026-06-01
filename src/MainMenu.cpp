@@ -4,6 +4,7 @@
 
 #include "MainMenu.hpp"
 #include "Component/Button/TextButton.hpp"
+#include "Component/UI/Advertisement.hpp"
 #include "GameConfig/GameConfig.hpp"
 #include "Core/Context.hpp"
 #include "Scene/CastingScene.hpp"
@@ -106,7 +107,9 @@ std::shared_ptr<Scene> MainMenu::GetRedirection() {
 
 void MainMenu::LaunchSettingsUI(bool launch) {
     if (launch) {
-        this->m_SettingsUI = std::make_shared<SettingsUI>(m_ZIndex + 5);
+        this->m_SettingsUI = std::make_shared<SettingsUI>();
+
+        this->m_SettingsUI->SetZIndex(m_ZIndex + 5);
         this->AddChild(this->m_SettingsUI);
     } else {
         this->RemoveChild(this->m_SettingsUI);

@@ -35,7 +35,7 @@ private:
 
     std::shared_ptr<Scene> m_Redirect_Scene;
 
-    std::shared_ptr<SettingsUI> m_SettingsUI = nullptr;
+    std::shared_ptr<BaseUI> m_SettingsUI = nullptr;
 
     std::shared_ptr<Util::BGM> m_BGM;
 };

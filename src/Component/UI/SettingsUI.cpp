@@ -9,18 +9,9 @@
 #include "Util/Input.hpp"
 #include "Util/Logger.hpp"
 
-SettingsUI::SettingsUI(float zIndex)
-: Util::GameObject(nullptr, zIndex)
+SettingsUI::SettingsUI()
+: BaseUI(true)
 {
-    m_Background = std::make_shared<Util::GameObject>(
-        std::make_shared<Util::Image>(
-            RESOURCE_DIR"/UI/Pause/layer_dim.png"
-        ),
-        m_ZIndex
-    );
-
-    this->AddChild(m_Background);
-
     m_SettingsMenu = std::make_shared<Util::GameObject>(
         std::make_shared<Util::Image>(
             RESOURCE_DIR"/UI/Settings/settings_ui_menu.png",
@@ -31,7 +22,6 @@ SettingsUI::SettingsUI(float zIndex)
 
     this->AddChild(m_SettingsMenu);
 
-    
     m_CloseButton = std::make_shared<ImageButton>(
         std::make_shared<ButtonAction>(
           nullptr,
@@ -91,12 +81,7 @@ void SettingsUI::Update() {
         this->m_ExitSignal = true;
     }
 
-    std::vector<std::shared_ptr<GameObject>> children = this->GetChildren();
-    for (int i=0; i< (int) children.size(); i++) {
-        std::shared_ptr<IStateful> stateful = std::dynamic_pointer_cast<IStateful>(children[i]);
-        if (stateful) { stateful->Update(); }
-    }
-
+    BaseUI::Update();
 }
 
 bool SettingsUI::GetExitSignal() {

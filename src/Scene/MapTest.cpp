@@ -14,6 +14,7 @@
 #include "Component/Weapon.hpp"
 #include "GameConfig/GameConfig.hpp"
 #include "Generator/MapGenerator.hpp"
+#include "Scene/Gameover.hpp"
 #include "Util/BGM.hpp"
 #include "Util/Color.hpp"
 #include "Util/GameObject.hpp"
@@ -93,6 +94,7 @@ MapTest::MapTest(
             return PlayUI::BossHudState{};
         }
     );
+    this->m_PlayUI->SetZIndex(8);
     this->AddChild(this->m_PlayUI);
 
     this->m_AttachCamera = std::make_shared<TraceCamera>(
@@ -159,34 +161,56 @@ MapTest::~MapTest() {
 }
 
 void MapTest::Update() {
-    if (Util::Time::GetElapsedTimeMs() - m_SceneStartTime > 2500) {
-        m_LevelTitle->SetVisible(false);
-        m_LevelIcon->SetVisible(false);
+    // Level title display logic
+    if (m_LevelTitle && m_LevelIcon && Util::Time::GetElapsedTimeMs() - m_SceneStartTime > 2500) {
+        this->RemoveChild(m_LevelTitle);
+        this->RemoveChild(m_LevelIcon);
+        m_LevelTitle = nullptr;
+        m_LevelIcon = nullptr;
     }
 
-    if (m_IsPaused) {
-        this->m_PauseUI->Update();
-    } else {
-        MapSystem::Update();
+    switch (m_MapState) {
+        case MapState::PLAYING:
+            MapSystem::Update();
+            break;
+        case MapState::PAUSED:
+            if (this->m_PauseUI) {
+                this->m_PauseUI->Update();
+
+                bool exitSignal = this->m_PauseUI->GetExitSignal();
+
+                this->SetPauseUIVisible(!exitSignal);
+            }
+            break;
+        case MapState::RESPAWNING:
+            if (this->m_RespawnUI) {
+                this->m_RespawnUI->Update();
+
+                if (this->m_RespawnUI) {
+                    bool exitSignal = this->m_RespawnUI->GetExitSignal();
+                    this->SetRespawnUIVisible(!exitSignal);
+                }
+            }
+            break;
     }
 
-    // Game pause logic
-    if (m_IsPaused) {
-        if (this->m_PauseUI->GetExitSignal()) {
-            m_IsPaused = false;
-            this->RemoveChild(m_PauseUI);
-        }
-    } else if (Util::Input::IsKeyUp(Util::Keycode::ESCAPE)) {
-        m_IsPaused = true;
-
-        m_PauseUI = std::make_shared<PauseUI>(
-            [this] { this->m_ExitToHome = true; },
-            20
-        );
-        this->AddChild(m_PauseUI);
+    if (m_MapState != MapState::RESPAWNING && 
+        Util::Input::IsKeyUp(Util::Keycode::ESCAPE)
+    ) {
+        m_MapState = (m_MapState == MapState::PAUSED) ? MapState::PLAYING : MapState::PAUSED;
+        this->SetPauseUIVisible(m_MapState == MapState::PAUSED);
     }
 
     this->m_BGM->SetVolume(GameConfig::GetInstance().m_BGMVolume * 128);
+
+    std::shared_ptr<Player> player = this->GetPlayers().front();
+
+    if (player->IsDead() && m_MapState != MapState::RESPAWNING) {
+        this->m_BGM->Pause();
+        this->m_MapState = MapState::RESPAWNING;
+        this->SetRespawnUIVisible(true);
+    }
+
 }
 
 std::shared_ptr<Scene> MapTest::GetRedirection() {
@@ -195,4 +219,63 @@ std::shared_ptr<Scene> MapTest::GetRedirection() {
     }
 
     return MapSystem::GetRedirection();
+}
+
+void MapTest::SetPauseUIVisible(bool visible) {
+    if (visible) {
+        if (this->m_PauseUI != nullptr) {
+            return;
+        }
+
+        this->m_PauseUI = std::make_shared<PauseUI>(
+            [this] { this->m_ExitToHome = true; }
+        );
+
+        this->m_PauseUI->SetZIndex(this->GetZIndex() + 20);
+
+        this->AddChild(this->m_PauseUI);
+    } else {
+        if (this->m_PauseUI == nullptr) {
+            return;
+        }
+
+        this->RemoveChild(this->m_PauseUI);
+        this->m_PauseUI = nullptr;
+    }
+}
+
+void MapTest::SetRespawnUIVisible(bool visible) {
+    if (visible) {
+        if (this->m_RespawnUI != nullptr) {
+            return;
+        }
+
+        this->m_RespawnUI = std::make_shared<RespawnUI>(
+            [this] { this->m_RedirectScene = std::make_shared<GameoverScene>(); },
+            [this] { this->RespawnPlayer(); }
+        );
+
+        this->m_RespawnUI->SetZIndex(this->GetZIndex() + 10);
+
+        this->AddChild(this->m_RespawnUI);
+    } else {
+        if (this->m_RespawnUI == nullptr) {
+            return;
+        }
+
+        this->RemoveChild(this->m_RespawnUI);
+        this->m_RespawnUI = nullptr;
+    }
+}
+
+void MapTest::RespawnPlayer() {
+    this->m_BGM->Play();
+    
+    this->m_MainPlayer->SetCurrentHealth(this->m_MainPlayer->GetMaxHealth());
+    this->m_MainPlayer->SetCurrentShield(this->m_MainPlayer->GetMaxShield());
+    this->m_MainPlayer->SetCurrentAmmo(this->m_MainPlayer->GetMaxAmmo());
+
+    m_MapState = MapState::PLAYING;
+
+    this->SetRespawnUIVisible(false);
 }

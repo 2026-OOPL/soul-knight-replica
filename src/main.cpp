@@ -1,4 +1,5 @@
 #include "App.hpp"
+#include "Component/UI/Advertisement.hpp"
 #include "Core/Context.hpp"
 
 int main(int, char**) {
@@ -6,6 +7,14 @@ int main(int, char**) {
     auto context = Core::Context::GetInstance();
     
     context->SetWindowIcon(RESOURCE_DIR"/icon.png");
+
+    // Advertisement preload
+    std::shared_ptr<AdvertisementUI> advertisementUI = std::make_shared<AdvertisementUI>(
+        AdvertisementArc::SPRITES,
+        AdvertisementArc::SPRITE_NUMBER
+    );
+
+    advertisementUI->PreloadMedia();
 
     while (!context->GetExit()) {
         switch (app.GetCurrentState()) {

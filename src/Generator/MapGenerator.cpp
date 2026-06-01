@@ -233,17 +233,17 @@ MapGenerator::MapGenerator(GeneratorType type, std::shared_ptr<RandomChoose> ran
             break;
     }
     
-    const std::shared_ptr<RoomInfo> starterRoom = std::make_shared<RoomInfo>(
-        RoomType::ROOM_13_13, RoomPurpose::STARTER, m_RandomChoose
-    );
-    this->m_Blueprint->SetElementByCooridinate(
-        this->m_StartChamberCooridinate,
-        starterRoom
-    );
-
     int retries = 0;
     bool generateSuccess = false;
     do {
+        const std::shared_ptr<RoomInfo> starterRoom = std::make_shared<RoomInfo>(
+            RoomType::ROOM_13_13, RoomPurpose::STARTER, m_RandomChoose
+        );
+        this->m_Blueprint->SetElementByCooridinate(
+            this->m_StartChamberCooridinate,
+            starterRoom
+        );
+
         this->m_GenChamber.clear();
 
         m_GenChamber.push_back(
@@ -261,7 +261,7 @@ MapGenerator::MapGenerator(GeneratorType type, std::shared_ptr<RandomChoose> ran
             case GeneratorType::BOSS_1:
                 m_GenChamber.push_back(
                     std::make_shared<GenBossChamber>(
-                        MobType::ZULAN_IN_RUINS,
+                        MobType::GHOST_KING,
                         nullptr,
                         this->m_Blueprint,
                         m_RandomChoose
@@ -281,7 +281,7 @@ MapGenerator::MapGenerator(GeneratorType type, std::shared_ptr<RandomChoose> ran
             case GeneratorType::BOSS_3:
                 m_GenChamber.push_back(
                     std::make_shared<GenBossChamber>(
-                        MobType::GHOST_KING,
+                        MobType::ZULAN_IN_RUINS,
                         nullptr,
                         this->m_Blueprint,
                         m_RandomChoose
@@ -332,8 +332,8 @@ MapGenerator::MapGenerator(GeneratorType type, std::shared_ptr<RandomChoose> ran
     } while (!generateSuccess && retries <= 1000);
 
     if (!generateSuccess) {
-        LOG_ERROR("Failed to generate map after 10 retries");
-        throw std::runtime_error("Failed to generate map after 10 retries");
+        LOG_ERROR("Failed to generate map after 1000 retries");
+        throw std::runtime_error("Failed to generate map after 1000 retries");
     }
 
 }

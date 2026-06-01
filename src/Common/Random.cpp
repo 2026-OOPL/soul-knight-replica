@@ -68,6 +68,9 @@ bool RandomChoose::GetBool() {
 
 template <typename T> 
 T RandomChoose::ChooseFromVector(std::vector<T>& vector) {
+    if (vector.empty()) {
+        throw std::runtime_error("Cannot choose from an empty vector in ChooseFromVector");
+    }
     int index = this->GetInteger(vector.size()-1);
     return vector[index];
 }

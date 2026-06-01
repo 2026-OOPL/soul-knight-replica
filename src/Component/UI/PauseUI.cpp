@@ -13,24 +13,13 @@
 #include "Util/Input.hpp"
 #include "Util/Transform.hpp"
 
-PauseUI::PauseUI(std::function<void()> onHomeButtonClick, float zIndex) 
-: Util::GameObject(nullptr, zIndex)
-{
+PauseUI::PauseUI(std::function<void()> onHomeButtonClick)
+ : BaseUI(true) {
     const int zIndexBase = this->GetZIndex();
 
     this->onHomeButtonClick = onHomeButtonClick;
     
     this->m_Transform.scale = {2.0F, 2.0F};
-
-    m_Background = std::make_shared<Util::GameObject>(
-        std::make_shared<Util::Image>(
-            RESOURCE_DIR"/UI/Pause/layer_dim.png",
-            false
-        ),
-        zIndexBase+1
-    );
-
-    this->AddChild(m_Background);
 
     m_PauseMenu = std::make_shared<Util::GameObject>(
         std::make_shared<Util::Image>(
@@ -46,7 +35,10 @@ PauseUI::PauseUI(std::function<void()> onHomeButtonClick, float zIndex)
         std::make_shared<ButtonAction>(
             nullptr,
             nullptr,
-            this->onHomeButtonClick
+            [this] () {
+                if (m_SettingsLaunched) return;
+                this->onHomeButtonClick();
+            }
         ),
         std::make_shared<ImageButtonTheme>(
             RESOURCE_DIR"/UI/Pause/button_home.png",
@@ -67,6 +59,7 @@ PauseUI::PauseUI(std::function<void()> onHomeButtonClick, float zIndex)
             nullptr,
             nullptr,
             [this] () {
+                if (this->m_SettingsLaunched) return;
                 this->m_ExitSignal = true;
             }
         ),
@@ -89,6 +82,7 @@ PauseUI::PauseUI(std::function<void()> onHomeButtonClick, float zIndex)
             nullptr,
             nullptr,
             [this] () {
+                if (this->m_SettingsLaunched) return;
                 this->ToggleSettings();
             }
         ),
@@ -121,25 +115,8 @@ void PauseUI::Update() {
     if (!m_SettingsLaunched && Util::Input::IsKeyUp(Util::Keycode::ESCAPE)) {
         this->m_ExitSignal = true;
     }
-    
-    std::vector<std::shared_ptr<GameObject>> children = this->GetChildren();
-    for (const auto& i : this->GetChildren()) {
-        std::shared_ptr<IStateful> stateful = std::dynamic_pointer_cast<IStateful>(i);
-        
-        if (m_SettingsLaunched && (
-            i == m_ContinueButton ||
-            i == m_HomeButton ||
-            i == m_SettingsButton)
-        ) {
-            continue;
-        }
 
-        if (stateful) { stateful->Update(); }
-    }
-}
-
-bool PauseUI::GetExitSignal() {
-    return m_ExitSignal;
+    BaseUI::Update();
 }
 
 void PauseUI::ToggleSettings() {
@@ -150,9 +127,9 @@ void PauseUI::ToggleSettings() {
         return;
     }
 
-    this->m_SettingsMenu = std::make_shared<SettingsUI>(
-        m_ZIndex + 5
-    );
+    this->m_SettingsMenu = std::make_shared<SettingsUI>();
+    this->m_SettingsMenu->SetZIndex(m_ZIndex + 5);
     this->AddChild(this->m_SettingsMenu);
+
     this->m_SettingsLaunched = true;
 }

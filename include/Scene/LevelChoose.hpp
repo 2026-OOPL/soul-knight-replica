@@ -4,10 +4,10 @@
 #include <imgui.h>
 #include <memory>
 
-#include "Scene/MapTest.hpp"
-#include "Util/GameObject.hpp"
-
 #include "Scene.hpp"
+#include "Component/Button/ImageButton.hpp"
+#include "Component/Map/MapSystem.hpp"
+#include "Util/GameObject.hpp"
 #include "Util/Time.hpp"
 
 class LevelSwitch : public Scene {

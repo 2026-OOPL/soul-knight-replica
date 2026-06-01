@@ -1,4 +1,3 @@
-#include "Component/UI/PlayUI.hpp"
 
 #include <algorithm>
 #include <string>
@@ -6,17 +5,15 @@
 
 #include <glm/vec2.hpp>
 
+#include "Component/UI/PlayUI.hpp"
+#include "Component/UI/BaseUI.hpp"
 #include "Core/Context.hpp"
 #include "Util/Color.hpp"
 
 namespace {
-
 constexpr float kUiScale = 2.0F;
 constexpr float kMarginX = 24.0F;
 constexpr float kMarginY = 24.0F;
-constexpr float kBackgroundZIndex = 99.0F;
-constexpr float kBarZIndex = 99.5F;
-constexpr float kTextZIndex = 100.0F;
 constexpr int kFontSize = 14;
 
 const std::string kPlayUiTexture = RESOURCE_DIR "/UI/Gameplay/panel.png";
@@ -35,7 +32,7 @@ constexpr glm::vec2 kAmmoTextOffset = {47.0F, -32.0F};
 constexpr glm::vec2 kHealthBarOffset = {46.0F, -9.0F};
 constexpr glm::vec2 kShieldBarOffset = {46.0F, -21.0F};
 constexpr glm::vec2 kAmmoBarOffset = {46.0F, -32.0F};
-constexpr float kHealthBarFullWidth =   58.0F;
+constexpr float kHealthBarFullWidth = 58.0F;
 constexpr float kBossBarWidthMultiplier = 5.0F;
 constexpr float kBossBarTopMargin = 28.0F;
 
@@ -100,18 +97,19 @@ void LayoutProgressBar(
 PlayUI::PlayUI(
     HudStateProvider hudStateProvider,
     BossHudStateProvider bossHudStateProvider
-)
-    : GameObject(nullptr, kBackgroundZIndex),
+)     : BaseUI(false),
       m_HudStateProvider(std::move(hudStateProvider)),
       m_BossHudStateProvider(std::move(bossHudStateProvider)) {
+
     this->m_Background = std::make_shared<Util::Image>(kPlayUiTexture, false);
     this->SetDrawable(this->m_Background);
+
     this->m_Transform.scale = {kUiScale, kUiScale};
 
     this->m_HealthBar = std::make_shared<Util::Image>(kHealthBarTexture, false);
     this->m_HealthBarNode = std::make_shared<Util::GameObject>(
         this->m_HealthBar,
-        kBarZIndex,
+        m_ZIndex+1,
         glm::vec2{-0.5F, 0.0F}
     );
     this->AddChild(this->m_HealthBarNode);
@@ -119,7 +117,7 @@ PlayUI::PlayUI(
     this->m_ShieldBar = std::make_shared<Util::Image>(kShieldBarTexture, false);
     this->m_ShieldBarNode = std::make_shared<Util::GameObject>(
         this->m_ShieldBar,
-        kBarZIndex,
+        m_ZIndex+1,
         glm::vec2{-0.5F, 0.0F}
     );
     this->AddChild(this->m_ShieldBarNode);
@@ -127,7 +125,7 @@ PlayUI::PlayUI(
     this->m_AmmoBar = std::make_shared<Util::Image>(kAmmoBarTexture, false);
     this->m_AmmoBarNode = std::make_shared<Util::GameObject>(
         this->m_AmmoBar,
-        kBarZIndex,
+        m_ZIndex+1,
         glm::vec2{-0.5F, 0.0F}
     );
     this->AddChild(this->m_AmmoBarNode);
@@ -135,7 +133,7 @@ PlayUI::PlayUI(
     this->m_BossHealthBar = std::make_shared<Util::Image>(kHealthBarTexture, false);
     this->m_BossHealthBarNode = std::make_shared<Util::GameObject>(
         this->m_BossHealthBar,
-        kBarZIndex,
+        m_ZIndex+1,
         glm::vec2{-0.5F, 0.0F}
     );
     this->m_BossHealthBarNode->SetVisible(false);
@@ -172,19 +170,19 @@ PlayUI::PlayUI(
 
     this->m_HealthTextNode = std::make_shared<Util::GameObject>(
         this->m_HealthText,
-        kTextZIndex
+        m_ZIndex+2
     );
     this->m_ShieldTextNode = std::make_shared<Util::GameObject>(
         this->m_ShieldText,
-        kTextZIndex
+        m_ZIndex+2
     );
     this->m_AmmoTextNode = std::make_shared<Util::GameObject>(
         this->m_AmmoText,
-        kTextZIndex
+        m_ZIndex+2
     );
     this->m_BossHealthTextNode = std::make_shared<Util::GameObject>(
         this->m_BossHealthText,
-        kTextZIndex
+        m_ZIndex+2
     );
     this->m_BossHealthTextNode->SetVisible(false);
 
@@ -202,6 +200,8 @@ void PlayUI::Update() {
     this->SyncHudState();
     this->SyncBossHudState();
     this->UpdateLayout();
+
+    BaseUI::Update();
 }
 
 void PlayUI::UpdateLayout() {

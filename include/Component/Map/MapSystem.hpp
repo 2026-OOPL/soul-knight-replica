@@ -6,10 +6,8 @@
 
 #include <glm/vec2.hpp>
 
+#include "Scene.hpp"
 #include "Component/Prop/Portal.hpp"
-#include "Generator/MapGenerator.hpp"
-#include "Util/GameObject.hpp"
-
 #include "Component/Bullet.hpp"
 #include "Component/Camera/Camera.hpp"
 #include "Component/Character/Character.hpp"
@@ -20,9 +18,14 @@
 #include "Component/Map/RoomTransitionSystem.hpp"
 #include "Component/Player/Player.hpp"
 #include "Component/World/WorldRegistry.hpp"
-#include "Scene.hpp"
+#include "Generator/MapGenerator.hpp"
+#include "Util/GameObject.hpp"
 
 namespace MapSystemConfig {
+
+constexpr int MAX_HEALTH = 100;
+constexpr int MAX_SHIELD = 5;
+constexpr int MAX_AMMO = 130;
 
 struct MapInfo {
     int chapter = 1;
@@ -32,12 +35,12 @@ struct MapInfo {
 };
 
 struct PlayerInfo {
-    int mana = 100;
-    int health = 100;
-    int protection = 100;
-    int maxMana = 100;
-    int maxHealth = 100;
-    int maxProtection = 100;
+    int mana = MapSystemConfig::MAX_AMMO;
+    int health = MapSystemConfig::MAX_HEALTH;
+    int protection = MapSystemConfig::MAX_SHIELD;
+    int maxMana = MapSystemConfig::MAX_AMMO;
+    int maxHealth = MapSystemConfig::MAX_HEALTH;
+    int maxProtection = MapSystemConfig::MAX_SHIELD;
 };
 
 struct MapConfig {
@@ -135,9 +138,10 @@ protected:
     std::vector<std::shared_ptr<Camera>> m_Cameras;
 
     std::shared_ptr<Camera> m_AttachCamera;
-
+    
     std::shared_ptr<Character> GetNearestMonster();
-
+    
+    std::shared_ptr<Scene> m_RedirectScene;
 private:
     void ApplyCameraRecursive(const std::shared_ptr<Util::GameObject> &object);
     void DebugClearCurrentFightRoom();
@@ -162,7 +166,6 @@ private:
 
     std::shared_ptr<Portal> m_CurrentPortal;
 
-    std::shared_ptr<Scene> m_RedirectScene;
 
     MapSystemConfig::MapConfig m_MapConfig;
 
