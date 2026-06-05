@@ -4,7 +4,6 @@
 #include "Component/UI/BaseUI.hpp"
 #include "Component/UI/Advertisement.hpp"
 #include "Util/Animation.hpp"
-#include "Util/Image.hpp"
 #include "Util/Time.hpp"
 
 AdvertisementUI::AdvertisementUI(
@@ -37,19 +36,37 @@ AdvertisementUI::AdvertisementUI(
         RESOURCE_DIR "/SFX/Arc on Windows. Download now.mp3"
     );
 
-    this->m_LeaveButton = std::make_shared<TextButton>(
-        "X",
+    m_DownloadButton = std::make_shared<ImageButton>(
+        std::make_shared<ButtonAction>(
+            nullptr,
+            nullptr,
+            []() { SDL_OpenURL("https://arc.net/"); }
+        ),
+        std::make_shared<ImageButtonTheme>(
+            RESOURCE_DIR"/UI/Advertisement/advertisement_download.png",
+            RESOURCE_DIR"/UI/Advertisement/advertisement_download.png",
+            RESOURCE_DIR"/UI/Advertisement/advertisement_download.png"
+        ),
+        nullptr
+    );
+
+    m_DownloadButton->m_Transform.translation = {0.0F, -250.0F};
+
+    this->m_CloseButton = std::make_shared<ImageButton>(
         std::make_shared<ButtonAction>(
             nullptr,
             nullptr,
             [this]() { this->m_ExitSignal = true; }
         ),
-        std::make_shared<TextButtonTheme>(
-            Util::Color(255, 255, 255),
-            Util::Color(255, 255, 255),
-            Util::Color(255, 255, 255)
-        )
+        std::make_shared<ImageButtonTheme>(
+            RESOURCE_DIR"/UI/Advertisement/advertisement_close.png",
+            RESOURCE_DIR"/UI/Advertisement/advertisement_close.png",
+            RESOURCE_DIR"/UI/Advertisement/advertisement_close.png"
+        ),
+        nullptr
     );
+    
+    this->m_CloseButton->m_Transform.translation = {183.5F, -250.0F};
 }
 
 void AdvertisementUI::Update() {
@@ -62,9 +79,11 @@ void AdvertisementUI::Update() {
 
     if (m_CurrentFrame >= m_SpriteNumber - 5 && !m_IsButtonPresented) {
         m_IsButtonPresented = true;
-        this->m_LeaveButton->m_Transform.translation = {580.0F, 300.0F};
-        this->m_LeaveButton->SetZIndex(this->GetZIndex() + 2);
-        this->AddChild(this->m_LeaveButton);
+        this->m_CloseButton->SetZIndex(this->GetZIndex() + 2);
+        this->AddChild(this->m_CloseButton);
+
+        m_DownloadButton->SetZIndex(this->GetZIndex() + 2);
+        this->AddChild(m_DownloadButton);
     }
     
     if (m_CurrentFrame + 1 < m_SpriteNumber) {

@@ -7,7 +7,7 @@ int main(int, char**) {
     auto context = Core::Context::GetInstance();
     
     context->SetWindowIcon(RESOURCE_DIR"/icon.png");
-
+    
     // Advertisement preload
     std::shared_ptr<AdvertisementUI> advertisementUI = std::make_shared<AdvertisementUI>(
         AdvertisementArc::SPRITES,

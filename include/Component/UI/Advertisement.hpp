@@ -6,10 +6,10 @@
 #include <string>
 #include <vector>
 
+#include "Component/Button/ImageButton.hpp"
 #include "Component/Button/TextButton.hpp"
 #include "Component/UI/BaseUI.hpp"
 #include "Util/Animation.hpp"
-#include "Util/Image.hpp"
 #include "Util/BGM.hpp"
 #include "Util/GameObject.hpp"
 #include "Util/Time.hpp"
@@ -26,7 +26,6 @@ namespace AdvertisementArc {
         RESOURCE_DIR"/Advertisement/ArcBrowser/spritesheet_7.png",
         RESOURCE_DIR"/Advertisement/ArcBrowser/spritesheet_8.png"
     };
-
     constexpr int SPRITE_NUMBER = 878;
 }
 
@@ -49,6 +48,9 @@ private:
     std::shared_ptr<Util::Animation> m_ViewFrame;
     std::shared_ptr<Util::Animation> m_Animation;
     std::shared_ptr<Util::GameObject> m_Video;
+
+    std::shared_ptr<ImageButton> m_DownloadButton;
+    std::shared_ptr<ImageButton> m_CloseButton;
 
     Util::ms_t m_AnimationStartTime;
     
