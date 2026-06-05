@@ -16,17 +16,30 @@
 
 Knight::Knight(
     std::function<std::shared_ptr<Character>()> GetNearestMob
+) : Knight(
+    MapSystemConfig::PlayerInfo{},
+    std::move(GetNearestMob)
+) {}
+
+Knight::Knight(
+    MapSystemConfig::PlayerInfo playerInfo,
+    std::function<std::shared_ptr<Character>()> GetNearestMob
 ) : Player(
     KnightPlayer::STAND_SPRITES,
     KnightPlayer::WALK_SPRITES,
     KnightPlayer::DIE_SPRITES,
-    KnightPlayer::MAX_HEALTH,
-    KnightPlayer::MAX_SHIELD,
-    KnightPlayer::MAX_AMMO
+    playerInfo.maxHealth,
+    playerInfo.maxProtection,
+    playerInfo.maxMana
 ) { 
     this->m_GetNearestMob = std::move(GetNearestMob);
     this->SetWeapon(std::make_shared<BadPistol>());
     this->SetWeapon(std::make_shared<Plunger>());
+
+    this->SetCurrentHealth(playerInfo.health);
+    this->SetCurrentShield(playerInfo.protection);
+    this->SetCurrentAmmo(playerInfo.mana);
+
 }
 
 glm::vec2 Knight::GetFaceDirection() const {

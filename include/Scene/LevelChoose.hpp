@@ -4,10 +4,10 @@
 #include <imgui.h>
 #include <memory>
 
-#include "Scene/MapTest.hpp"
-#include "Util/GameObject.hpp"
-
 #include "Scene.hpp"
+#include "Component/Button/ImageButton.hpp"
+#include "Component/Map/MapSystem.hpp"
+#include "Util/GameObject.hpp"
 #include "Util/Time.hpp"
 
 class LevelSwitch : public Scene {
@@ -21,14 +21,17 @@ public:
     void Update() override;
 
 private:
-    void StartNewGame();
-    void LeaveGame();
+    void SwitcToNextLevel(); 
 
     Util::ms_t m_SceneStartTime;
     std::shared_ptr<Util::GameObject> m_LoadingText;
     std::shared_ptr<Scene> m_Redirect_Scene;
 
     MapSystemConfig::MapConfig m_MapConfig;
+
+    std::shared_ptr<ImageButton> m_LeftSkill;
+    std::shared_ptr<ImageButton> m_MiddleSkill;
+    std::shared_ptr<ImageButton> m_RightSkill;
 };
 
 #endif

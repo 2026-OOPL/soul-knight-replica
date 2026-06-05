@@ -11,7 +11,7 @@
 #include "Component/IStateful.hpp"
 
 
-class MultiTraceCamera : public Camera, IStateful {
+class MultiTraceCamera : public Camera, public IStateful {
 public:
     MultiTraceCamera(
         std::vector<std::shared_ptr<MapObject>>& target

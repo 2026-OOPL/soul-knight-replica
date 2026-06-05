@@ -1,37 +1,33 @@
 #ifndef PAUSE_UI_HPP
 #define PAUSE_UI_HPP
 
-#include "Component/Button/ImageButton.hpp"
-#include "Component/IStateful.hpp"
-#include "Component/UI/SettingsUI.hpp"
-#include "Util/GameObject.hpp"
-#include <glm/vec2.hpp>
 #include <memory>
 
-class PauseUI : public Util::GameObject, IStateful {
+#include <glm/vec2.hpp>
 
+#include "Component/Button/ImageButton.hpp"
+#include "Component/UI/BaseUI.hpp"
+#include "Component/UI/SettingsUI.hpp"
+#include "Util/GameObject.hpp"
+
+class PauseUI : public BaseUI {
 public:
     PauseUI(
-        std::function<void()> onHomeButtonClick,
-        float zIndex
+        std::function<void()> onHomeButtonClick
     );
 
     ~PauseUI() override = default;
 
     void Update() override;
 
-    bool GetExitSignal();
-
     void ToggleSettings();
 
 private:
-    bool m_ExitSignal = false;
     bool m_SettingsLaunched = false;
 
-    std::shared_ptr<Util::GameObject> m_PauseMenu;
-    std::shared_ptr<Util::GameObject> m_Background;
     std::shared_ptr<SettingsUI> m_SettingsMenu;
 
+    std::shared_ptr<Util::GameObject> m_PauseMenu;
     std::shared_ptr<ImageButton> m_HomeButton;
     std::shared_ptr<ImageButton> m_ContinueButton;
     std::shared_ptr<ImageButton> m_SettingsButton;

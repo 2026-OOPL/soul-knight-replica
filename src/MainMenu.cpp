@@ -1,8 +1,11 @@
 #include <memory>
+
 #include <glm/vec2.hpp>
 
 #include "MainMenu.hpp"
 #include "Component/Button/TextButton.hpp"
+#include "Component/UI/Advertisement.hpp"
+#include "GameConfig/GameConfig.hpp"
 #include "Core/Context.hpp"
 #include "Scene/CastingScene.hpp"
 #include "Scene/MapTest.hpp"
@@ -88,14 +91,12 @@ MainMenu::MainMenu() : Scene() {
     this->AddChild(this->m_Background);
 
     m_BGM = std::make_shared<Util::BGM>(
-        RESOURCE_DIR"/SFX/Alan Walker - Fade (NCS).m4a"
+        RESOURCE_DIR"/SFX/Alan Walker - Fade (NCS).mp3"
     );
 
-    m_BGM->LoadMedia(RESOURCE_DIR"/SFX/Alan Walker - Fade (NCS).m4a");
+    m_BGM->LoadMedia(RESOURCE_DIR"/SFX/Alan Walker - Fade (NCS).mp3");
 
     m_BGM->Play();
-
-    LOG_INFO(m_BGM->GetVolume());
 }
 
 MainMenu::~MainMenu() = default;
@@ -106,7 +107,9 @@ std::shared_ptr<Scene> MainMenu::GetRedirection() {
 
 void MainMenu::LaunchSettingsUI(bool launch) {
     if (launch) {
-        this->m_SettingsUI = std::make_shared<SettingsUI>(m_ZIndex + 5);
+        this->m_SettingsUI = std::make_shared<SettingsUI>();
+
+        this->m_SettingsUI->SetZIndex(m_ZIndex + 5);
         this->AddChild(this->m_SettingsUI);
     } else {
         this->RemoveChild(this->m_SettingsUI);
@@ -121,6 +124,8 @@ void MainMenu::Update() {
             this->LaunchSettingsUI(false);
         }
     }
+
+    m_BGM->SetVolume(GameConfig::GetInstance().m_BGMVolume * 128);
 
     Scene::Update();
 }

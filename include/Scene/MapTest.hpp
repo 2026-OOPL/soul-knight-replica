@@ -9,9 +9,17 @@
 #include "Component/Map/MapSystem.hpp"
 #include "Component/UI/PauseUI.hpp"
 #include "Component/UI/PlayUI.hpp"
+#include "Component/UI/Respawn.hpp"
 #include "Generator/MapGenerator.hpp"
+#include "Util/BGM.hpp"
 #include "Util/GameObject.hpp"
 #include "Util/Time.hpp"
+
+enum class MapState {
+    PLAYING,
+    PAUSED,
+    RESPAWNING
+};
 
 class MapTest : public MapSystem {
 public:
@@ -21,7 +29,7 @@ public:
         MapSystemConfig::MapConfig config
     );
 
-    ~MapTest() override = default;
+    ~MapTest() override;
 
     void Update() override;
 
@@ -43,7 +51,18 @@ private:
     
     bool m_IsPaused = false;
     bool m_ExitToHome = false;
+
     std::shared_ptr<PauseUI> m_PauseUI;
+    std::shared_ptr<RespawnUI> m_RespawnUI;
+
+    void SetPauseUIVisible(bool visible);
+    void SetRespawnUIVisible(bool visible);
+
+    void RespawnPlayer();
+
+    std::shared_ptr<Util::BGM> m_BGM;
+
+    MapState m_MapState = MapState::PLAYING;
 };
 
 #endif

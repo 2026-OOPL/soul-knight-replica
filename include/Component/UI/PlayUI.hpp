@@ -6,11 +6,12 @@
 
 #include "Component/IStateful.hpp"
 #include "Component/Player/Player.hpp"
+#include "Component/UI/BaseUI.hpp"
 #include "Util/GameObject.hpp"
 #include "Util/Image.hpp"
 #include "Util/Text.hpp"
 
-class PlayUI : public Util::GameObject, public IStateful {
+class PlayUI : public BaseUI {
 public:
     using HudStateProvider = std::function<PlayerHudState()>;
 
