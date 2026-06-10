@@ -4,11 +4,9 @@
 
 #include "MainMenu.hpp"
 #include "Component/Button/TextButton.hpp"
-#include "Component/UI/Advertisement.hpp"
 #include "GameConfig/GameConfig.hpp"
 #include "Core/Context.hpp"
 #include "Scene/CastingScene.hpp"
-#include "Scene/Gameover.hpp"
 #include "Scene/MapTest.hpp"
 #include "Util/BGM.hpp"
 #include "Util/GameObject.hpp"

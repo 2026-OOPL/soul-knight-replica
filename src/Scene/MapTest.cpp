@@ -1,5 +1,4 @@
 #include <memory>
-#include <stdexcept>
 #include <string>
 #include <glm/vec2.hpp>
 #include <vector>
