@@ -180,6 +180,7 @@ void MapTest::Update() {
                 bool exitSignal = this->m_PauseUI->GetExitSignal();
 
                 this->SetPauseUIVisible(!exitSignal);
+                m_MapState = exitSignal ? MapState::PLAYING : MapState::PAUSED;
             }
             break;
         case MapState::RESPAWNING:
@@ -251,7 +252,7 @@ void MapTest::SetRespawnUIVisible(bool visible) {
         }
 
         this->m_RespawnUI = std::make_shared<RespawnUI>(
-            [this] { this->m_RedirectScene = std::make_shared<GameoverScene>(); },
+            [this] { this->m_RedirectScene = std::make_shared<GameoverScene>(this->m_MapConfig); },
             [this] { this->RespawnPlayer(); }
         );
 

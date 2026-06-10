@@ -9,12 +9,12 @@ int main(int, char**) {
     context->SetWindowIcon(RESOURCE_DIR"/icon.png");
     
     // Advertisement preload
-    std::shared_ptr<AdvertisementUI> advertisementUI = std::make_shared<AdvertisementUI>(
-        AdvertisementArc::SPRITES,
-        AdvertisementArc::SPRITE_NUMBER
-    );
+    // std::shared_ptr<AdvertisementUI> advertisementUI = std::make_shared<AdvertisementUI>(
+    //     AdvertisementArc::SPRITES,
+    //     AdvertisementArc::SPRITE_NUMBER
+    // );
 
-    advertisementUI->PreloadMedia();
+    // advertisementUI->PreloadMedia();
 
     while (!context->GetExit()) {
         switch (app.GetCurrentState()) {

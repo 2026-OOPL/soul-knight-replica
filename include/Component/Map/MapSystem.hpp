@@ -142,6 +142,9 @@ protected:
     std::shared_ptr<Character> GetNearestMonster();
     
     std::shared_ptr<Scene> m_RedirectScene;
+
+    MapSystemConfig::MapConfig m_MapConfig;
+    
 private:
     void ApplyCameraRecursive(const std::shared_ptr<Util::GameObject> &object);
     void DebugClearCurrentFightRoom();
@@ -165,9 +168,6 @@ private:
     bool m_ShowCollisionDebug = false;
 
     std::shared_ptr<Portal> m_CurrentPortal;
-
-
-    MapSystemConfig::MapConfig m_MapConfig;
 
     void SwitchToLevelSelect();
 
