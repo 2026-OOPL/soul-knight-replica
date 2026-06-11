@@ -40,11 +40,11 @@ public:
         ) {
         this->SetMaxHealth(12);
         this->SetCurrentHealth(this->GetMaxHealth());
-        this->SetMeleeAttack(4, 8.0F, 700.0F, 0.12F);
+        this->SetMeleeAttack(4, 12.0F, 700.0F, 0.12F);
 
         MeleeAIConfig aiConfig;
-        aiConfig.attackRange = 30.0F;
-        aiConfig.attackReleaseRange = 42.0F;
+        aiConfig.attackRange = 10.0F;
+        aiConfig.attackReleaseRange = 15.0F;
         this->m_AI = std::make_shared<MeleeAI>(
             this,
             tracePlayer.lock(),

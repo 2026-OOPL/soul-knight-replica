@@ -93,7 +93,7 @@ MapTest::MapTest(
             return PlayUI::BossHudState{};
         }
     );
-    this->m_PlayUI->SetZIndex(8);
+    this->m_PlayUI->SetZIndex(10);
     this->AddChild(this->m_PlayUI);
 
     this->m_AttachCamera = std::make_shared<TraceCamera>(
