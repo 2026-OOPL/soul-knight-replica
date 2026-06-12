@@ -36,7 +36,7 @@ PreloadScene::PreloadScene() {
     m_SceneStartTime = Util::Time::GetElapsedTimeMs();
 
     this->m_BGM = std::make_shared<Util::BGM>(
-        RESOURCE_DIR"/SFX/Startup.mp3"
+        RESOURCE_DIR"/SFX/sfx_startup.mp3"
     );
 }
 

@@ -8,11 +8,13 @@
 #include "Component/Weapon.hpp"
 #include "Common/Constants.hpp"
 #include "Common/MapObject.hpp"
+#include "GameConfig/GameConfig.hpp"
 #include "Util/Animation.hpp"
 #include "Util/GameObject.hpp"
 #include "Util/Input.hpp"
 #include "Util/Keycode.hpp"
 #include "Util/Logger.hpp"
+#include "Util/SFX.hpp"
 #include "Util/Time.hpp"
 
 #include "Component/Player/Player.hpp"
@@ -81,6 +83,31 @@ Player::Player(
     this->AddChild(this->m_MeleeAttackVisual);
 
     this->m_AbsoluteTransform.translation = {0.0F, 0.0F};
+
+}
+
+void Player::SetMeleeSFX(std::string path) {
+    m_MeleeSFX = std::make_shared<Util::SFX>(
+        path
+    );
+
+    m_MeleeSFX->LoadMedia(path);
+}
+
+void Player::SetDamagedSFX(std::string path) {
+    m_DamagedSFX = std::make_shared<Util::SFX>(
+        path
+    );
+
+    m_DamagedSFX->LoadMedia(path);
+}
+
+void Player::SetDeathSFX(std::string path) {
+    m_DeathSFX = std::make_shared<Util::SFX>(
+        path
+    );
+
+    m_DeathSFX->LoadMedia(path);
 }
 
 glm::vec2 Player::GetMoveIntent() const {
@@ -363,6 +390,11 @@ void Player::StartMeleeAttackVisual() {
         return;
     }
 
+    if (this->m_MeleeSFX != nullptr) {                                                                                              
+        this->m_MeleeSFX->SetVolume(GameConfig::GetInstance().m_SFXVolume * 128);                                                   
+        this->m_MeleeSFX->Play();                                                                                                   
+    }    
+
     this->m_MeleeAttackVisualEndTime =
         Util::Time::GetElapsedTimeMs() + kMeleeAttackVisualDurationMs;
     this->m_MeleeAttackAnimation->SetCurrentFrame(0);
@@ -426,6 +458,12 @@ void Player::ApplyDamage(int damage) {
         this->SetCurrentShield(this->m_CurrentShield - 1);
     } else {
         Character::ApplyDamage(damage);
+
+        if (this->IsDead() && m_DeathSFX) {
+            m_DeathSFX->Play();
+        } else if (!this->IsDead() && m_DamagedSFX){
+            m_DamagedSFX->Play();
+        }
     }
 }
 

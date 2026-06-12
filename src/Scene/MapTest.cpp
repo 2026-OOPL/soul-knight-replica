@@ -170,20 +170,19 @@ void MapTest::Update() {
 
     switch (m_MapState) {
         case MapState::PLAYING:
-            this->m_BGM->Resume();
             MapSystem::Update();
 
             if (m_MapState != MapState::RESPAWNING && 
                 Util::Input::IsKeyUp(Util::Keycode::ESCAPE)
             ) {
-                m_MapState = (m_MapState == MapState::PAUSED) ? MapState::PLAYING : MapState::PAUSED;
+                m_MapState = MapState::PAUSED;
+                this->m_BGM->Pause();
                 this->SetPauseUIVisible(m_MapState == MapState::PAUSED);
             }
             
             break;
 
         case MapState::PAUSED:
-            this->m_BGM->Pause();
             if (this->m_PauseUI) {
                 this->m_PauseUI->Update();
 
@@ -191,11 +190,14 @@ void MapTest::Update() {
 
                 this->SetPauseUIVisible(!exitSignal);
                 m_MapState = exitSignal ? MapState::PLAYING : MapState::PAUSED;
+
+                if (m_MapState == MapState::PLAYING) {
+                    this->m_BGM->Resume();
+                }
             }
             break;
 
         case MapState::RESPAWNING:
-            this->m_BGM->Pause();
             if (this->m_RespawnUI) {
                 this->m_RespawnUI->Update();
 
@@ -261,7 +263,7 @@ void MapTest::SetRespawnUIVisible(bool visible) {
             [this] { this->RespawnPlayer(); }
         );
 
-        this->m_RespawnUI->SetZIndex(this->GetZIndex() + 10);
+        this->m_RespawnUI->SetZIndex(this->GetZIndex() + 20);
 
         this->AddChild(this->m_RespawnUI);
     } else {

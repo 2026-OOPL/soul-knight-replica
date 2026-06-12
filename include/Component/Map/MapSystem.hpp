@@ -22,6 +22,7 @@
 #include "Component/World/WorldRegistry.hpp"
 #include "Generator/MapGenerator.hpp"
 #include "Util/GameObject.hpp"
+#include "Util/SFX.hpp"
 
 namespace MapSystemConfig {
 
@@ -179,6 +180,8 @@ private:
     std::shared_ptr<Portal> m_CurrentPortal;
 
     void SwitchToLevelSelect();
+
+    std::shared_ptr<Util::SFX> m_KillAllSFX;
 
 };
 

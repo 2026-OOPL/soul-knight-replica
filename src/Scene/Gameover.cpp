@@ -1,13 +1,9 @@
-#include <cstddef>
 #include <memory>
 #include <string>
 
 #include "Scene/Gameover.hpp"
-#include "Component/Mobs/Ghost.hpp"
-#include "Component/Mobs/GhostKing.hpp"
 #include "Component/Player/Knight.hpp"
 #include "GameConfig/GameConfig.hpp"
-#include "Component/Camera/TraceCamera.hpp"
 #include "MainMenu.hpp"
 #include "Util/Animation.hpp"
 #include "Util/GameObject.hpp"
@@ -201,6 +197,10 @@ void GameoverScene::Update() {
     if (!m_SwitchBGM) {
         this->m_BGM->Play();
         m_SwitchBGM = true;
+    }
+
+    if (this->m_BGM) {
+        this->m_BGM->SetVolume(GameConfig::GetInstance().m_BGMVolume * 128);
     }
 
     MoveCharacterAnimation();

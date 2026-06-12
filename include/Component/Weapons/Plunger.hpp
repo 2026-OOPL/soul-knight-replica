@@ -63,7 +63,7 @@ public:
         this->SetHoldOffset({4.0F, 0.0F});
         this->SetMuzzleOffset({24.0F, 0.0F});
 
-        this->SetShootSFX(RESOURCE_DIR"/SFX/Quick Reverb Fart.mp3");
+        this->SetShootSFX(RESOURCE_DIR"/SFX/sfx_plunger_shoot.mp3");
     }
 
     WeaponType GetWeaponType() override { return WeaponType::RANGED; }

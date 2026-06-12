@@ -46,7 +46,7 @@ public:
         this->SetAttackMoveSpeedMultiplier(kBadPistolAttackMoveSpeedMultiplier);
         this->SetMuzzleOffset({18.0F, 0.0F});
 
-        this->SetShootSFX(RESOURCE_DIR"/SFX/Bang.mp3");
+        this->SetShootSFX(RESOURCE_DIR"/SFX/sfx_pistol_shoot.mp3");
     }
 
     WeaponType GetWeaponType() override { return WeaponType::RANGED; }

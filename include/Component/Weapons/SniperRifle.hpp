@@ -39,7 +39,7 @@ public:
         this->SetAttackMoveSpeedMultiplier(kSniperRifleAttackMoveSpeedMultiplier);
         this->SetHoldOffset({4.0F, 0.0F});
         this->SetMuzzleOffset({30.0F, 0.0F});
-        this->SetShootSFX(RESOURCE_DIR"/SFX/snipershoot.mp3");
+        this->SetShootSFX(RESOURCE_DIR"/SFX/sfx_sniper_shoot.mp3");
     }
 
     WeaponType GetWeaponType() override { return WeaponType::RANGED; }

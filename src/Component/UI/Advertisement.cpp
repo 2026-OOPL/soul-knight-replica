@@ -36,6 +36,8 @@ AdvertisementUI::AdvertisementUI(
         RESOURCE_DIR "/SFX/Arc on Windows. Download now.mp3"
     );
 
+    this->m_BGM->LoadMedia(RESOURCE_DIR "/SFX/Arc on Windows. Download now.mp3");
+
     m_DownloadButton = std::make_shared<ImageButton>(
         std::make_shared<ButtonAction>(
             nullptr,
@@ -71,11 +73,6 @@ AdvertisementUI::AdvertisementUI(
 
 void AdvertisementUI::Update() {
     BaseUI::Update();
-    
-    if (!m_IsBGMStarted) {
-        m_IsBGMStarted = true;
-        m_BGM->Play(0);
-    }
 
     if (m_CurrentFrame >= m_SpriteNumber - 5 && !m_IsButtonPresented) {
         m_IsButtonPresented = true;
@@ -90,6 +87,11 @@ void AdvertisementUI::Update() {
         m_CurrentFrame = 1 + (Util::Time::GetElapsedTimeMs() - m_AnimationStartTime) / (1.0F / 24 * 1000);
 
         this->SetSprite(m_CurrentFrame);
+    }
+
+    if (!m_IsBGMStarted) {
+        m_IsBGMStarted = true;
+        m_BGM->Play(0);
     }
 }
 

@@ -40,6 +40,10 @@ Knight::Knight(
     this->SetCurrentShield(playerInfo.protection);
     this->SetCurrentAmmo(playerInfo.mana);
     this->SetHealthLocked(playerInfo.healthLocked);
+
+    this->SetMeleeSFX(RESOURCE_DIR"/SFX/sfx_knife_stab.mp3");
+    this->SetDeathSFX(RESOURCE_DIR"/SFX/sfx_player_death.mp3");
+    this->SetDamagedSFX(RESOURCE_DIR"/SFX/sfx_player_damaged.mp3");
 }
 
 glm::vec2 Knight::GetFaceDirection() const {

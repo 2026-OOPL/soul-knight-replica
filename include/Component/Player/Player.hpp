@@ -3,13 +3,16 @@
 
 #include <array>
 #include <functional>
+#include <memory>
 #include <nlohmann/detail/iterators/primitive_iterator.hpp>
+#include <string>
 #include <vector>
 
 #include <glm/vec2.hpp>
 
 #include "Component/Character/Character.hpp"
 #include "Component/Collision/CollisionTypes.hpp"
+#include "Util/SFX.hpp"
 #include "Util/Time.hpp"
 
 struct PlayerHudState {
@@ -70,6 +73,9 @@ public:
 protected:
     float GetMoveSpeedMultiplier() const override;
     void UpdateWeaponPresentation() override;
+    void SetDamagedSFX(std::string path);
+    void SetMeleeSFX(std::string path);
+    void SetDeathSFX(std::string path);
 
 private:
     void SwitchWeapon();
@@ -102,6 +108,10 @@ private:
     static constexpr float kMeleeAttackVisualDurationMs = 140.0F;
 
     Util::ms_t m_LastDamageTime = Util::Time::GetElapsedTimeMs();
+
+    std::shared_ptr<Util::SFX> m_MeleeSFX;
+    std::shared_ptr<Util::SFX> m_DamagedSFX;
+    std::shared_ptr<Util::SFX> m_DeathSFX;
 };
 
 #endif

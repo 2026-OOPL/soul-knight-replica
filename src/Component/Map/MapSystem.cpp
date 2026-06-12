@@ -20,6 +20,7 @@
 #include "Scene/LevelChoose.hpp"
 #include "Util/Input.hpp"
 #include "Util/Keycode.hpp"
+#include "Util/SFX.hpp"
 
 namespace {
 
@@ -140,6 +141,10 @@ MapSystem::MapSystem(MapSystemConfig::MapConfig config)
     this->AddChild(this->m_CollisionDebugOverlay);
 
     this->m_MapConfig = config;
+
+    this->m_KillAllSFX = std::make_shared<Util::SFX>(
+        RESOURCE_DIR"/SFX/sfx_killall_death.mp3"
+    );
 }
 
 std::shared_ptr<Scene> MapSystem::GetRedirection() {
@@ -170,6 +175,7 @@ void MapSystem::Update() {
         this->m_ShowCollisionDebug = !this->m_ShowCollisionDebug;
     }
     if (Util::Input::IsKeyDown(Util::Keycode::P)) {
+        this->m_KillAllSFX->Play();
         this->DebugClearCurrentFightRoom();
     }
 
