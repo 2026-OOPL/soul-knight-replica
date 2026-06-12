@@ -96,7 +96,7 @@ constexpr float kStrafeFlipMinMs = 900.0F;
 constexpr float kStrafeFlipMaxMs = 1700.0F;
 constexpr float kIntroHiddenMs = 2300.0F;
 constexpr float kInitialSkillDelayMs = 700.0F;
-constexpr float kSkillCooldownMs = 1050.0F;
+constexpr float kSkillCooldownMs = 5050.0F;
 constexpr float kRelocationChance = 0.35F;
 constexpr float kRelocationWarningMs = 650.0F;
 constexpr float kRelocationHiddenMs = 900.0F;
@@ -132,11 +132,8 @@ constexpr int kSpiritBurstDamage = 4;
 constexpr float kSpiritBurstScale = 0.80F;
 const glm::vec2 kSpiritBurstColliderSize = {20.0F, 20.0F};
 
-constexpr float kPi = 3.14159265358979323846F;
-constexpr float kTau = kPi * 2.0F;
-
 constexpr float ToRadians(float degrees) {
-    return degrees * kPi / 180.0F;
+    return degrees * M_PI / 180.0F;
 }
 
 BulletConfig BuildBulletConfig(
@@ -742,12 +739,12 @@ void GhostKing::FireSpiritBurst() {
         5
     );
     const glm::vec2 origin = this->GetBurstOrigin();
-    const float angleOffset = this->RandomFloat(0.0F, kTau);
+    const float angleOffset = this->RandomFloat(0.0F, 2 * M_PI);
 
     for (int index = 0; index < kSpiritBurstBulletCount; ++index) {
         const float angle =
             angleOffset +
-            kTau * static_cast<float>(index) /
+            2 * M_PI * static_cast<float>(index) /
                 static_cast<float>(kSpiritBurstBulletCount);
         const glm::vec2 direction = {std::cos(angle), std::sin(angle)};
         std::shared_ptr<Bullet> bullet = std::make_shared<TimedBullet>(
@@ -858,7 +855,7 @@ glm::vec2 GhostKing::FindSafeGhostPosition(const glm::vec2 &fallback) {
     }
 
     for (int attempt = 0; attempt < kMaxSpawnAttempts; ++attempt) {
-        const float angle = this->RandomFloat(0.0F, kTau);
+        const float angle = this->RandomFloat(0.0F, 2 * M_PI);
         const float radius = this->RandomFloat(30.0F, 88.0F);
         glm::vec2 candidate = {
             fallback.x + std::cos(angle) * radius,

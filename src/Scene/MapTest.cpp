@@ -1,5 +1,4 @@
 #include <memory>
-#include <stdexcept>
 #include <string>
 #include <glm/vec2.hpp>
 #include <vector>
@@ -94,7 +93,7 @@ MapTest::MapTest(
             return PlayUI::BossHudState{};
         }
     );
-    this->m_PlayUI->SetZIndex(8);
+    this->m_PlayUI->SetZIndex(10);
     this->AddChild(this->m_PlayUI);
 
     this->m_AttachCamera = std::make_shared<TraceCamera>(
@@ -172,7 +171,16 @@ void MapTest::Update() {
     switch (m_MapState) {
         case MapState::PLAYING:
             MapSystem::Update();
+
+            if (m_MapState != MapState::RESPAWNING && 
+                Util::Input::IsKeyUp(Util::Keycode::ESCAPE)
+            ) {
+                m_MapState = (m_MapState == MapState::PAUSED) ? MapState::PLAYING : MapState::PAUSED;
+                this->SetPauseUIVisible(m_MapState == MapState::PAUSED);
+            }
+            
             break;
+
         case MapState::PAUSED:
             if (this->m_PauseUI) {
                 this->m_PauseUI->Update();
@@ -180,8 +188,10 @@ void MapTest::Update() {
                 bool exitSignal = this->m_PauseUI->GetExitSignal();
 
                 this->SetPauseUIVisible(!exitSignal);
+                m_MapState = exitSignal ? MapState::PLAYING : MapState::PAUSED;
             }
             break;
+
         case MapState::RESPAWNING:
             if (this->m_RespawnUI) {
                 this->m_RespawnUI->Update();
@@ -192,13 +202,6 @@ void MapTest::Update() {
                 }
             }
             break;
-    }
-
-    if (m_MapState != MapState::RESPAWNING && 
-        Util::Input::IsKeyUp(Util::Keycode::ESCAPE)
-    ) {
-        m_MapState = (m_MapState == MapState::PAUSED) ? MapState::PLAYING : MapState::PAUSED;
-        this->SetPauseUIVisible(m_MapState == MapState::PAUSED);
     }
 
     this->m_BGM->SetVolume(GameConfig::GetInstance().m_BGMVolume * 128);
@@ -251,7 +254,7 @@ void MapTest::SetRespawnUIVisible(bool visible) {
         }
 
         this->m_RespawnUI = std::make_shared<RespawnUI>(
-            [this] { this->m_RedirectScene = std::make_shared<GameoverScene>(); },
+            [this] { this->m_RedirectScene = std::make_shared<GameoverScene>(this->m_MapConfig); },
             [this] { this->RespawnPlayer(); }
         );
 

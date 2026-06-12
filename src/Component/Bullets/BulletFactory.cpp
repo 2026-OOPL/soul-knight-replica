@@ -12,7 +12,7 @@
 namespace {
 
 constexpr float kDefaultSpinRadiansPerMs =
-    (2.0F * 3.14159265358979323846F) / 500.0F;
+    (2.0F * M_PI) / 500.0F;
 
 } // namespace
 
@@ -20,7 +20,7 @@ const BulletConfig &BulletFactory::SmallNormalBulletConfig() {
     static const BulletConfig config = {
         {RESOURCE_DIR"/Bullet/SmallNormalBullet.png"},
         {0.5F, 0.5F},
-        {12.0F, 12.0F},
+        {10.0F, 10.0F},
         1,
         true,
         20
@@ -43,8 +43,8 @@ const BulletConfig &BulletFactory::SpindleBulletConfig() {
 const BulletConfig &BulletFactory::ArrowBulletConfig() {
     static const BulletConfig config = {
         {RESOURCE_DIR"/Bullet/Arrow.png"},
-        {1.0F, 1.0F},
-        {18.0F, 8.0F},
+        {0.75F, 0.75F},
+        {5.25F, 5.25F},
         1,
         true,
         20
@@ -56,7 +56,7 @@ const BulletConfig &BulletFactory::PoopBulletConfig() {
     static const BulletConfig config = {
         {RESOURCE_DIR"/Bullet/PoopBullet.png"},
         {1.0F, 1.0F},
-        {16.0F, 16.0F},
+        {10.0F, 11.0F},
         1,
         true,
         20
@@ -68,7 +68,7 @@ const BulletConfig &BulletFactory::EnemyRoundBulletConfig() {
     static const BulletConfig config = {
         {RESOURCE_DIR"/Bullet/EnemyRoundBullet.png"},
         {1.0F, 1.0F},
-        {12.0F, 12.0F},
+        {2.5F, 2.5F},
         1,
         true,
         20

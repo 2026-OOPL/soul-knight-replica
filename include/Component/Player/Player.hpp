@@ -10,6 +10,7 @@
 
 #include "Component/Character/Character.hpp"
 #include "Component/Collision/CollisionTypes.hpp"
+#include "Util/Time.hpp"
 
 struct PlayerHudState {
     int hp;
@@ -99,6 +100,8 @@ private:
     static constexpr float kShieldRegenIntervalMs = 1000.0F;
     static constexpr float kMeleeAttackCooldownMs = 350.0F;
     static constexpr float kMeleeAttackVisualDurationMs = 140.0F;
+
+    Util::ms_t m_LastDamageTime = Util::Time::GetElapsedTimeMs();
 };
 
 #endif

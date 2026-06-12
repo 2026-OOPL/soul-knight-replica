@@ -28,6 +28,7 @@ file(GLOB_RECURSE INCLUDE_FILES CONFIGURE_DEPENDS "include/*.hpp")
 add_executable(${PROJECT_NAME}
     ${SRC_FILES}
     ${INCLUDE_FILES}
+    include/Scene/PreloadScene.hpp
 )
 
 if(MSVC)

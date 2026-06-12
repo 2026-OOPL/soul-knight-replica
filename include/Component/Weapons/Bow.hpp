@@ -28,6 +28,8 @@ public:
         this->SetBulletDamage(kBowDamage);
         this->SetAmmoCostPerShot(kBowAmmoCost);
         this->SetMuzzleOffset({24.0F, 0.0F});
+
+        this->SetShootSFX(RESOURCE_DIR"/SFX/Bang.mp3");
     }
 
     WeaponType GetWeaponType() override { return WeaponType::RANGED; }

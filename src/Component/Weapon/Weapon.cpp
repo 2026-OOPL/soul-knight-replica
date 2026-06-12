@@ -1,19 +1,15 @@
 #include <algorithm>
 #include <memory>
-#include <utility>
 #include <cstdlib>
 #include <cmath>
-#include <glm/geometric.hpp>
 #include <glm/vec2.hpp>
 
-#include "Util/Image.hpp"
-#include "Util/Input.hpp"
-#include "Util/Keycode.hpp"
 #include "Util/Time.hpp"
-
+#include "Util/Image.hpp"
 #include "Component/Weapon.hpp"
 #include "Component/Bullet.hpp"
 #include "Component/Bullets/BulletFactory.hpp"
+#include "GameConfig/GameConfig.hpp"
 #include "Component/Weapons/AK47.hpp"
 #include "Component/Weapons/BadPistol.hpp"
 #include "Component/Weapons/Bow.hpp"
@@ -76,6 +72,10 @@ glm::vec2 Weapon::GetFacingDirection() {
 void Weapon::Update() {
     // Apply the rotation for the weapon
     this->SetWeaponPointingByMoveDirection();
+
+    if (m_ShootSFX) {
+        m_ShootSFX->SetVolume(GameConfig::GetInstance().m_SFXVolume * 128);
+    }
 }
 
 Util::Transform Weapon::GetObjectTransform() const {
@@ -250,6 +250,8 @@ bool Weapon::ShotBullet() {
         return false;
     }
 
+    this->PlayShootSFX();
+
     m_LastShotTime = Util::Time::GetElapsedTimeMs();
     this->TriggerRecoil();
 
@@ -266,6 +268,18 @@ bool Weapon::ShotBullet() {
     return true;
 }
 
+void Weapon::SetShootSFX(const std::string &path) {                                                                                 
+    this->m_ShootSFX = std::make_shared<Util::SFX>(path);
+    this->m_ShootSFX->LoadMedia(path);
+}
+
+void Weapon::PlayShootSFX() {
+    if (this->m_ShootSFX == nullptr) {
+        return;
+    }
+
+    this->m_ShootSFX->Play();                                                                                                       
+}
 WeaponId Weapon::GetWeaponId() const {
     return this->m_WeaponId;
 }

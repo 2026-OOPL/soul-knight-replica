@@ -31,7 +31,7 @@ namespace {
             kPlungerAttackOffsetDegrees
         );
 
-        constexpr float kDegreesToRadians = 3.14159265358979323846F / 180.0F;
+        constexpr float kDegreesToRadians = M_PI / 180.0F;
         const glm::vec2 forward =
             glm::length(direction) <= 0.0001F ?
             glm::vec2(1.0F, 0.0F) :
@@ -62,6 +62,8 @@ public:
         this->SetAttackMoveSpeedMultiplier(kPlungerAttackMoveSpeedMultiplier);
         this->SetHoldOffset({4.0F, 0.0F});
         this->SetMuzzleOffset({24.0F, 0.0F});
+
+        this->SetShootSFX(RESOURCE_DIR"/SFX/Quick Reverb Fart.mp3");
     }
 
     WeaponType GetWeaponType() override { return WeaponType::RANGED; }

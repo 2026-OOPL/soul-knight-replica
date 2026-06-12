@@ -411,12 +411,22 @@ void Player::ApplyDamage(int damage) {
         return;
     }
 
+    Util::ms_t now = Util::Time::GetElapsedTimeMs();
+
+    if (now - m_LastDamageTime < 500) {
+        return;
+    }
+
+    m_LastDamageTime = now;
+
     this->m_ShieldRegenDelayRemainingMs = kShieldRegenDelayMs;
     this->m_ShieldRegenElapsedMs = 0.0F;
-
-    const int shieldDamage = std::min(this->m_CurrentShield, damage);
-    this->SetCurrentShield(this->m_CurrentShield - shieldDamage);
-    Character::ApplyDamage(damage - shieldDamage);
+    
+    if (this->m_CurrentShield > 0) {
+        this->SetCurrentShield(this->m_CurrentShield - 1);
+    } else {
+        Character::ApplyDamage(damage);
+    }
 }
 
 bool Player::IsHealthLocked() const {

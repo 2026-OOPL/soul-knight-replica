@@ -403,7 +403,7 @@ void RuinsGuard::FireRadialBullets() {
             this->GetFaction(),
             kRadialBulletLifetimeMs
         );
-        bullet->SetColliderSize({12.0F, 12.0F});
+        bullet->SetColliderSize({8.0F, 8.0F});
         bullet->SetAbsoluteScale({0.6F, 0.6F});
         bullet->AddHitEffect(std::make_shared<KnockbackHitEffect>(kBulletKnockbackStrength));
         this->m_MapSystem->AddBullet(bullet);

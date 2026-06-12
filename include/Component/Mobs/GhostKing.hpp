@@ -3,13 +3,12 @@
 
 #include <memory>
 #include <random>
-#include <vector>
 
 #include <glm/vec2.hpp>
 
+#include "Util/Time.hpp"
 #include "Component/Character/Character.hpp"
 #include "Component/Mobs/Mob.hpp"
-#include "Util/Time.hpp"
 
 class GhostKingWarningSign;
 

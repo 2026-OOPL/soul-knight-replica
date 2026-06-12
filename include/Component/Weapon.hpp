@@ -10,6 +10,7 @@
 #include "Component/IStateful.hpp"
 #include "Util/GameObject.hpp"
 #include "Util/Image.hpp"
+#include "Util/SFX.hpp"
 #include "Util/Time.hpp"
 
 enum class WeaponType {
@@ -94,6 +95,11 @@ protected:
     std::function<void(std::shared_ptr<Bullet>)> m_OnBulletFired;
     
     std::shared_ptr<Util::Image> m_Resource;
+
+    std::shared_ptr<Util::SFX> m_ShootSFX;
+
+    void SetShootSFX(const std::string &path);
+    void PlayShootSFX();
     
 private:
     int m_FireDelay;

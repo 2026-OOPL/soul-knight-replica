@@ -26,7 +26,7 @@ namespace {
             kBadPistolAttackOffsetDegrees
         );
 
-        constexpr float kDegreesToRadians = 3.14159265358979323846F / 180.0F;
+        constexpr float kDegreesToRadians = M_PI / 180.0F;
         const float angle =
             std::atan2(direction.y, direction.x) + distribution(engine) * kDegreesToRadians;
         return {std::cos(angle), std::sin(angle)};
@@ -45,6 +45,8 @@ public:
         this->SetCriticalChance(kBadPistolCriticalChance);
         this->SetAttackMoveSpeedMultiplier(kBadPistolAttackMoveSpeedMultiplier);
         this->SetMuzzleOffset({18.0F, 0.0F});
+
+        this->SetShootSFX(RESOURCE_DIR"/SFX/Bang.mp3");
     }
 
     WeaponType GetWeaponType() override { return WeaponType::RANGED; }

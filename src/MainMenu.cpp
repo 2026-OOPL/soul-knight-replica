@@ -4,7 +4,6 @@
 
 #include "MainMenu.hpp"
 #include "Component/Button/TextButton.hpp"
-#include "Component/UI/Advertisement.hpp"
 #include "GameConfig/GameConfig.hpp"
 #include "Core/Context.hpp"
 #include "Scene/CastingScene.hpp"

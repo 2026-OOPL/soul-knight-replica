@@ -54,8 +54,8 @@ public:
         this->SetWeapon(std::make_shared<Shear>());
 
         MeleeAIConfig aiConfig;
-        aiConfig.attackRange = 70.0F;
-        aiConfig.attackReleaseRange = 92.0F;
+        aiConfig.attackRange = 50.0F;
+        aiConfig.attackReleaseRange = 60.0F;
         this->m_AI = std::make_shared<MeleeAI>(
             this,
             tracePlayer.lock(),
