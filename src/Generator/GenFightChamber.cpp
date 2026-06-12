@@ -1,4 +1,5 @@
 #include <array>
+#include <algorithm>
 #include <vector>
 #include <memory>
 #include <stdexcept>
@@ -97,6 +98,9 @@ GenFightChamber::GenFightChamber(
 
     this->m_MinChamberCount = minChamberCount;
     this->m_MaxChamberCount = maxChamberCount;
+    this->m_ObstacleRoomIndex = this->m_RandomChoose->GetInteger(
+        std::max(1, this->m_MinChamberCount)
+    );
 }
 
 void GenFightChamber::Generate() {
@@ -122,7 +126,10 @@ void GenFightChamber::Generate() {
         currentPosition = m_RandomChoose->ChooseFromVector(candidateCooridinate);
         
         this->CreateRoom(currentPosition);
-        this->PopulateRoomContents(currentPosition);
+        this->PopulateRoomContents(
+            currentPosition,
+            i == this->m_ObstacleRoomIndex
+        );
 
         i++;
     } while (i < m_MaxChamberCount);
@@ -181,10 +188,15 @@ std::vector<glm::ivec2> GenFightChamber::GetAvailableCooridinate() {
     return results;
 }
 
-void GenFightChamber::PopulateRoomContents(glm::ivec2 position) {
+void GenFightChamber::PopulateRoomContents(
+    glm::ivec2 position,
+    bool shouldAddObstacles
+) {
     std::shared_ptr<RoomInfo> info = m_Blueprint->GetElementByCooridinate(position);
 
-    AddRoomObstacleLayout(info);
+    if (shouldAddObstacles) {
+        AddRoomObstacleLayout(info);
+    }
 
     int waveCount = this->m_RandomChoose->GetInteger(1, 3); // 隨機 1 到 3 波
     const float safeDistance = 60.0F; // 怪物與箱子之間的最短安全距離 (可依照你的素材大小調整)

@@ -1,3 +1,4 @@
+#include <array>
 #include <memory>
 #include <random>
 #include "Component/Map/RewardRoom.hpp"
@@ -5,8 +6,7 @@
 #include "Component/Map/MapSystem.hpp"
 #include "Component/Prop/Chest.hpp"
 #include "Component/Prop/ChestReward.hpp"
-#include "Component/Weapons/BadPistol.hpp"
-#include "Component/Weapons/Plunger.hpp"
+#include "Component/Weapon.hpp"
 #include "Util/Image.hpp"
 
 namespace {
@@ -17,7 +17,6 @@ constexpr glm::vec2 kRewardChestRenderSize = {40.0F, 40.0F};
 constexpr glm::vec2 kRewardChestBlockingSize = {28.0F, 20.0F};
 constexpr glm::vec2 kRewardChestBlockingOffset = {0.0F, -6.0F};
 constexpr float kRewardChestAutoOpenRange = 42.0F;
-constexpr int kBadPistolRewardChancePercent = 50;
 
 Chest::Visuals BuildRewardChestVisuals() {
     Chest::Visuals visuals;
@@ -29,13 +28,28 @@ Chest::Visuals BuildRewardChestVisuals() {
 std::shared_ptr<Weapon> CreateRewardWeapon() {
     static std::random_device randomDevice;
     static std::mt19937 randomEngine(randomDevice());
-    static std::uniform_int_distribution<int> distribution(1, 100);
+    static constexpr std::array<WeaponId, 4> kRewardWeaponPool = {
+        WeaponId::BadPistol,
+        WeaponId::Plunger,
+        WeaponId::AK47,
+        WeaponId::SniperRifle
+    };
+    static std::uniform_int_distribution<std::size_t> distribution(
+        0,
+        kRewardWeaponPool.size() - 1
+    );
+    static WeaponId lastRewardWeapon = WeaponId::Empty;
 
-    if (distribution(randomEngine) <= kBadPistolRewardChancePercent) {
-        return std::make_shared<BadPistol>();
-    }
+    WeaponId rewardWeapon = WeaponId::Empty;
+    do {
+        rewardWeapon = kRewardWeaponPool[distribution(randomEngine)];
+    } while (
+        rewardWeapon == lastRewardWeapon &&
+        kRewardWeaponPool.size() > 1
+    );
 
-    return std::make_shared<Plunger>();
+    lastRewardWeapon = rewardWeapon;
+    return CreateWeaponById(rewardWeapon);
 }
 
 } // namespace

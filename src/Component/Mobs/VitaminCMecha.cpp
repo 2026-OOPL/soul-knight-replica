@@ -88,6 +88,45 @@ constexpr float ToRadians(float degrees) {
     return degrees * kPi / 180.0F;
 }
 
+void PushTargetOutsideBody(
+    Character &target,
+    const Character &boss,
+    const glm::vec2 &fallbackDirection
+) {
+    constexpr float kSeparationPadding = 2.0F;
+
+    const glm::vec2 bossPosition = boss.GetAbsoluteTranslation();
+    glm::vec2 targetPosition = target.GetAbsoluteTranslation();
+    const glm::vec2 delta = targetPosition - bossPosition;
+    const glm::vec2 combinedHalfSize =
+        (boss.GetColliderSize() + target.GetColliderSize()) * 0.5F;
+    const glm::vec2 overlap = combinedHalfSize - glm::abs(delta);
+
+    if (overlap.x <= 0.0F || overlap.y <= 0.0F) {
+        return;
+    }
+
+    glm::vec2 pushDirection = fallbackDirection;
+    if (glm::length(delta) > 0.0001F) {
+        pushDirection = delta;
+    } else if (glm::length(pushDirection) <= 0.0001F) {
+        pushDirection = {1.0F, 0.0F};
+    }
+
+    pushDirection = glm::normalize(pushDirection);
+    if (overlap.x < overlap.y) {
+        targetPosition.x +=
+            (pushDirection.x < 0.0F ? -1.0F : 1.0F) *
+            (overlap.x + kSeparationPadding);
+    } else {
+        targetPosition.y +=
+            (pushDirection.y < 0.0F ? -1.0F : 1.0F) *
+            (overlap.y + kSeparationPadding);
+    }
+
+    target.SetAbsoluteTranslation(targetPosition);
+}
+
 constexpr int kSpiralNormalShots = 26;
 constexpr int kSpiralAngryShots = 70;
 constexpr float kSpiralNormalIntervalMs = 82.0F;
@@ -600,6 +639,8 @@ void VitaminCMecha::UpdateState() {
         this->HideLaserBeams();
         return;
     }
+
+    PushTargetOutsideBody(*target, *this, this->m_FaceDirection);
 
     const glm::vec2 toTarget =
         target->GetAbsoluteTranslation() - this->GetAbsoluteTranslation();
