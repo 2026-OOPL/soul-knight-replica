@@ -60,6 +60,7 @@ public:
         this->SetCriticalChance(kAK47CriticalChance);
         this->SetAttackMoveSpeedMultiplier(kAK47AttackMoveSpeedMultiplier);
         this->SetMuzzleOffset({24.0F, 0.0F});
+        this->SetShootSFX(RESOURCE_DIR"/SFX/ak47shoot.mp3");
     }
 
     WeaponType GetWeaponType() override { return WeaponType::RANGED; }

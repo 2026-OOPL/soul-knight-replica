@@ -4,6 +4,7 @@
 
 #include "MainMenu.hpp"
 #include "Component/Button/TextButton.hpp"
+#include "Component/Map/MapSystem.hpp"
 #include "GameConfig/GameConfig.hpp"
 #include "Core/Context.hpp"
 #include "Scene/CastingScene.hpp"
@@ -14,7 +15,9 @@
 #include "Util/Logger.hpp"
 
 void MainMenu::StartNewGame() {
-    this->m_Redirect_Scene = std::make_shared<MapTest>();
+    this->m_Redirect_Scene = std::make_shared<MapTest>(
+        MapSystemConfig::MapConfig{3, 3}
+    );
 }
 
 void MainMenu::LeaveGame() {

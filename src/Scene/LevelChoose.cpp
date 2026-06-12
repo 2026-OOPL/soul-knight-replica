@@ -26,7 +26,7 @@ LevelSwitch::LevelSwitch(MapSystemConfig::MapConfig config) {
 
 void LevelSwitch::Update() {
     if (m_MapConfig.info.chapter >= 3 && m_MapConfig.info.section >= 3) {
-        m_Redirect_Scene = std::make_shared<CastingScene>();
+        m_Redirect_Scene = std::make_shared<CastingScene>(this->m_MapConfig);
         return;
     }
 
