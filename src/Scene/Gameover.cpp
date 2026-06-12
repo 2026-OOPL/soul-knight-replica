@@ -55,10 +55,18 @@ GameoverScene::GameoverScene(MapSystemConfig::MapConfig config) : Scene() {
     this->AddChild(m_ContinueButton);
 
     // Music setup
-    this->m_BGM = std::make_shared<Util::BGM>(
-        RESOURCE_DIR"/SFX/Nokia Arabic Ringtone.mp3"
-    );
-    this->m_BGM->LoadMedia(RESOURCE_DIR"/SFX/Nokia Arabic Ringtone.mp3");
+    if (this->m_Config.info.section == 3 && this->m_Config.info.chapter == 3) {
+        this->m_BGM = std::make_shared<Util::BGM>(
+            RESOURCE_DIR"/SFX/DJ R4 - 67.mp3"
+        );
+        this->m_BGM->LoadMedia(RESOURCE_DIR"/SFX/DJ R4 - 67.mp3");
+    } else {
+        this->m_BGM = std::make_shared<Util::BGM>(
+            RESOURCE_DIR"/SFX/Nokia Arabic Ringtone.mp3"
+        );
+        this->m_BGM->LoadMedia(RESOURCE_DIR"/SFX/Nokia Arabic Ringtone.mp3");
+    }
+
     this->m_BGM->SetVolume(GameConfig::GetInstance().m_BGMVolume * 128);
 
     // Player character indicator
