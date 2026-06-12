@@ -42,9 +42,9 @@ MechanicalRuinsBlock::MechanicalRuinsBlock(
           BuildMechanicalRuinsConfig(
               std::move(config),
               kMechanicalRuinsBlockSprite,
-              {48.0F, 32.0F},
-              {0.0F, -6.0F},
-              {64.0F, 48.0F}
+              {24.0F, 16.0F},
+              {0.0F, -3.0F},
+              {32.0F*1.5, 24.0F*1.5}
           )
       ) {
 }
@@ -58,9 +58,9 @@ MechanicalRuinsFence::MechanicalRuinsFence(
           BuildMechanicalRuinsConfig(
               std::move(config),
               kMechanicalRuinsFenceSprite,
-              {52.0F, 26.0F},
-              {0.0F, -11.0F},
-              {64.0F, 48.0F}
+              {26.0F, 13.0F},
+              {0.0F, -5.5F},
+              {32.0F*1.5, 24.0F*1.5}
           )
       ) {
 }
@@ -74,9 +74,9 @@ MechanicalRuinsPillar::MechanicalRuinsPillar(
           BuildMechanicalRuinsConfig(
               std::move(config),
               kMechanicalRuinsPillarSprite,
-              {28.0F, 28.0F},
-              {0.0F, -18.0F},
-              {32.0F, 64.0F}
+              {14.0F, 14.0F},
+              {0.0F, -9.0F},
+              {16.0F*1.5, 32.0F*1.5}
           )
       ) {
 }

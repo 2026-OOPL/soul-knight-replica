@@ -35,8 +35,10 @@ glm::vec2 IndestructibleObstacle::SafeScaleForSize(
     }
 
     const glm::vec2 drawableSize = drawable->GetSize();
-    return {
+    const float uniformScale = std::min(
         renderSize.x / std::max(drawableSize.x, 1.0F),
         renderSize.y / std::max(drawableSize.y, 1.0F)
-    };
+    );
+
+    return {uniformScale, uniformScale};
 }
