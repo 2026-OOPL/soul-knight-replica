@@ -6,13 +6,19 @@
 #include "Component/Camera/TraceCamera.hpp"
 #include "MainMenu.hpp"
 #include "Scene/CastingScene.hpp"
+#include "Scene/Gameover.hpp"
 #include "Util/BGM.hpp"
 #include "Util/Input.hpp"
-#include "Util/SFX.hpp"
 #include "Util/Time.hpp"
 
 namespace {
     const int SCROLLING_END_POSITION = -1900;
+};
+
+CastingScene::CastingScene(MapSystemConfig::MapConfig config) :
+CastingScene() {
+    this->m_HaveMapConfig = true;
+    this->m_MapConfig = config;
 };
 
 CastingScene::CastingScene() {
@@ -214,10 +220,18 @@ void CastingScene::Update() {
     if (m_CastingEndTime > 0 &&  castEndElapsed > 2000 && castEndElapsed < 3000) {
         m_Music->FadeOut(1000);
     } else if (m_CastingEndTime > 0 && Util::Time::GetElapsedTimeMs() - m_CastingEndTime > 3000) {
-        m_SceneRedirection = std::make_shared<MainMenu>();
+        this->EndTheScene();
     }
 
     Scene::Update();
+}
+
+void CastingScene::EndTheScene() {
+    if (m_HaveMapConfig) {
+        m_SceneRedirection = std::make_shared<GameoverScene>(this->m_MapConfig);
+    } else {
+        m_SceneRedirection = std::make_shared<MainMenu>();
+    }
 }
 
 std::shared_ptr<Scene> CastingScene::GetRedirection() {

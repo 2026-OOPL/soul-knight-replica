@@ -170,6 +170,7 @@ void MapTest::Update() {
 
     switch (m_MapState) {
         case MapState::PLAYING:
+            this->m_BGM->Resume();
             MapSystem::Update();
 
             if (m_MapState != MapState::RESPAWNING && 
@@ -182,6 +183,7 @@ void MapTest::Update() {
             break;
 
         case MapState::PAUSED:
+            this->m_BGM->Pause();
             if (this->m_PauseUI) {
                 this->m_PauseUI->Update();
 
@@ -193,6 +195,7 @@ void MapTest::Update() {
             break;
 
         case MapState::RESPAWNING:
+            this->m_BGM->Pause();
             if (this->m_RespawnUI) {
                 this->m_RespawnUI->Update();
 

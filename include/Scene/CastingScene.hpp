@@ -4,6 +4,7 @@
 #include <memory>
 
 #include "Component/Camera/Camera.hpp"
+#include "Component/Map/MapSystem.hpp"
 #include "Scene.hpp"
 #include "Util/BGM.hpp"
 #include "Util/SFX.hpp"
@@ -12,6 +13,7 @@
 class CastingScene : public Scene {
 public:
     CastingScene();
+    CastingScene(MapSystemConfig::MapConfig config);
 
     ~CastingScene();
 
@@ -28,10 +30,15 @@ private:
     Util::ms_t m_SceneStartTime;
     Util::ms_t m_CastingEndTime = -1.0F;
 
+    bool m_HaveMapConfig = false;
+    MapSystemConfig::MapConfig m_MapConfig;
+
     float m_Progress = 0.0F;
     float m_ScrollingSpeed = 1.0F;
 
     bool m_SwitchBGM = false;
+
+    void EndTheScene();
 };
 
 #endif
