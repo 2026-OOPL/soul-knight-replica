@@ -22,7 +22,7 @@ Weapon::Weapon(
     int fireDelay,
     WeaponId weaponId
 ) : Util::GameObject(nullptr, 5) {
-    m_Resource = std::make_shared<Util::Image>(resource);
+    m_Resource = std::make_shared<Util::Image>(resource, false);
 
     this->m_FireDelay = fireDelay;
     this->m_WeaponId = weaponId;

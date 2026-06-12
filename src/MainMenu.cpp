@@ -3,8 +3,8 @@
 #include <glm/vec2.hpp>
 
 #include "MainMenu.hpp"
-#include "Component/Button/TextButton.hpp"
 #include "Component/Map/MapSystem.hpp"
+#include "Component/Button/TextButton.hpp"
 #include "GameConfig/GameConfig.hpp"
 #include "Core/Context.hpp"
 #include "Scene/CastingScene.hpp"
@@ -16,7 +16,7 @@
 
 void MainMenu::StartNewGame() {
     this->m_Redirect_Scene = std::make_shared<MapTest>(
-        MapSystemConfig::MapConfig{3, 3}
+        
     );
 }
 
