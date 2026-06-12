@@ -37,12 +37,13 @@ public:
 
 protected:
     void CreateRoom(glm::ivec2 position);
-    void PopulateRoomContents(glm::ivec2 position);
+    void PopulateRoomContents(glm::ivec2 position, bool shouldAddObstacles);
 
     glm::ivec2 m_Start;
 
     int m_MaxChamberCount;
     int m_MinChamberCount;
+    int m_ObstacleRoomIndex = 0;
 };
 
 #endif
