@@ -22,7 +22,8 @@ class Bow : public Weapon {
 public:
     Bow() : Weapon(
         BOW_WEAPON_SKIN,
-        kBowFireDelayMs
+        kBowFireDelayMs,
+        WeaponId::Bow
     ) {
         this->SetBulletDamage(kBowDamage);
         this->SetAmmoCostPerShot(kBowAmmoCost);

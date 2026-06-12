@@ -14,6 +14,7 @@
 #include "Component/Mobs/Ghost.hpp"
 #include "Component/Mobs/GhostKing.hpp"
 #include "Component/Mobs/PortalMob.hpp"
+#include "Component/Prop/MechanicalRuinsObstacle.hpp"
 #include "Component/Mobs/RuinsGuard.hpp"
 #include "Component/Mobs/RuinsSearcher.hpp"
 #include "Component/Mobs/RuinsTurret.hpp"
@@ -82,6 +83,7 @@ FightRoom::FightRoom(
 ) {
     this->OpenAllDoors();
 
+    this->m_Obstacles = info->GetObstacle();
     this->m_MonsterWaves = info->GetMonsterWaves();
 
     this->m_CompletedWave = 0;
@@ -316,6 +318,8 @@ void FightRoom::StartNextMonsterWave() {
 void FightRoom::Initialize(MapSystem* system) {
     this->m_MapSystem = system;
 
+    this->SpawnObstacles(system);
+
     // Spawn the mobs in the first wave 
     this->StartNextMonsterWave();
 
@@ -323,5 +327,43 @@ void FightRoom::Initialize(MapSystem* system) {
     for (auto const& i : this->GetMobs()) {
         i->SetDamageEnabled(false);
         i->m_AI->Freeze();
+    }
+}
+
+void FightRoom::SpawnObstacles(MapSystem* mapSystem) {
+    if (mapSystem == nullptr) {
+        return;
+    }
+
+    MechanicalRuinsObstacleConfig config;
+    config.owningRoom = this->shared_from_this();
+
+    const glm::vec2 roomCenter = this->GetAbsoluteTranslation();
+    for (const auto &obstacle : this->m_Obstacles) {
+        const glm::vec2 position = roomCenter + obstacle.localPosition;
+
+        switch (obstacle.type) {
+            case ObstacleType::WOODEN_BOX:
+            case ObstacleType::MECHANICAL_RUINS_BLOCK:
+                mapSystem->AddProp(std::make_shared<MechanicalRuinsBlock>(
+                    position,
+                    config
+                ));
+                break;
+
+            case ObstacleType::MECHANICAL_RUINS_FENCE:
+                mapSystem->AddProp(std::make_shared<MechanicalRuinsFence>(
+                    position,
+                    config
+                ));
+                break;
+
+            case ObstacleType::MECHANICAL_RUINS_PILLAR:
+                mapSystem->AddProp(std::make_shared<MechanicalRuinsPillar>(
+                    position,
+                    config
+                ));
+                break;
+        }
     }
 }

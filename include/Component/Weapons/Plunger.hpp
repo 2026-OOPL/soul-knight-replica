@@ -53,7 +53,8 @@ class Plunger : public Weapon {
 public:
     Plunger() : Weapon(
         PLUNGER_WEAPON_SKIN,
-        kPlungerFireDelayMs
+        kPlungerFireDelayMs,
+        WeaponId::Plunger
     ) {
         this->SetBulletDamage(kPlungerDamage);
         this->SetAmmoCostPerShot(kPlungerAmmoCost);

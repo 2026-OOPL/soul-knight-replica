@@ -1,6 +1,7 @@
 #ifndef MAP_SYSTEM_HPP
 #define MAP_SYSTEM_HPP
 
+#include <array>
 #include <memory>
 #include <vector>
 
@@ -17,6 +18,7 @@
 #include "Component/Map/Gangway.hpp"
 #include "Component/Map/RoomTransitionSystem.hpp"
 #include "Component/Player/Player.hpp"
+#include "Component/Weapon.hpp"
 #include "Component/World/WorldRegistry.hpp"
 #include "Generator/MapGenerator.hpp"
 #include "Util/GameObject.hpp"
@@ -41,6 +43,12 @@ struct PlayerInfo {
     int maxMana = MapSystemConfig::MAX_AMMO;
     int maxHealth = MapSystemConfig::MAX_HEALTH;
     int maxProtection = MapSystemConfig::MAX_SHIELD;
+    std::array<WeaponId, 2> weaponSlots = {
+        WeaponId::AK47,
+        WeaponId::SniperRifle
+    };
+    int activeWeaponSlot = 1;
+    bool healthLocked = false;
 };
 
 struct MapConfig {
@@ -159,6 +167,7 @@ private:
     void PruneDestroyedProps();
     void PruneDefeatedMobs();
     void SpawnDropsForMob(const std::shared_ptr<Mob> &mob);
+    void SyncDepthSortedZIndices();
 
     std::shared_ptr<CollisionDebugOverlay> m_CollisionDebugOverlay;
     std::vector<std::shared_ptr<Bullet>> m_PendingBullets;

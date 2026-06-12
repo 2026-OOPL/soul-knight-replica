@@ -37,7 +37,8 @@ class BadPistol : public Weapon {
 public:
     BadPistol() : Weapon(
         WEAPON_SKIN,
-        kBadPistolFireDelayMs
+        kBadPistolFireDelayMs,
+        WeaponId::BadPistol
     ) {
         this->SetBulletDamage(kBadPistolDamage);
         this->SetAmmoCostPerShot(kBadPistolAmmoCost);

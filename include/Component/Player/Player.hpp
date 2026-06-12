@@ -37,10 +37,17 @@ public:
     virtual glm::vec2 GetMoveIntent() const override;
     void SetWeapon(std::shared_ptr<Weapon> weapon) override;
     std::shared_ptr<Weapon> PickupWeapon(std::shared_ptr<Weapon> weapon);
+    std::array<WeaponId, 2> GetWeaponLoadout() const;
+    int GetActiveWeaponSlot() const;
+    void RestoreWeaponLoadout(
+        const std::array<WeaponId, 2> &weaponSlots,
+        int activeWeaponSlot
+    );
     void SetOnWeaponBulletFired(std::function<void(std::shared_ptr<Bullet>)> callback);
     void SetMeleeAttackResolver(MeleeAttackResolver resolver);
     void ApplyDamage(int damage) override;
     bool IsHealthLocked() const;
+    void SetHealthLocked(bool healthLocked);
     
     int GetCurrentShield() const;
     int GetMaxShield() const;

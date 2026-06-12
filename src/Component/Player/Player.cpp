@@ -130,9 +130,9 @@ void Player::Update() {
     this->UpdateMeleeAttackVisual();
 
     if (Util::Input::IsKeyDown(Util::Keycode::T)) {
-        this->m_HealthLocked = !this->m_HealthLocked;
+        this->SetHealthLocked(!this->m_HealthLocked);
         LOG_INFO(
-            "Player health lock {}.",
+            "Player invincible mode {}.",
             this->m_HealthLocked ? "enabled" : "disabled"
         );
     }
@@ -146,7 +146,7 @@ void Player::Update() {
             int cost = this->m_Weapon->GetAmmoCostPerShot();
             
             // Check if player has enough ammo before attempting to fire
-            if (this->GetCurrentAmmo() >= cost || cost <= 0) {
+            if (this->m_HealthLocked || this->GetCurrentAmmo() >= cost || cost <= 0) {
                 if (this->m_Weapon->ShotBullet()) {
                     this->TriggerAttackVisual();
                     this->TryConsumeAmmo(cost);
@@ -197,6 +197,55 @@ void Player::Update() {
 
 void Player::SetWeapon(std::shared_ptr<Weapon> weapon) {
     (void)this->PickupWeapon(std::move(weapon));
+}
+
+std::array<WeaponId, 2> Player::GetWeaponLoadout() const {
+    std::array<WeaponId, 2> weaponSlots = {
+        WeaponId::Empty,
+        WeaponId::Empty
+    };
+
+    for (std::size_t index = 0; index < this->m_WeaponSlots.size(); ++index) {
+        if (this->m_WeaponSlots[index] != nullptr) {
+            weaponSlots[index] = this->m_WeaponSlots[index]->GetWeaponId();
+        }
+    }
+
+    return weaponSlots;
+}
+
+int Player::GetActiveWeaponSlot() const {
+    return this->m_ActiveWeaponSlot;
+}
+
+void Player::RestoreWeaponLoadout(
+    const std::array<WeaponId, 2> &weaponSlots,
+    int activeWeaponSlot
+) {
+    Character::SetWeapon(nullptr);
+
+    this->m_WeaponSlots = {nullptr, nullptr};
+    this->m_ActiveWeaponSlot = std::clamp(
+        activeWeaponSlot,
+        0,
+        static_cast<int>(this->m_WeaponSlots.size()) - 1
+    );
+
+    for (std::size_t index = 0; index < this->m_WeaponSlots.size(); ++index) {
+        this->m_WeaponSlots[index] = CreateWeaponById(weaponSlots[index]);
+        this->ApplyWeaponBulletCallback(this->m_WeaponSlots[index]);
+    }
+
+    if (this->m_WeaponSlots[this->m_ActiveWeaponSlot] == nullptr) {
+        for (std::size_t index = 0; index < this->m_WeaponSlots.size(); ++index) {
+            if (this->m_WeaponSlots[index] != nullptr) {
+                this->m_ActiveWeaponSlot = static_cast<int>(index);
+                break;
+            }
+        }
+    }
+
+    Character::SetWeapon(this->m_WeaponSlots[this->m_ActiveWeaponSlot]);
 }
 
 std::shared_ptr<Weapon> Player::PickupWeapon(std::shared_ptr<Weapon> weapon) {
@@ -384,6 +433,10 @@ bool Player::IsHealthLocked() const {
     return this->m_HealthLocked;
 }
 
+void Player::SetHealthLocked(bool healthLocked) {
+    this->m_HealthLocked = healthLocked;
+}
+
 int Player::GetCurrentShield() const {
     return this->m_CurrentShield;
 }
@@ -428,6 +481,10 @@ void Player::SetMaxAmmo(int maxAmmo) {
 
 bool Player::TryConsumeAmmo(int amount) {
     if (amount <= 0) {
+        return true;
+    }
+
+    if (this->m_HealthLocked) {
         return true;
     }
 

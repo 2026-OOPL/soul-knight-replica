@@ -18,12 +18,23 @@ enum class WeaponType {
     MELEE
 };
 
+enum class WeaponId {
+    Empty,
+    BadPistol,
+    Plunger,
+    AK47,
+    SniperRifle,
+    Bow,
+    Shear
+};
+
 class Bullet;
 class Weapon : public Util::GameObject, public MapObject, public IStateful {
 public:
     Weapon(
         std::string resource,
-        int fireDelay
+        int fireDelay,
+        WeaponId weaponId = WeaponId::Empty
     );
 
     void Update() override;
@@ -45,6 +56,7 @@ public:
     Util::Transform GetObjectTransform() const override;
 
     virtual bool ShotBullet();
+    WeaponId GetWeaponId() const;
     int GetAmmoCostPerShot() const;
     void SetAmmoCostPerShot(int ammoCostPerShot);
     int GetBulletDamage() const;
@@ -96,6 +108,9 @@ private:
     int m_CriticalChance = 0;
     float m_AttackMoveSpeedMultiplier = 1.0F;
     CombatFaction m_ProjectileFaction = CombatFaction::Neutral;
+    WeaponId m_WeaponId = WeaponId::Empty;
 };
+
+std::shared_ptr<Weapon> CreateWeaponById(WeaponId weaponId);
 
 #endif
