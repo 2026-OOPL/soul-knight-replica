@@ -183,8 +183,30 @@ glm::vec2 MeleeAI::CalculateDesiredTranslation() {
             this->m_Owner->GetAbsoluteTranslation();
     }
 
-    if (this->m_StateMachine.GetState() == Status::STOPANDATTACK) {
+    const Status currentState = this->m_StateMachine.GetState();
+    if (currentState == Status::STOPANDATTACK) {
         return this->m_Owner->GetAbsoluteTranslation();
+    }
+
+    if (currentState == Status::PURSUIT) {
+        const glm::vec2 targetPos = this->m_Target->GetAbsoluteTranslation();
+        const glm::vec2 ownerPos = this->m_Owner->GetAbsoluteTranslation();
+        glm::vec2 toOwner = ownerPos - targetPos;
+        if (glm::length(toOwner) <= 0.0001F) {
+            toOwner = {1.0F, 0.0F};
+        } else {
+            toOwner = glm::normalize(toOwner);
+        }
+
+        // Apply a random angle deflection (e.g. M_PI / 3.0F) to the approach vector
+        glm::vec2 offsetDir = this->ApplyRandomAngle(toOwner, M_PI / 3.0F);
+
+        // Keep the target offset within attackRange, but not too close
+        const float minRange = std::min(16.0F, this->m_Config.attackRange * 0.4F);
+        const float maxRange = this->m_Config.attackRange * 0.8F;
+        const float offsetDist = this->m_Random.GetFloat(minRange, maxRange);
+
+        return targetPos + offsetDir * offsetDist;
     }
 
     return this->m_Target->GetAbsoluteTranslation();

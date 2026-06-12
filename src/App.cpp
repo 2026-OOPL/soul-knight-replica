@@ -2,6 +2,7 @@
 
 #include "App.hpp"
 #include "MainMenu.hpp"
+#include "Scene/PreloadScene.hpp"
 #include "Util/Input.hpp"
 #include "Util/Logger.hpp"
 #include "Util/Renderer.hpp"
@@ -9,7 +10,8 @@
 void App::Start() {
     LOG_TRACE("Start");
 
-    this->m_Scene = std::make_shared<MainMenu>();
+    this->m_Scene = std::make_shared<PreloadScene>();
+
     this->m_Root.AddChild(this->m_Scene);
 
     this->m_CurrentState = State::UPDATE;

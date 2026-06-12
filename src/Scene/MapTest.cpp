@@ -171,7 +171,16 @@ void MapTest::Update() {
     switch (m_MapState) {
         case MapState::PLAYING:
             MapSystem::Update();
+
+            if (m_MapState != MapState::RESPAWNING && 
+                Util::Input::IsKeyUp(Util::Keycode::ESCAPE)
+            ) {
+                m_MapState = (m_MapState == MapState::PAUSED) ? MapState::PLAYING : MapState::PAUSED;
+                this->SetPauseUIVisible(m_MapState == MapState::PAUSED);
+            }
+            
             break;
+
         case MapState::PAUSED:
             if (this->m_PauseUI) {
                 this->m_PauseUI->Update();
@@ -182,6 +191,7 @@ void MapTest::Update() {
                 m_MapState = exitSignal ? MapState::PLAYING : MapState::PAUSED;
             }
             break;
+
         case MapState::RESPAWNING:
             if (this->m_RespawnUI) {
                 this->m_RespawnUI->Update();
@@ -192,13 +202,6 @@ void MapTest::Update() {
                 }
             }
             break;
-    }
-
-    if (m_MapState != MapState::RESPAWNING && 
-        Util::Input::IsKeyUp(Util::Keycode::ESCAPE)
-    ) {
-        m_MapState = (m_MapState == MapState::PAUSED) ? MapState::PLAYING : MapState::PAUSED;
-        this->SetPauseUIVisible(m_MapState == MapState::PAUSED);
     }
 
     this->m_BGM->SetVolume(GameConfig::GetInstance().m_BGMVolume * 128);
