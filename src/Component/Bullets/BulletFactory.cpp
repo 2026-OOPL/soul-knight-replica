@@ -28,6 +28,18 @@ const BulletConfig &BulletFactory::SmallNormalBulletConfig() {
     return config;
 }
 
+const BulletConfig &BulletFactory::SpindleBulletConfig() {
+    static const BulletConfig config = {
+        {RESOURCE_DIR"/Bullet/Spindle-shaped bullet_Huang.png"},
+        {0.5F, 0.5F},
+        {18.0F, 6.0F},
+        1,
+        true,
+        20
+    };
+    return config;
+}
+
 const BulletConfig &BulletFactory::ArrowBulletConfig() {
     static const BulletConfig config = {
         {RESOURCE_DIR"/Bullet/Arrow.png"},
@@ -103,6 +115,21 @@ std::shared_ptr<Bullet> BulletFactory::CreateSmallNormalBullet(
 ) {
     return std::make_shared<ConfiguredBullet>(
         SmallNormalBulletConfig(),
+        coordinate,
+        momentum,
+        damage,
+        faction
+    );
+}
+
+std::shared_ptr<Bullet> BulletFactory::CreateSpindleBullet(
+    glm::vec2 coordinate,
+    glm::vec2 momentum,
+    int damage,
+    CombatFaction faction
+) {
+    return std::make_shared<ConfiguredBullet>(
+        SpindleBulletConfig(),
         coordinate,
         momentum,
         damage,

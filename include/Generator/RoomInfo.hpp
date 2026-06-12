@@ -27,7 +27,10 @@ enum MobType {
 };
 
 enum ObstacleType {
-    WOODEN_BOX
+    WOODEN_BOX,
+    MECHANICAL_RUINS_BLOCK,
+    MECHANICAL_RUINS_FENCE,
+    MECHANICAL_RUINS_PILLAR
 };
 
 template <typename T>

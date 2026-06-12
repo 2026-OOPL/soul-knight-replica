@@ -34,6 +34,7 @@ This is a [PTSD](https://github.com/ntut-open-source-club/practical-tools-for-si
 | `Space` | Hold to melee attack when close to a target; otherwise fire the current weapon |
 | `Q` | Switch between the two carried weapons |
 | `E` | Pick up a dropped weapon when standing near it; if both weapon slots are full, drop the current weapon |
+| `T` | Toggle invincible mode; while enabled, the player takes no damage and weapon ammo is not consumed |
 | `Left Mouse Button` | Click menu buttons |
 | `Esc` | Exit the game |
 

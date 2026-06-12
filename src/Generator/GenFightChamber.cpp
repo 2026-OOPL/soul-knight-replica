@@ -12,6 +12,70 @@
 #include "Generator/RoomInfo.hpp"
 #include "Generator/GenFightChamber.hpp"
 
+namespace {
+
+void AddObstacle(
+    const std::shared_ptr<RoomInfo> &info,
+    ObstacleType type,
+    const glm::vec2 &position
+) {
+    SpawnInfo<ObstacleType> spawn(type, position);
+    info->AddSpawnObject(spawn);
+}
+
+void AddSymmetricObstaclePair(
+    const std::shared_ptr<RoomInfo> &info,
+    ObstacleType type,
+    const glm::vec2 &position
+) {
+    AddObstacle(info, type, position);
+    AddObstacle(info, type, {-position.x, -position.y});
+}
+
+void AddMirroredObstacleRow(
+    const std::shared_ptr<RoomInfo> &info,
+    ObstacleType type,
+    float x,
+    float y
+) {
+    AddObstacle(info, type, {-x, y});
+    AddObstacle(info, type, {x, y});
+    AddObstacle(info, type, {-x, -y});
+    AddObstacle(info, type, {x, -y});
+}
+
+void AddRoomObstacleLayout(const std::shared_ptr<RoomInfo> &info) {
+    switch (info->GetRoomType()) {
+        case RoomType::ROOM_15_15:
+            AddMirroredObstacleRow(info, ObstacleType::MECHANICAL_RUINS_PILLAR, 48.0F, 48.0F);
+            AddSymmetricObstaclePair(info, ObstacleType::MECHANICAL_RUINS_FENCE, {0.0F, 72.0F});
+            break;
+
+        case RoomType::ROOM_17_17:
+            AddSymmetricObstaclePair(info, ObstacleType::MECHANICAL_RUINS_BLOCK, {-64.0F, 0.0F});
+            AddSymmetricObstaclePair(info, ObstacleType::MECHANICAL_RUINS_BLOCK, {0.0F, 64.0F});
+            AddMirroredObstacleRow(info, ObstacleType::MECHANICAL_RUINS_PILLAR, 48.0F, 48.0F);
+            break;
+
+        case RoomType::ROOM_17_23:
+            AddMirroredObstacleRow(info, ObstacleType::MECHANICAL_RUINS_FENCE, 48.0F, 96.0F);
+            AddMirroredObstacleRow(info, ObstacleType::MECHANICAL_RUINS_PILLAR, 48.0F, 32.0F);
+            AddSymmetricObstaclePair(info, ObstacleType::MECHANICAL_RUINS_BLOCK, {0.0F, 128.0F});
+            break;
+
+        case RoomType::ROOM_23_17:
+            AddMirroredObstacleRow(info, ObstacleType::MECHANICAL_RUINS_FENCE, 96.0F, 48.0F);
+            AddMirroredObstacleRow(info, ObstacleType::MECHANICAL_RUINS_PILLAR, 32.0F, 48.0F);
+            AddSymmetricObstaclePair(info, ObstacleType::MECHANICAL_RUINS_BLOCK, {128.0F, 0.0F});
+            break;
+
+        case RoomType::ROOM_13_13:
+            break;
+    }
+}
+
+} // namespace
+
 GenFightChamber::GenFightChamber(
     glm::ivec2 start,
 
@@ -120,17 +184,7 @@ std::vector<glm::ivec2> GenFightChamber::GetAvailableCooridinate() {
 void GenFightChamber::PopulateRoomContents(glm::ivec2 position) {
     std::shared_ptr<RoomInfo> info = m_Blueprint->GetElementByCooridinate(position);
 
-    int boxCount = this->m_RandomChoose->GetInteger(0, 4);
-            
-    for (int i = 0; i < boxCount; ++i) {
-        glm::vec2 pos = info->GetRandomPositionInChamberAligned();
-
-        SpawnInfo<ObstacleType> spawn (
-            ObstacleType::WOODEN_BOX, pos
-        );
-        
-        info->AddSpawnObject(spawn);
-    }
+    AddRoomObstacleLayout(info);
 
     int waveCount = this->m_RandomChoose->GetInteger(1, 3); // 隨機 1 到 3 波
     const float safeDistance = 60.0F; // 怪物與箱子之間的最短安全距離 (可依照你的素材大小調整)

@@ -53,6 +53,7 @@ protected:
     );
 
     void StartNextMonsterWave();
+    void SpawnObstacles(MapSystem* mapSystem);
     void PushPlayersInsideClosedDoors();
 
     WaveStatus m_WaveStatus = WaveStatus::IDLE;
@@ -67,6 +68,7 @@ private:
     int m_MaxMobWave = 0;
     int m_CompletedWave = 0;
 
+    std::vector<SpawnInfo<ObstacleType>> m_Obstacles;
     std::vector<std::vector<SpawnInfo<MobType>>> m_MonsterWaves;
 };
 

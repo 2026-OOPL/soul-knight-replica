@@ -111,7 +111,7 @@ void ShearAttackEffect::SyncToWeapon(
 }
 
 Shear::Shear()
-    : Weapon(SHEAR_WEAPON_SKIN, kShearFireDelayMs) {
+    : Weapon(SHEAR_WEAPON_SKIN, kShearFireDelayMs, WeaponId::Shear) {
     this->SetBulletDamage(kShearDamage);
     this->m_WeaponRadius = 22.0F;
     this->m_RecoilDistance = 0.0F;
