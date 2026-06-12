@@ -26,6 +26,10 @@ namespace {
 constexpr int kAmmoOrbsPerMob = 3;
 constexpr int kAmmoRecoveredPerOrb = 5;
 constexpr float kAmmoOrbSpawnRadius = 12.0F;
+constexpr float kDepthSortBaseZIndex = 4.0F;
+constexpr float kDepthSortScale = 0.001F;
+constexpr float kDepthSortedMinZIndex = 3.05F;
+constexpr float kDepthSortedMaxZIndex = 4.95F;
 
 glm::vec2 BuildAmmoOrbSpawnOffset(
     const glm::vec2 &origin,
@@ -76,6 +80,29 @@ bool AreBoxesOverlapping(
 
     return !(lhsRight <= rhsLeft || lhsLeft >= rhsRight ||
              lhsTop <= rhsBottom || lhsBottom >= rhsTop);
+}
+
+float CalculateDepthSortedZIndex(float groundY) {
+    return std::clamp(
+        kDepthSortBaseZIndex - groundY * kDepthSortScale,
+        kDepthSortedMinZIndex,
+        kDepthSortedMaxZIndex
+    );
+}
+
+float GetBoxBottom(const Collision::AxisAlignedBox &box) {
+    return box.center.y - box.size.y / 2.0F;
+}
+
+float GetCharacterGroundY(const Character &character) {
+    return GetBoxBottom(character.GetCollisionBox());
+}
+
+float GetBlockingPropGroundY(const BlockingProp &prop) {
+    const glm::vec2 boxCenter =
+        prop.GetAbsoluteTranslation() + prop.GetBlockingOffset();
+    const glm::vec2 boxSize = prop.GetBlockingSize();
+    return boxCenter.y - boxSize.y / 2.0F;
 }
 
 void AppendPrimitives(
@@ -131,6 +158,10 @@ void MapSystem::SwitchToLevelSelect() {
     this->m_MapConfig.playerInfo.mana = player->GetCurrentAmmo();
     this->m_MapConfig.playerInfo.maxMana = player->GetMaxAmmo();
 
+    this->m_MapConfig.playerInfo.weaponSlots = player->GetWeaponLoadout();
+    this->m_MapConfig.playerInfo.activeWeaponSlot = player->GetActiveWeaponSlot();
+    this->m_MapConfig.playerInfo.healthLocked = player->IsHealthLocked();
+
     m_RedirectScene = std::make_shared<LevelSwitch>(this->m_MapConfig);
 }
 
@@ -158,6 +189,7 @@ void MapSystem::Update() {
     this->PruneDestroyedBullets();
     this->PruneDefeatedMobs();
     this->PruneDestroyedProps();
+    this->SyncDepthSortedZIndices();
 
     if (this->m_AttachCamera != nullptr) {
         const std::shared_ptr<IStateful> statefulCamera =
@@ -915,6 +947,45 @@ void MapSystem::SpawnDropsForMob(const std::shared_ptr<Mob> &mob) {
         this->AddProp(std::make_shared<AmmoOrb>(
             deathPosition + BuildAmmoOrbSpawnOffset(deathPosition, i, kAmmoOrbsPerMob),
             config
+        ));
+    }
+}
+
+void MapSystem::SyncDepthSortedZIndices() {
+    for (const auto &player : this->m_World.GetPlayers()) {
+        if (player != nullptr) {
+            player->SetZIndex(CalculateDepthSortedZIndex(
+                GetCharacterGroundY(*player)
+            ));
+        }
+    }
+
+    for (const auto &mob : this->m_World.GetMobs()) {
+        if (mob == nullptr) {
+            continue;
+        }
+
+        if (!mob->IsDead() &&
+            (mob->GetZIndex() > kDepthSortedMaxZIndex ||
+             mob->GetZIndex() < kDepthSortedMinZIndex)) {
+            continue;
+        }
+
+        mob->SetZIndex(CalculateDepthSortedZIndex(GetCharacterGroundY(*mob)));
+    }
+
+    for (const auto &prop : this->m_World.GetProps()) {
+        if (prop == nullptr) {
+            continue;
+        }
+
+        BlockingProp *blockingProp = dynamic_cast<BlockingProp *>(prop.get());
+        if (blockingProp == nullptr) {
+            continue;
+        }
+
+        blockingProp->SetZIndex(CalculateDepthSortedZIndex(
+            GetBlockingPropGroundY(*blockingProp)
         ));
     }
 }

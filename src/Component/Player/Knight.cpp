@@ -6,8 +6,6 @@
 #include <utility>
 
 #include "Component/Player/Player.hpp"
-#include "Component/Weapons/BadPistol.hpp"
-#include "Component/Weapons/Plunger.hpp"
 #include "Util/Input.hpp"
 #include "Util/Keycode.hpp"
 #include "Util/Logger.hpp"
@@ -33,13 +31,15 @@ Knight::Knight(
     playerInfo.maxMana
 ) { 
     this->m_GetNearestMob = std::move(GetNearestMob);
-    this->SetWeapon(std::make_shared<BadPistol>());
-    this->SetWeapon(std::make_shared<Plunger>());
+    this->RestoreWeaponLoadout(
+        playerInfo.weaponSlots,
+        playerInfo.activeWeaponSlot
+    );
 
     this->SetCurrentHealth(playerInfo.health);
     this->SetCurrentShield(playerInfo.protection);
     this->SetCurrentAmmo(playerInfo.mana);
-
+    this->SetHealthLocked(playerInfo.healthLocked);
 }
 
 glm::vec2 Knight::GetFaceDirection() const {

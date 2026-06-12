@@ -14,16 +14,50 @@
 #include "Component/Weapon.hpp"
 #include "Component/Bullet.hpp"
 #include "Component/Bullets/BulletFactory.hpp"
+#include "Component/Weapons/AK47.hpp"
+#include "Component/Weapons/BadPistol.hpp"
+#include "Component/Weapons/Bow.hpp"
+#include "Component/Weapons/Plunger.hpp"
+#include "Component/Weapons/Shear.hpp"
+#include "Component/Weapons/SniperRifle.hpp"
 
 Weapon::Weapon(
     std::string resource,
-    int fireDelay
+    int fireDelay,
+    WeaponId weaponId
 ) : Util::GameObject(nullptr, 5) {
     m_Resource = std::make_shared<Util::Image>(resource);
 
     this->m_FireDelay = fireDelay;
+    this->m_WeaponId = weaponId;
 
     this->SetDrawable(m_Resource);
+}
+
+std::shared_ptr<Weapon> CreateWeaponById(WeaponId weaponId) {
+    switch (weaponId) {
+    case WeaponId::BadPistol:
+        return std::make_shared<BadPistol>();
+
+    case WeaponId::Plunger:
+        return std::make_shared<Plunger>();
+
+    case WeaponId::AK47:
+        return std::make_shared<AK47>();
+
+    case WeaponId::SniperRifle:
+        return std::make_shared<SniperRifle>();
+
+    case WeaponId::Bow:
+        return std::make_shared<Bow>();
+
+    case WeaponId::Shear:
+        return std::make_shared<Shear>();
+
+    case WeaponId::Empty:
+    default:
+        return nullptr;
+    }
 }
 
 void Weapon::SetFacingDirection(glm::vec2 direction) {
@@ -230,4 +264,8 @@ bool Weapon::ShotBullet() {
     }
     
     return true;
+}
+
+WeaponId Weapon::GetWeaponId() const {
+    return this->m_WeaponId;
 }

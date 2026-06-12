@@ -13,6 +13,7 @@ class Bullet;
 class BulletFactory {
 public:
     static const BulletConfig &SmallNormalBulletConfig();
+    static const BulletConfig &SpindleBulletConfig();
     static const BulletConfig &ArrowBulletConfig();
     static const BulletConfig &PoopBulletConfig();
     static const BulletConfig &EnemyRoundBulletConfig();
@@ -28,6 +29,13 @@ public:
     );
 
     static std::shared_ptr<Bullet> CreateSmallNormalBullet(
+        glm::vec2 coordinate,
+        glm::vec2 momentum,
+        int damage = 1,
+        CombatFaction faction = CombatFaction::Neutral
+    );
+
+    static std::shared_ptr<Bullet> CreateSpindleBullet(
         glm::vec2 coordinate,
         glm::vec2 momentum,
         int damage = 1,
