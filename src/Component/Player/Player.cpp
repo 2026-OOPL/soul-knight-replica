@@ -352,17 +352,17 @@ bool Player::TryMeleeAttack() {
         return true;
     }
 
+    const float now = Util::Time::GetElapsedTimeMs();
+    if (now - this->m_LastMeleeAttackTime < kMeleeAttackCooldownMs) {
+        return true;
+    }
+
     if (this->m_MeleeAttackResolver == nullptr ||
-        Util::Time::GetElapsedTimeMs() - this->m_LastMeleeAttackTime <
-            kMeleeAttackCooldownMs) {
+        !this->m_MeleeAttackResolver(*this)) {
         return false;
     }
 
-    if (!this->m_MeleeAttackResolver(*this)) {
-        return false;
-    }
-
-    this->m_LastMeleeAttackTime = Util::Time::GetElapsedTimeMs();
+    this->m_LastMeleeAttackTime = now;
     this->TriggerAttackVisual(kMeleeAttackVisualDurationMs);
     this->StartMeleeAttackVisual();
     return true;
