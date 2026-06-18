@@ -1,29 +1,20 @@
 # Soul Knight Replica
 
-This is a [PTSD](https://github.com/ntut-open-source-club/practical-tools-for-simple-design) framework template for students taking OOPL2024s.
+This is a 《Soul Knight》game clone written in C++ with [PTSD](https://github.com/ntut-open-source-club/practical-tools-for-simple-design) framework.
 
 ## Quick Start
-
-1. Use this template to create a new repository
-   ![github screenshot](https://github.com/ntut-rick/ptsd-template/assets/126899559/ef62242f-03ed-481d-b858-12b730c09beb)
-
-2. Clone your repository
-
+1. Clone your repository
    ```bash
    git clone YOUR_GIT_URL --recursive
    ```
-
-3. Build your project
-
-  > [!WARNING]
-  > Please build your project in `Debug` because our `Release` path is broken D:
    
+2. Build your project
    ```sh
    cmake -DCMAKE_BUILD_TYPE=Debug -B build # -G Ninja
    ```
-   better read [PTSD README](https://github.com/ntut-open-source-club/practical-tools-for-simple-design)
+   For more information, please read [PTSD README](https://github.com/ntut-open-source-club/practical-tools-for-simple-design)
 
-## Controls
+## Game Controls
 
 | Key | Function |
 | --- | --- |
@@ -38,7 +29,7 @@ This is a [PTSD](https://github.com/ntut-open-source-club/practical-tools-for-si
 | `Left Mouse Button` | Click menu buttons |
 | `Esc` | Exit the game |
 
-### Debug Controls
+### Game Debug Controls
 
 | Key | Function |
 | --- | --- |
