@@ -1,6 +1,9 @@
 # Soul Knight Replica
+This is a 《Soul Knight》game clone written in C++ with [PTSD](https://github.com/ntut-open-source-club/practical-tools-for-simple-design) framework. <br>
 
-This is a 《Soul Knight》game clone written in C++ with [PTSD](https://github.com/ntut-open-source-club/practical-tools-for-simple-design) framework.
+#### Tested on <br>
+![Arch](https://img.shields.io/badge/Arch%20Linux-1793D1?logo=arch-linux&logoColor=fff&style=for-the-badge)
+![Windows 11](https://img.shields.io/badge/Windows%2011-%230079d5.svg?style=for-the-badge&logo=Windows%2011&logoColor=white)
 
 ## Quick Start
 1. Clone your repository
