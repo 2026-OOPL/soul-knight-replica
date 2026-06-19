@@ -12,7 +12,7 @@
 #include "Util/Time.hpp"
 
 namespace {
-    const int SCROLLING_END_POSITION = -1900;
+    const int SCROLLING_END_POSITION = -1630 - 360 - 80;
 };
 
 CastingScene::CastingScene(MapSystemConfig::MapConfig config) :
@@ -102,60 +102,75 @@ CastingScene::CastingScene() {
     ));
 
     this->AddChild(std::make_shared<CastingText>(
-        "Alan Walker - Just the way you are",
+        "Alan Walker - The Spectre ( Slowed + Reverb )",
         glm::vec2(0, -880)
     ));
 
     this->AddChild(std::make_shared<CastingText>(
-        "Alan Walker - Today is the best day for OOP demo ",
+        "DJ R4 - 67",
         glm::vec2(0, -930)
     ));
 
     this->AddChild(std::make_shared<CastingText>(
-        "Alan Walker - My Way",
+        "Elektronomia - Sky High",
         glm::vec2(0, -980)
     ));
 
     this->AddChild(std::make_shared<CastingText>(
+        "MONTAGEM ALQUIMIA",
+        glm::vec2(0, -1030)
+    ));
+
+    this->AddChild(std::make_shared<CastingText>(
+        "Nokia Arabic Ringtone",
+        glm::vec2(0, -1080)
+    ));
+
+    this->AddChild(std::make_shared<CastingText>(
+        "Tobu - Candyland",
+        glm::vec2(0, -1130)
+    ));
+
+    this->AddChild(std::make_shared<CastingText>(
         "特別致謝 | Special Thanks",
-        glm::vec2(0, -1080),
+        glm::vec2(0, -1230),
         20
     ));
 
     this->AddChild(std::make_shared<CastingText>(
         "天、地、衣食父母、國立臺北科技大學",
-        glm::vec2(0, -1130)
-    ));
-
-    this->AddChild(std::make_shared<CastingText>(
-        "OpenAI, Alphabet, Anthropic, Intel, Apple",
-        glm::vec2(0, -1180)
-    ));
-
-    this->AddChild(std::make_shared<CastingText>(
-        "Stack Overflow, Reddit 網友, Gcc, Cmake",
-        glm::vec2(0, -1230)
-    ));
-
-    this->AddChild(std::make_shared<CastingText>(
-        "陽光、空氣、H₂O、陽光與仙人掌",
         glm::vec2(0, -1280)
     ));
 
     this->AddChild(std::make_shared<CastingText>(
+        "OpenAI, Alphabet, Anthropic, Intel, Apple",
+        glm::vec2(0, -1330)
+    ));
+
+    this->AddChild(std::make_shared<CastingText>(
+        "Stack Overflow, Reddit 網友, Gcc, Cmake",
+        glm::vec2(0, -1380)
+    ));
+
+    this->AddChild(std::make_shared<CastingText>(
+        "陽光、空氣、H₂O、陽光與仙人掌",
+        glm::vec2(0, -1430)
+    ));
+
+    this->AddChild(std::make_shared<CastingText>(
         "特別內部供暖支援 | Special Internal Heating Support",
-        glm::vec2(0, -1380),
+        glm::vec2(0, -1530),
         20
     ));
 
     this->AddChild(std::make_shared<CastingText>(
         "Acer Swift Go 14 (2024)",
-        glm::vec2(0, -1430)
+        glm::vec2(0, -1580)
     ));
 
     this->AddChild(std::make_shared<CastingText>(
         "Gigabyte K4A1 鐵磚",
-        glm::vec2(0, -1480)
+        glm::vec2(0, -1630)
     ));
 
     this->AddChild(std::make_shared<CastingText>(
